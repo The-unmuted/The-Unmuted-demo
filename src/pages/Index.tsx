@@ -14,6 +14,7 @@ import { emailFromPrivyUser, normalizeEmail, usePrivyAuth } from "@/lib/privyAut
 import { assessSolanaWallet, type WalletReputation } from "@/lib/solanaReputation";
 import { AlertTriangle, CheckCircle2, Loader2, Mail, Wallet } from "lucide-react";
 import { toast } from "sonner";
+import FeedbackWidget from "@/components/FeedbackWidget";
 
 const CONTRACT_ADDRESS = "0x79B1A83d803213560BA5AF373FDcE54d1e84f18c";
 const BRAND_BANNER_EN = "SECURE RECORD PROTECT SPEAK";
@@ -158,6 +159,7 @@ export default function Index() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <FeedbackWidget language={language} />
           <button
             onClick={() => setLanguage(language === "en" ? "zh" : "en")}
             className="rounded-full border border-border bg-card/90 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary transition-colors hover:bg-accent"
