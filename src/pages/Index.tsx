@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { useSolanaWallet } from "@/hooks/useSolanaWallet";
 import { useZKPIdentity } from "@/hooks/useZKPIdentity";
 import { useSilentMode } from "@/hooks/useSilentMode";
 import SOSPage from "@/components/SOSPage";
@@ -10,8 +9,7 @@ import CommunityPage from "@/components/CommunityPage";
 import NGOPage from "@/components/NGOPage";
 import { useLocale, copyFor } from "@/lib/locale";
 import { emailFromPrivyUser, normalizeEmail, usePrivyAuth } from "@/lib/privyAuth";
-import { assessSolanaWallet, type WalletReputation } from "@/lib/solanaReputation";
-import { AlertTriangle, CheckCircle2, Eye, EyeOff, KeyRound, Loader2, Mail, Wallet } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Eye, EyeOff, KeyRound, Loader2, Mail } from "lucide-react";
 import { toast } from "sonner";
 import FeedbackWidget from "@/components/FeedbackWidget";
 import SettingsWidget from "@/components/SettingsWidget";
@@ -25,14 +23,12 @@ export default function Index() {
   const [activeTab, setActiveTab] = useState<MainTab>("sos");
   const [showAfterReport, setShowAfterReport] = useState(false);
   const { language, setLanguage } = useLocale();
-  const solanaWallet = useSolanaWallet();
   const identity = useZKPIdentity();
   const privyAuth = usePrivyAuth();
   const { isSilent, voiceDeterrent, customAudioUrl } = useSilentMode();
-  type SignupMode = "idle" | "phantom" | "email-send" | "email-verify" | "email-contact" | "password-login" | "set-password";
+  type SignupMode = "idle" | "email-send" | "email-verify" | "email-contact" | "password-login" | "set-password";
   const [signupMode, setSignupMode] = useState<SignupMode>("idle");
   const [pendingEmail, setPendingEmail] = useState("");
-  const [walletReputation, setWalletReputation] = useState<WalletReputation | null>(null);
   const handledPrivyUserRef = useRef("");
 
   const isSignedIn = Boolean(identity.identity?.provider && identity.identity.commitment);
@@ -63,36 +59,6 @@ export default function Index() {
         toast.error(error instanceof Error ? error.message : copyFor(language, "Could not create identity.", "身份创建失败。"));
       });
   }, [identity, isSignedIn, language, privyAuth.authenticated, privyAuth.ready, privyAuth.user]);
-
-  const handlePhantomSignup = async () => {
-    setSignupMode("phantom");
-    setWalletReputation(null);
-    try {
-      const result = await solanaWallet.connectAndSignIdentity();
-      const reputation = await assessSolanaWallet(result.address).catch(() => null);
-      setWalletReputation(reputation);
-      await identity.generateFromWallet(result.address, result.signature, reputation
-        ? {
-            level: reputation.trustLevel,
-            score: reputation.score,
-            checkedAt: reputation.checkedAt,
-            signals: reputation.signals,
-            warnings: reputation.warnings,
-          }
-        : {
-            level: "limited",
-            score: 20,
-            checkedAt: Date.now(),
-            signals: ["Phantom signature verified"],
-            warnings: ["Wallet history could not be checked"],
-          });
-      toast.success(copyFor(language, "Identity created", "身份已创建"));
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : copyFor(language, "Signup failed", "注册失败"));
-    } finally {
-      setSignupMode("idle");
-    }
-  };
 
   const handleEmailSignup = async (email: string) => {
     const normalized = normalizeEmail(email);
@@ -221,12 +187,9 @@ export default function Index() {
           language={language}
           loading={identity.generating}
           mode={signupMode}
-          isPhantomInstalled={solanaWallet.wallet.isPhantomInstalled}
-          walletReputation={walletReputation}
           emailOtpReady={privyAuth.configured}
           emailOtpStatus={privyAuth.emailOtpStatus}
           pendingEmail={pendingEmail}
-          onPhantomSignup={handlePhantomSignup}
           onEmailSignup={handleEmailSignup}
           onVerifyEmail={handleVerifyEmail}
           onContactOnlyEmail={handleContactOnlyEmail}
@@ -271,12 +234,9 @@ function SignupPage({
   language,
   loading,
   mode,
-  isPhantomInstalled,
-  walletReputation,
   emailOtpReady,
   emailOtpStatus,
   pendingEmail,
-  onPhantomSignup,
   onEmailSignup,
   onVerifyEmail,
   onContactOnlyEmail,
@@ -287,13 +247,10 @@ function SignupPage({
 }: {
   language: "en" | "zh";
   loading: boolean;
-  mode: "idle" | "phantom" | "email-send" | "email-verify" | "email-contact" | "password-login" | "set-password";
-  isPhantomInstalled: boolean;
-  walletReputation: WalletReputation | null;
+  mode: "idle" | "email-send" | "email-verify" | "email-contact" | "password-login" | "set-password";
   emailOtpReady: boolean;
   emailOtpStatus: string;
   pendingEmail: string;
-  onPhantomSignup: () => void;
   onEmailSignup: (email: string) => void;
   onVerifyEmail: (token: string) => void;
   onContactOnlyEmail: () => void;
@@ -306,7 +263,7 @@ function SignupPage({
   const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
   const [showPwd, setShowPwd] = useState(false);
-  const busy = loading || mode === "phantom" || mode === "email-send" || emailOtpStatus === "submitting-code";
+  const busy = loading || mode === "email-send" || emailOtpStatus === "submitting-code";
 
   return (
     <main className="flex flex-1 flex-col items-center justify-center overflow-y-auto px-6 py-10">
@@ -319,62 +276,12 @@ function SignupPage({
         <p className="mt-3 text-sm leading-6 text-muted-foreground">
           {copyFor(
             language,
-            "Create one private identity. The app will remember you next time.",
-            "创建一次私密身份。之后再次打开会保持登录状态。"
+            "Enter your email to create a private identity. The app will remember you next time.",
+            "输入邮箱创建私密身份。之后再次打开会保持登录状态。"
           )}
         </p>
 
-        <button
-          onClick={onPhantomSignup}
-          disabled={busy}
-          className="mt-8 flex w-full items-center justify-center gap-3 rounded-[1.75rem] border border-primary/25 bg-[linear-gradient(145deg,hsl(270_75%_62%),hsl(336_92%_76%))] px-6 py-5 text-base font-black text-primary-foreground shadow-[0_0_48px_hsl(var(--primary)/0.25)] active:scale-[0.98] disabled:opacity-60"
-        >
-          {mode === "phantom" ? <Loader2 className="h-5 w-5 animate-spin" /> : <Wallet className="h-5 w-5" />}
-          {copyFor(
-            language,
-            isPhantomInstalled ? "Sign up with Phantom" : "Install Phantom",
-            isPhantomInstalled ? "使用 Phantom 注册" : "安装 Phantom"
-          )}
-        </button>
-
-        <p className="mt-4 text-xs leading-5 text-muted-foreground">
-          {copyFor(
-            language,
-            "Phantom signs a message only. We also check public wallet history to reduce map spam.",
-            "Phantom 只会签署身份消息。我们也会检查公开钱包历史，以减少地图刷屏滥用。"
-          )}
-        </p>
-
-        {walletReputation && (
-          <div className="mt-4 rounded-2xl border border-border bg-card/80 p-3 text-left">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-sos-success" />
-              <p className="text-xs font-bold text-foreground">
-                {copyFor(language, "Wallet trust check", "钱包可信度检查")}
-              </p>
-              <span className="ml-auto rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
-                {walletReputation.score}/100
-              </span>
-            </div>
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              {copyFor(
-                language,
-                `${walletReputation.txCount} visible tx · ${walletReputation.tokenAccountCount} token accounts`,
-                `${walletReputation.txCount} 条可见交易 · ${walletReputation.tokenAccountCount} 个代币账户`
-              )}
-            </p>
-          </div>
-        )}
-
-        <div className="my-5 flex items-center gap-3">
-          <span className="h-px flex-1 bg-border" />
-          <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            {copyFor(language, "or", "或")}
-          </span>
-          <span className="h-px flex-1 bg-border" />
-        </div>
-
-        <div className="rounded-[1.75rem] border border-border bg-card/80 p-4 text-left">
+        <div className="mt-8 rounded-[1.75rem] border border-border bg-card/80 p-4 text-left">
           <div className="flex items-start gap-3">
             <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
               <Mail className="h-4 w-4 text-primary" />
