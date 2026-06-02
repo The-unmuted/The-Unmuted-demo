@@ -9,9 +9,11 @@ import { AppLanguage, copyFor } from "@/lib/locale";
 import { toast } from "sonner";
 import {
   useEmergencyContacts,
+  loadContacts,
   buildSmsUri,
   type EmergencyContact,
 } from "@/hooks/useEmergencyContacts";
+import { loadSosTemplate } from "@/hooks/useSosMessage";
 
 type SOSState = "idle" | "pressing" | "triggered" | "success" | "no-contacts";
 const LOGO_SRC = "/sos-button-logo-cutout.png";
@@ -37,6 +39,7 @@ export default function SOSButton({
   const [showSafeButton, setShowSafeButton] = useState(false);
   const [extraContacts, setExtraContacts] = useState<EmergencyContact[]>([]);
   const [coords, setCoords] = useState<{ lat: number; lng: number }>({ lat: 0, lng: 0 });
+  const [triggeredNote, setTriggeredNote] = useState<string>("");
 
   const intervalRef = useRef<ReturnType<typeof setInterval>>();
   const startTimeRef = useRef<number>(0);
@@ -95,7 +98,10 @@ export default function SOSButton({
       void reportZone(lat, lng, "emergency");
     }
 
-    if (contacts.length === 0) {
+    // Read fresh contacts from localStorage at trigger time to avoid stale React state
+    const freshContacts = loadContacts();
+
+    if (freshContacts.length === 0) {
       setState("no-contacts");
       if (!isSilent) {
         toast(copyFor(language, "⚠️ No emergency contacts set.", "⚠️ 尚未设置紧急联系人。"));
@@ -103,11 +109,15 @@ export default function SOSButton({
       return;
     }
 
+    // Read pre-set message template (also fresh from localStorage)
+    const situationNote = loadSosTemplate();
+
     // Open SMS for first contact immediately
-    const [first, ...rest] = contacts;
-    const uri = buildSmsUri(first, lat, lng);
+    const [first, ...rest] = freshContacts;
+    const uri = buildSmsUri(first, lat, lng, situationNote);
     window.location.href = uri;
 
+    setTriggeredNote(situationNote);
     setExtraContacts(rest);
     setState("success");
 
@@ -153,6 +163,7 @@ export default function SOSButton({
     setState("idle");
     setProgress(0);
     setExtraContacts([]);
+    setTriggeredNote("");
     onUserSafe?.();
   };
 
@@ -278,7 +289,7 @@ export default function SOSButton({
             {extraContacts.map((c) => (
               <a
                 key={c.id}
-                href={buildSmsUri(c, coords.lat, coords.lng)}
+                href={buildSmsUri(c, coords.lat, coords.lng, triggeredNote)}
                 className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-card py-3 text-sm font-semibold text-foreground active:scale-95 transition-transform"
               >
                 <PhoneCall className="h-4 w-4 text-primary" />
