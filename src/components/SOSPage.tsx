@@ -24,6 +24,7 @@ import { useZKPIdentity } from "@/hooks/useZKPIdentity";
 import { recordCommunityHelpMapAlert } from "@/lib/geoAlert";
 import { AppLanguage, copyFor } from "@/lib/locale";
 import { useEmergencyContacts } from "@/hooks/useEmergencyContacts";
+import { useSosMessage, DEFAULT_TEMPLATE } from "@/hooks/useSosMessage";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -316,6 +317,9 @@ function HomeView({
       {/* Emergency contacts management card */}
       <EmergencyContactsCard language={language} />
 
+      {/* Pre-set SOS message template card */}
+      <SosMessageCard language={language} />
+
       <div className="grid w-full max-w-sm gap-3">
         <button
           onClick={onAfterReport}
@@ -451,6 +455,55 @@ function EmergencyContactsCard({ language }: { language: AppLanguage }) {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// ── SOS Message Template Card ─────────────────────────────────────────────────
+
+function SosMessageCard({ language }: { language: AppLanguage }) {
+  const { template, setTemplate, reset } = useSosMessage();
+  const isDefault = template === DEFAULT_TEMPLATE;
+
+  return (
+    <div className="w-full max-w-sm rounded-2xl border border-border/80 bg-card/92 px-5 py-4 space-y-3">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <p className="text-sm font-bold text-foreground">
+            {copyFor(language, "SOS Message", "求救信息")}
+          </p>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">
+            {copyFor(
+              language,
+              "Edit to match your situation. {位置} will be replaced with your Gaode map link.",
+              "根据你的情况修改。{位置} 会自动替换成高德地图定位链接。"
+            )}
+          </p>
+        </div>
+        {!isDefault && (
+          <button
+            onClick={reset}
+            className="shrink-0 text-xs text-muted-foreground underline hover:text-foreground transition-colors"
+          >
+            {copyFor(language, "Reset", "恢复默认")}
+          </button>
+        )}
+      </div>
+
+      <textarea
+        value={template}
+        onChange={(e) => setTemplate(e.target.value)}
+        rows={6}
+        className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary resize-none leading-6"
+      />
+
+      <p className="text-[11px] text-muted-foreground/60">
+        {copyFor(
+          language,
+          "Tip: keep {位置} to include your GPS location automatically.",
+          "提示：保留 {位置} 可自动插入你的 GPS 定位。"
+        )}
+      </p>
     </div>
   );
 }

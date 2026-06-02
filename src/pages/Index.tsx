@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useZKPIdentity } from "@/hooks/useZKPIdentity";
 import { useSilentMode } from "@/hooks/useSilentMode";
 import SOSPage from "@/components/SOSPage";
@@ -8,8 +8,7 @@ import EvidencePage from "@/components/EvidencePage";
 import CommunityPage from "@/components/CommunityPage";
 import NGOPage from "@/components/NGOPage";
 import { useLocale, copyFor } from "@/lib/locale";
-import { emailFromPrivyUser, normalizeEmail, usePrivyAuth } from "@/lib/privyAuth";
-import { AlertTriangle, CheckCircle2, Eye, EyeOff, KeyRound, Loader2, Mail } from "lucide-react";
+import { Eye, EyeOff, KeyRound, Loader2, Mail } from "lucide-react";
 import { toast } from "sonner";
 import FeedbackWidget from "@/components/FeedbackWidget";
 import SettingsWidget from "@/components/SettingsWidget";
@@ -24,71 +23,27 @@ export default function Index() {
   const [showAfterReport, setShowAfterReport] = useState(false);
   const { language, setLanguage } = useLocale();
   const identity = useZKPIdentity();
-  const privyAuth = usePrivyAuth();
   const { isSilent, voiceDeterrent, customAudioUrl } = useSilentMode();
-  type SignupMode = "idle" | "email-send" | "email-verify" | "email-contact" | "password-login" | "set-password";
+  type SignupMode = "idle" | "password-login" | "set-password";
   const [signupMode, setSignupMode] = useState<SignupMode>("idle");
   const [pendingEmail, setPendingEmail] = useState("");
-  const handledPrivyUserRef = useRef("");
 
   const isSignedIn = Boolean(identity.identity?.provider && identity.identity.commitment);
 
-  useEffect(() => {
-    if (!privyAuth.ready || !privyAuth.authenticated || !privyAuth.user || isSignedIn) return;
-    if (handledPrivyUserRef.current === privyAuth.user.id) return;
-
-    const verifiedEmail = emailFromPrivyUser(privyAuth.user);
-    if (!verifiedEmail) return;
-
-    handledPrivyUserRef.current = privyAuth.user.id;
-    void identity
-      .generateFromEmail(verifiedEmail, privyAuth.user.id, true)
-      .then(async () => {
-        // Prompt to set a password if they don't have one yet
-        const hasPwd = await hasPassword(verifiedEmail);
-        if (!hasPwd) {
-          setPendingEmail(verifiedEmail);
-          setSignupMode("set-password");
-        } else {
-          setSignupMode("idle");
-        }
-        toast.success(copyFor(language, "Email verified. Identity created.", "邮箱已验证，身份已创建。"));
-      })
-      .catch((error) => {
-        handledPrivyUserRef.current = "";
-        toast.error(error instanceof Error ? error.message : copyFor(language, "Could not create identity.", "身份创建失败。"));
-      });
-  }, [identity, isSignedIn, language, privyAuth.authenticated, privyAuth.ready, privyAuth.user]);
-
   const handleEmailSignup = async (email: string) => {
-    const normalized = normalizeEmail(email);
+    const normalized = email.trim().toLowerCase();
     if (!normalized || !normalized.includes("@")) {
       toast.error(copyFor(language, "Enter a valid email address.", "请输入有效邮箱地址。"));
       return;
     }
-
     setPendingEmail(normalized);
-
-    // Check if user already has a password set → go to password login
     const hasPwd = await hasPassword(normalized);
     if (hasPwd) {
       setSignupMode("password-login");
-      return;
-    }
-
-    if (!privyAuth.configured) {
-      setSignupMode("email-contact");
-      return;
-    }
-
-    setSignupMode("email-send");
-    try {
-      await privyAuth.sendEmailCode(normalized);
-      setSignupMode("email-verify");
-      toast.success(copyFor(language, "OTP sent. Check your email.", "验证码已发送，请查看邮箱。"));
-    } catch (error) {
-      setSignupMode("idle");
-      toast.error(error instanceof Error ? error.message : copyFor(language, "Could not send OTP.", "验证码发送失败。"));
+    } else {
+      // New user — generate a local identity then let them set a password
+      await identity.generateFromEmail(normalized, `local:${normalized}`, false);
+      setSignupMode("set-password");
     }
   };
 
@@ -109,34 +64,10 @@ export default function Index() {
       return;
     }
     await savePassword(pendingEmail, password);
-    toast.success(copyFor(language, "Password saved. You can use it next time.", "密码已保存，下次可直接使用。"));
+    // Upgrade identity to verified now that they have a password
+    await identity.generateFromEmail(pendingEmail, `password:${pendingEmail}`, true);
+    toast.success(copyFor(language, "Account created. Welcome!", "账号已创建，欢迎使用！"));
     setSignupMode("idle");
-  };
-
-  const handleVerifyEmail = async (token: string) => {
-    if (!pendingEmail) return;
-    if (!token.trim()) {
-      toast.error(copyFor(language, "Enter the OTP code.", "请输入验证码。"));
-      return;
-    }
-
-    setSignupMode("email-verify");
-    try {
-      await privyAuth.verifyEmailCode(token.trim());
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : copyFor(language, "OTP verification failed.", "验证码验证失败。"));
-    }
-  };
-
-  const handleContactOnlyEmail = async () => {
-    if (!pendingEmail) return;
-    setSignupMode("email-contact");
-    try {
-      await identity.generateFromEmail(pendingEmail, `contact-only:${pendingEmail}`, false);
-      toast.success(copyFor(language, "Email contact saved. Limited identity created.", "邮箱联系方式已保存，已创建受限身份。"));
-    } finally {
-      setSignupMode("idle");
-    }
   };
 
   const handleLogout = () => {
@@ -187,12 +118,8 @@ export default function Index() {
           language={language}
           loading={identity.generating}
           mode={signupMode}
-          emailOtpReady={privyAuth.configured}
-          emailOtpStatus={privyAuth.emailOtpStatus}
           pendingEmail={pendingEmail}
           onEmailSignup={handleEmailSignup}
-          onVerifyEmail={handleVerifyEmail}
-          onContactOnlyEmail={handleContactOnlyEmail}
           onCancelEmail={() => setSignupMode("idle")}
           onPasswordLogin={handlePasswordLogin}
           onSetPassword={handleSetPassword}
@@ -234,12 +161,8 @@ function SignupPage({
   language,
   loading,
   mode,
-  emailOtpReady,
-  emailOtpStatus,
   pendingEmail,
   onEmailSignup,
-  onVerifyEmail,
-  onContactOnlyEmail,
   onCancelEmail,
   onPasswordLogin,
   onSetPassword,
@@ -247,23 +170,18 @@ function SignupPage({
 }: {
   language: "en" | "zh";
   loading: boolean;
-  mode: "idle" | "email-send" | "email-verify" | "email-contact" | "password-login" | "set-password";
-  emailOtpReady: boolean;
-  emailOtpStatus: string;
+  mode: "idle" | "password-login" | "set-password";
   pendingEmail: string;
   onEmailSignup: (email: string) => void;
-  onVerifyEmail: (token: string) => void;
-  onContactOnlyEmail: () => void;
   onCancelEmail: () => void;
   onPasswordLogin: (password: string) => void;
   onSetPassword: (password: string) => void;
   onSkipPassword: () => void;
 }) {
   const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
   const [showPwd, setShowPwd] = useState(false);
-  const busy = loading || mode === "email-send" || emailOtpStatus === "submitting-code";
+  const busy = loading;
 
   return (
     <main className="flex flex-1 flex-col items-center justify-center overflow-y-auto px-6 py-10">
@@ -291,78 +209,29 @@ function SignupPage({
                 {copyFor(language, "Continue with email", "使用邮箱继续")}
               </p>
               <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                {emailOtpReady
-                  ? copyFor(language, "Privy will send a one-time code to verify your email.", "Privy 会发送一次性验证码来验证邮箱。")
-                  : copyFor(language, "Privy is not configured yet. For now, email creates a limited contact identity.", "Privy 尚未配置。目前邮箱会创建受限联系方式身份。")}
+                {copyFor(language, "Your email is used as your identity. No verification email is sent.", "邮箱用于标识你的身份，不会发送验证邮件。")}
               </p>
             </div>
           </div>
 
-          {mode !== "email-verify" && (
+          {/* Email input — idle state */}
+          {mode === "idle" && (
             <div className="mt-4 space-y-3">
               <input
                 value={email}
-                onChange={(event) => setEmail(event.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && onEmailSignup(email)}
                 placeholder={copyFor(language, "Email address", "邮箱地址")}
                 type="email"
                 className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
               />
               <button
                 onClick={() => onEmailSignup(email)}
-                disabled={busy}
+                disabled={busy || !email.includes("@")}
                 className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-background py-3 text-sm font-bold text-foreground active:scale-[0.98] disabled:opacity-60"
               >
-                {mode === "email-send" || emailOtpStatus === "sending-code" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-                {emailOtpReady
-                  ? copyFor(language, "Send OTP code", "发送验证码")
-                  : copyFor(language, "Continue with email contact", "使用邮箱联系方式继续")}
-              </button>
-            </div>
-          )}
-
-          {mode === "email-verify" && (
-            <div className="mt-4 space-y-3">
-              <p className="text-xs text-muted-foreground">
-                {copyFor(language, `Code sent to ${pendingEmail}`, `验证码已发送至 ${pendingEmail}`)}
-              </p>
-              <input
-                value={otp}
-                onChange={(event) => setOtp(event.target.value)}
-                placeholder={copyFor(language, "One-time code", "一次性验证码")}
-                className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
-              />
-              <button
-                onClick={() => onVerifyEmail(otp)}
-                disabled={busy}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3 text-sm font-bold text-primary-foreground active:scale-[0.98] disabled:opacity-60"
-              >
-                {loading || emailOtpStatus === "submitting-code" ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                {copyFor(language, "Verify and enter", "验证并进入")}
-              </button>
-              <button onClick={onCancelEmail} className="w-full text-xs text-muted-foreground underline">
-                {copyFor(language, "Use another email", "使用其他邮箱")}
-              </button>
-            </div>
-          )}
-
-          {mode === "email-contact" && (
-            <div className="mt-4 rounded-2xl border border-sos-offline/30 bg-sos-offline/10 p-3">
-              <div className="flex items-start gap-2">
-                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-sos-offline" />
-                <p className="text-xs leading-5 text-muted-foreground">
-                  {copyFor(
-                    language,
-                    "Real OTP is not configured yet. This lets non-Web3 users enter with limited map trust until a Privy app ID is added.",
-                    "真实 OTP 尚未配置。这会让非 Web3 用户以受限地图可信度进入，直到添加 Privy App ID。"
-                  )}
-                </p>
-              </div>
-              <button
-                onClick={onContactOnlyEmail}
-                disabled={loading}
-                className="mt-3 w-full rounded-2xl bg-primary py-3 text-sm font-bold text-primary-foreground disabled:opacity-60"
-              >
-                {copyFor(language, "Enter with limited identity", "以受限身份进入")}
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+                {copyFor(language, "Continue", "继续")}
               </button>
             </div>
           )}
@@ -404,7 +273,7 @@ function SignupPage({
           )}
         </div>
 
-        {/* Set password — shown after first OTP success */}
+        {/* Set password — new user */}
         {mode === "set-password" && (
           <div className="mt-5 rounded-[1.75rem] border border-primary/30 bg-primary/5 p-4 text-left">
             <div className="flex items-start gap-3">
@@ -416,7 +285,7 @@ function SignupPage({
                   {copyFor(language, "Set a password", "设置密码")}
                 </p>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                  {copyFor(language, "Next time you can skip the OTP and sign in directly.", "下次可以跳过验证码，直接用密码登录。")}
+                  {copyFor(language, "You'll use this to sign in next time.", "下次直接用密码登录。")}
                 </p>
               </div>
             </div>
@@ -425,6 +294,7 @@ function SignupPage({
                 <input
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && password.length >= 6 && onSetPassword(password)}
                   placeholder={copyFor(language, "Choose a password (min. 6 chars)", "设置密码（至少6位）")}
                   type={showPwd ? "text" : "password"}
                   className="w-full rounded-2xl border border-border bg-background px-4 py-3 pr-11 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
@@ -438,10 +308,10 @@ function SignupPage({
               </div>
               <button
                 onClick={() => onSetPassword(password)}
-                disabled={password.length < 6}
+                disabled={password.length < 6 || busy}
                 className="w-full rounded-2xl bg-primary py-3 text-sm font-bold text-primary-foreground disabled:opacity-60"
               >
-                {copyFor(language, "Save password & enter", "保存密码并进入")}
+                {busy ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : copyFor(language, "Create account", "创建账号")}
               </button>
               <button onClick={onSkipPassword} className="w-full text-xs text-muted-foreground underline">
                 {copyFor(language, "Skip for now", "跳过")}
