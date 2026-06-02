@@ -475,8 +475,8 @@ function SosMessageCard({ language }: { language: AppLanguage }) {
           <p className="mt-1 text-xs leading-5 text-muted-foreground">
             {copyFor(
               language,
-              "Edit to match your situation. {位置} will be replaced with your Gaode map link.",
-              "根据你的情况修改。{位置} 会自动替换成高德地图定位链接。"
+              "Edit to match your situation. {位置} will be replaced with your GPS coordinates.",
+              "根据你的情况修改。{位置} 会自动替换成 GPS 坐标（可粘贴到任意地图 App）。"
             )}
           </p>
         </div>
