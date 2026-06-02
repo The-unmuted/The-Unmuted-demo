@@ -136,7 +136,6 @@ export default function SOSPage(props: SOSPageProps) {
         {flow.view === "home" && (
           <Pane key="home">
             <HomeView
-              onHelp={() => go({ view: "help:type" })}
               onAfterReport={props.onAfterReport}
               onUserSafe={() => setShowNGOSuggestion(true)}
               language={props.language}
@@ -286,7 +285,6 @@ function StepHeader({
 // ── Home view ──────────────────────────────────────────────────────────────────
 
 function HomeView({
-  onHelp,
   onAfterReport,
   onUserSafe,
   language,
@@ -294,7 +292,6 @@ function HomeView({
   voiceDeterrent,
   customAudioUrl,
 }: {
-  onHelp: () => void;
   onAfterReport: () => void;
   onUserSafe: () => void;
   language: AppLanguage;
@@ -320,39 +317,21 @@ function HomeView({
       {/* Pre-set SOS message template card */}
       <SosMessageCard language={language} />
 
-      <div className="grid w-full max-w-sm gap-3">
-        <button
-          onClick={onAfterReport}
-          className="rounded-2xl border border-border/80 bg-card/92 px-5 py-4 text-left shadow-[0_10px_28px_hsl(240_70%_4%/0.28)] active:scale-[0.98] transition-transform"
-        >
-          <p className="text-sm font-bold text-foreground">
-            {copyFor(language, "After Report", "事后存证")}
-          </p>
-          <p className="mt-1 text-xs leading-5 text-muted-foreground">
-            {copyFor(
-              language,
-              "Upload photo, video, or audio evidence later when you are safe.",
-              "在安全后上传照片、视频或录音补充记录。"
-            )}
-          </p>
-        </button>
-
-        <button
-          onClick={onHelp}
-          className="rounded-2xl border border-border/80 bg-card/78 px-5 py-4 text-left active:scale-[0.98] transition-transform"
-        >
-          <p className="text-sm font-bold text-foreground">
-            {copyFor(language, "Community Help", "社区陪伴支持")}
-          </p>
-          <p className="mt-1 text-xs leading-5 text-muted-foreground">
-            {copyFor(
-              language,
-              "Find emotional support, accompaniment, and practical advice nearby.",
-              "获取情绪支持、陪伴接应与信息建议。"
-            )}
-          </p>
-        </button>
-      </div>
+      <button
+        onClick={onAfterReport}
+        className="w-full max-w-sm rounded-2xl border border-border/80 bg-card/92 px-5 py-4 text-left shadow-[0_10px_28px_hsl(240_70%_4%/0.28)] active:scale-[0.98] transition-transform"
+      >
+        <p className="text-sm font-bold text-foreground">
+          {copyFor(language, "After Report", "事后存证")}
+        </p>
+        <p className="mt-1 text-xs leading-5 text-muted-foreground">
+          {copyFor(
+            language,
+            "Upload photo, video, or audio evidence later when you are safe.",
+            "在安全后上传照片、视频或录音补充记录。"
+          )}
+        </p>
+      </button>
     </div>
   );
 }
