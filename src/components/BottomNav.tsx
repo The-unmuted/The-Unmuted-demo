@@ -1,7 +1,7 @@
-import { Shield, Brain, Scale } from "lucide-react";
+import { Shield, Archive, Brain, Scale } from "lucide-react";
 import { AppLanguage, copyFor } from "@/lib/locale";
 
-export type MainTab = "sos" | "psych" | "legal";
+export type MainTab = "sos" | "evidence" | "psych" | "legal";
 
 interface BottomNavProps {
   activeTab: MainTab;
@@ -10,9 +10,10 @@ interface BottomNavProps {
 }
 
 const tabs = [
-  { id: "sos"   as const, english: "Help",        chinese: "求助",   icon: Shield },
-  { id: "psych" as const, english: "Mental Health", chinese: "心理援助", icon: Brain  },
-  { id: "legal" as const, english: "Legal Aid",   chinese: "法律援助", icon: Scale  },
+  { id: "sos"      as const, english: "Help",        chinese: "求助",   icon: Shield  },
+  { id: "evidence" as const, english: "Evidence",    chinese: "存证",   icon: Archive },
+  { id: "psych"    as const, english: "Mental Health", chinese: "心理援助", icon: Brain   },
+  { id: "legal"    as const, english: "Legal Aid",   chinese: "法律援助", icon: Scale   },
 ];
 
 export default function BottomNav({ activeTab, onTabChange, language }: BottomNavProps) {

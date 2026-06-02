@@ -19,7 +19,6 @@ const LOGO_SRC = "/the-unmuted-mark.png";
 
 export default function Index() {
   const [activeTab, setActiveTab] = useState<MainTab>("sos");
-  const [showAfterReport, setShowAfterReport] = useState(false);
   const { language, setLanguage } = useLocale();
   const identity = useZKPIdentity();
   const { isSilent, voiceDeterrent, customAudioUrl } = useSilentMode();
@@ -128,27 +127,24 @@ export default function Index() {
         <>
           {/* Main content scrolls above the bottom nav, which now participates in layout. */}
           <main className="flex min-h-0 flex-1 flex-col overflow-y-auto pb-4">
-            {showAfterReport ? (
-              <EvidencePage
-                language={language}
-                onExit={() => setShowAfterReport(false)}
-                onComplete={() => setShowAfterReport(false)}
-              />
-            ) : activeTab === "sos" && (
+            {activeTab === "sos" && (
               <SOSPage
                 isSilent={isSilent}
                 voiceDeterrent={voiceDeterrent}
                 customAudioUrl={customAudioUrl}
-                onAfterReport={() => setShowAfterReport(true)}
+                onAfterReport={() => setActiveTab("evidence")}
                 language={language}
               />
             )}
-            {!showAfterReport && activeTab === "psych" && <PsychPage language={language} />}
-            {!showAfterReport && activeTab === "legal" && <LegalPage language={language} />}
+            {activeTab === "evidence" && (
+              <EvidencePage language={language} />
+            )}
+            {activeTab === "psych" && <PsychPage language={language} />}
+            {activeTab === "legal" && <LegalPage language={language} />}
           </main>
 
           {/* Bottom nav */}
-          {!showAfterReport && <BottomNav activeTab={activeTab} onTabChange={setActiveTab} language={language} />}
+          <BottomNav activeTab={activeTab} onTabChange={setActiveTab} language={language} />
         </>
       )}
     </div>
