@@ -12,6 +12,7 @@ import {
   loadContacts,
   buildSmsUri,
   type EmergencyContact,
+  type LocationExtras,
 } from "@/hooks/useEmergencyContacts";
 import { loadSosTemplate } from "@/hooks/useSosMessage";
 
@@ -40,6 +41,7 @@ export default function SOSButton({
   const [extraContacts, setExtraContacts] = useState<EmergencyContact[]>([]);
   const [coords, setCoords] = useState<{ lat: number; lng: number }>({ lat: 0, lng: 0 });
   const [triggeredNote, setTriggeredNote] = useState<string>("");
+  const [triggeredExtras, setTriggeredExtras] = useState<LocationExtras | undefined>(undefined);
 
   const intervalRef = useRef<ReturnType<typeof setInterval>>();
   const startTimeRef = useRef<number>(0);
@@ -64,20 +66,40 @@ export default function SOSButton({
     }
 
     let lat = 0, lng = 0;
-    try {
-      const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
+    let accuracy: number | undefined;
+
+    // Get GPS + battery in parallel to minimise delay
+    const [posResult, battResult] = await Promise.allSettled([
+      new Promise<GeolocationPosition>((resolve, reject) =>
         navigator.geolocation.getCurrentPosition(resolve, reject, {
           enableHighAccuracy: true,
           timeout: 10000,
         })
-      );
-      lat = pos.coords.latitude;
-      lng = pos.coords.longitude;
-    } catch {
-      // fallback to 0,0
+      ),
+      // Battery API (Chrome/Android; silently ignored elsewhere)
+      (navigator as unknown as { getBattery?: () => Promise<{ level: number }> })
+        .getBattery?.() ?? Promise.reject(),
+    ]);
+
+    if (posResult.status === "fulfilled") {
+      lat = posResult.value.coords.latitude;
+      lng = posResult.value.coords.longitude;
+      accuracy = posResult.value.coords.accuracy ?? undefined;
     }
 
+    // Device status for rescuers
+    const battery =
+      battResult.status === "fulfilled"
+        ? Math.round(battResult.value.level * 100)
+        : undefined;
+    const network =
+      (navigator as unknown as { connection?: { effectiveType?: string } })
+        .connection?.effectiveType ?? undefined;
+
+    const extras: LocationExtras = { accuracy, battery, network };
+
     setCoords({ lat, lng });
+    setTriggeredExtras(extras);
 
     addSOSHistory({
       latitude: Math.round(lat * 1_000_000),
@@ -112,9 +134,9 @@ export default function SOSButton({
     // Read pre-set message template (also fresh from localStorage)
     const situationNote = loadSosTemplate();
 
-    // Open SMS for first contact immediately
+    // Open SMS for first contact immediately (with full location block)
     const [first, ...rest] = freshContacts;
-    const uri = buildSmsUri(first, lat, lng, situationNote);
+    const uri = buildSmsUri(first, lat, lng, situationNote, extras);
     window.location.href = uri;
 
     setTriggeredNote(situationNote);
@@ -164,6 +186,7 @@ export default function SOSButton({
     setProgress(0);
     setExtraContacts([]);
     setTriggeredNote("");
+    setTriggeredExtras(undefined);
     onUserSafe?.();
   };
 
@@ -289,7 +312,7 @@ export default function SOSButton({
             {extraContacts.map((c) => (
               <a
                 key={c.id}
-                href={buildSmsUri(c, coords.lat, coords.lng, triggeredNote)}
+                href={buildSmsUri(c, coords.lat, coords.lng, triggeredNote, triggeredExtras)}
                 className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-card py-3 text-sm font-semibold text-foreground active:scale-95 transition-transform"
               >
                 <PhoneCall className="h-4 w-4 text-primary" />
