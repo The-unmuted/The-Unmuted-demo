@@ -8,7 +8,7 @@ import { useState, useCallback } from "react";
 const STORAGE_KEY = "unmuted_sos_message";
 
 export const DEFAULT_TEMPLATE =
-  `我需要帮助，现在处境不安全。\nGPS坐标：{位置}\n请立即联系我，5分钟内无回应请代我报警。\nI need help and I am not safe. GPS: {位置}. Call me back. If no answer in 5 min, call police for me.`;
+  `我需要帮助，现在处境不安全。\n位置：\n{位置}\n请立即联系我，5分钟内无回应请代我报警。\nI need help and I am not safe.\nLocation:\n{位置}\nCall me back. If no answer in 5 min, call police for me.`;
 
 export function loadSosTemplate(): string {
   try {
