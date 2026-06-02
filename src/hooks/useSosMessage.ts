@@ -1,13 +1,14 @@
 /**
  * Pre-set SOS message template — stored in localStorage.
- * The placeholder {位置} is replaced with the actual Gaode map link at trigger time.
+ * The placeholder {位置} is replaced with GPS coordinates (decimal degrees) at trigger time.
+ * Recipients can paste the coordinates into any map app (Gaode, Baidu, Apple Maps, etc.)
  */
 import { useState, useCallback } from "react";
 
 const STORAGE_KEY = "unmuted_sos_message";
 
 export const DEFAULT_TEMPLATE =
-  `我需要帮助，现在处境不安全。\n位置：{位置}\n请立即联系我，5分钟内无回应请代我报警。\nI need help and I am not safe. Location: {位置}. Call me back. If no answer in 5 min, call police for me.`;
+  `我需要帮助，现在处境不安全。\nGPS坐标：{位置}\n请立即联系我，5分钟内无回应请代我报警。\nI need help and I am not safe. GPS: {位置}. Call me back. If no answer in 5 min, call police for me.`;
 
 export function loadSosTemplate(): string {
   try {

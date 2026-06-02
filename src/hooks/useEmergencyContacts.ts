@@ -29,30 +29,33 @@ function saveContacts(contacts: EmergencyContact[]): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(contacts));
 }
 
-/** 高德地图链接（经度,纬度）— 国内可直接访问 */
-export function buildMapLink(lat: number, lng: number): string {
-  if (lat === 0 && lng === 0) return "https://m.amap.com";
-  return `https://uri.amap.com/marker?position=${lng.toFixed(6)},${lat.toFixed(6)}&name=求救位置`;
+/**
+ * Returns a GPS coordinate string (decimal degrees).
+ * Universal format — recipient can paste into any map app (Gaode, Baidu, Apple Maps, etc.)
+ */
+export function buildLocationString(lat: number, lng: number): string {
+  if (lat === 0 && lng === 0) return "位置获取失败 / Location unavailable";
+  return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
 }
 
 /**
  * Build the SMS body from a template string.
- * The placeholder `{位置}` in the template is replaced with the Gaode map link.
+ * The placeholder `{位置}` in the template is replaced with GPS coordinates.
  * Falls back to a default bilingual message if no template provided.
  */
 export function buildSmsBody(lat: number, lng: number, template?: string): string {
-  const mapLink = buildMapLink(lat, lng);
+  const location = buildLocationString(lat, lng);
 
   if (template && template.trim()) {
-    return template.replace(/\{位置\}/g, mapLink);
+    return template.replace(/\{位置\}/g, location);
   }
 
   // Default fallback (no template set)
   return (
     `我需要帮助，现在处境不安全。\n` +
-    `位置：${mapLink}\n` +
+    `GPS坐标：${location}\n` +
     `请立即联系我，5分钟内无回应请代我报警。\n` +
-    `I need help and I am not safe. Location: ${mapLink}. Call me back. If no answer in 5 min, call police for me.`
+    `I need help and I am not safe. GPS: ${location}. Call me back. If no answer in 5 min, call police for me.`
   );
 }
 
