@@ -3,10 +3,9 @@ import { useZKPIdentity } from "@/hooks/useZKPIdentity";
 import { useSilentMode } from "@/hooks/useSilentMode";
 import SOSPage from "@/components/SOSPage";
 import BottomNav, { type MainTab } from "@/components/BottomNav";
-import MapPage from "@/components/MapPage";
 import EvidencePage from "@/components/EvidencePage";
-import CommunityPage from "@/components/CommunityPage";
-import NGOPage from "@/components/NGOPage";
+import PsychPage from "@/components/PsychPage";
+import LegalPage from "@/components/LegalPage";
 import { useLocale, copyFor } from "@/lib/locale";
 import { Eye, EyeOff, KeyRound, Loader2, Mail } from "lucide-react";
 import { toast } from "sonner";
@@ -144,9 +143,8 @@ export default function Index() {
                 language={language}
               />
             )}
-            {!showAfterReport && activeTab === "map" && <MapPage language={language} />}
-            {!showAfterReport && activeTab === "community" && <CommunityPage language={language} />}
-            {!showAfterReport && activeTab === "ngo" && <NGOPage language={language} />}
+            {!showAfterReport && activeTab === "psych" && <PsychPage language={language} />}
+            {!showAfterReport && activeTab === "legal" && <LegalPage language={language} />}
           </main>
 
           {/* Bottom nav */}
