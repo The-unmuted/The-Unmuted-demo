@@ -48,7 +48,6 @@ export interface SOSPageProps {
   isSilent:          boolean;
   voiceDeterrent:    boolean;
   customAudioUrl:    string | null;
-  onAfterReport:     () => void;
   language:          AppLanguage;
 }
 
@@ -136,7 +135,6 @@ export default function SOSPage(props: SOSPageProps) {
         {flow.view === "home" && (
           <Pane key="home">
             <HomeView
-              onAfterReport={props.onAfterReport}
               onUserSafe={() => setShowNGOSuggestion(true)}
               language={props.language}
               isSilent={props.isSilent}
@@ -285,14 +283,12 @@ function StepHeader({
 // ── Home view ──────────────────────────────────────────────────────────────────
 
 function HomeView({
-  onAfterReport,
   onUserSafe,
   language,
   isSilent,
   voiceDeterrent,
   customAudioUrl,
 }: {
-  onAfterReport: () => void;
   onUserSafe: () => void;
   language: AppLanguage;
   isSilent: boolean;
