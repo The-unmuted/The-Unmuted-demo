@@ -134,7 +134,6 @@ export default function Index() {
                 isSilent={isSilent}
                 voiceDeterrent={voiceDeterrent}
                 customAudioUrl={customAudioUrl}
-                onAfterReport={() => setActiveTab("evidence")}
                 language={language}
               />
             )}
