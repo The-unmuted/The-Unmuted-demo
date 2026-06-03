@@ -243,7 +243,7 @@ export default function LegalPage({ language }: LegalPageProps) {
       {/* Disclaimer */}
       <div className="rounded-2xl border border-border/60 bg-card/40 px-4 py-3 text-xs leading-5 text-muted-foreground pb-4">
         <span className="font-semibold text-foreground/60">
-          {copyFor(language, "Note", "提示")}
+          {copyFor(language, "Note · 提示", "提示")}
         </span>
         {"  "}
         {copyFor(
