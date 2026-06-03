@@ -317,21 +317,6 @@ function HomeView({
       {/* Pre-set SOS message template card */}
       <SosMessageCard language={language} />
 
-      <button
-        onClick={onAfterReport}
-        className="w-full max-w-sm rounded-2xl border border-border/80 bg-card/92 px-5 py-4 text-left shadow-[0_10px_28px_hsl(240_70%_4%/0.28)] active:scale-[0.98] transition-transform"
-      >
-        <p className="text-sm font-bold text-foreground">
-          {copyFor(language, "After Report", "事后存证")}
-        </p>
-        <p className="mt-1 text-xs leading-5 text-muted-foreground">
-          {copyFor(
-            language,
-            "Upload photo, video, or audio evidence later when you are safe.",
-            "在安全后上传照片、视频或录音补充记录。"
-          )}
-        </p>
-      </button>
     </div>
   );
 }
