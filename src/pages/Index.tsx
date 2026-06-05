@@ -79,7 +79,7 @@ export default function Index() {
     <div className="flex h-[100dvh] min-h-0 flex-col bg-background">
       {/* Top bar — sits below the iOS status bar (safe-area-inset-top handled by body) */}
       <header className="flex shrink-0 items-center justify-between border-b border-border/80 px-4 py-3">
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center gap-3">
           <img
             src={LOGO_SRC}
             alt=""
@@ -94,7 +94,7 @@ export default function Index() {
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1.5">
           <DonationWidget language={language} />
           <FeedbackWidget language={language} />
           {isSignedIn && (
@@ -106,9 +106,9 @@ export default function Index() {
           )}
           <button
             onClick={() => setLanguage(language === "en" ? "zh" : "en")}
-            className="inline-flex shrink-0 min-w-[3.75rem] items-center justify-center whitespace-nowrap rounded-full border border-border bg-card/90 px-3 py-2 text-[11px] font-semibold leading-none text-primary transition-colors hover:bg-accent"
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center whitespace-nowrap rounded-full border border-border bg-card/90 text-xs font-bold leading-none text-primary transition-colors hover:bg-accent"
           >
-            {language === "en" ? "中文" : "EN"}
+            {language === "en" ? "中" : "EN"}
           </button>
         </div>
       </header>

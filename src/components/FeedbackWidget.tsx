@@ -54,7 +54,7 @@ export default function FeedbackWidget({ language }: FeedbackWidgetProps) {
       <button
         onClick={() => setOpen(true)}
         aria-label="Feedback"
-        className="rounded-full border border-border bg-card/90 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary transition-colors hover:bg-accent"
+        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border bg-card/90 text-primary transition-colors hover:bg-accent"
       >
         <Mail className="h-3.5 w-3.5" />
       </button>
