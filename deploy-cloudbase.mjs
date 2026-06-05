@@ -82,6 +82,7 @@ async function uploadFile(fullPath, key) {
         Key: key,
         Body: fs.createReadStream(fullPath),
         ContentType: getContentType(key),
+        ContentDisposition: "inline",
         CacheControl: isHtml ? "no-cache, no-store, must-revalidate" : "public, max-age=31536000, immutable",
       },
       (err, data) => {
