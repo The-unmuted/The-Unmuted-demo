@@ -82,7 +82,7 @@ async function uploadFile(fullPath, key) {
         Key: key,
         Body: fs.createReadStream(fullPath),
         ContentType: getContentType(key),
-        ContentDisposition: "inline",
+        ContentDisposition: isHtml ? "inline" : undefined,
         CacheControl: isHtml ? "no-cache, no-store, must-revalidate" : "public, max-age=31536000, immutable",
       },
       (err, data) => {
@@ -103,17 +103,36 @@ async function headObject(key) {
 }
 
 async function verifyBucketAssets(keys) {
-  const missing = [];
-  for (const key of keys) {
+  let missing = keys.slice();
+
+  for (let attempt = 1; attempt <= 5 && missing.length > 0; attempt++) {
+    const nextMissing = [];
+    for (const key of missing) {
+      try {
+        await headObject(key);
+      } catch (error) {
+        nextMissing.push(`${key} (${error.message})`);
+      }
+    }
+
+    if (nextMissing.length === 0) return;
+
+    missing = nextMissing.map((entry) => entry.replace(/ \(.+$/, ""));
+    console.warn(`Asset verification attempt ${attempt} failed for ${missing.length} file(s)`);
+    if (attempt < 5) {
+      await new Promise((resolve) => setTimeout(resolve, attempt * 2000));
+    }
+  }
+
+  const finalMissing = [];
+  for (const key of missing) {
     try {
       await headObject(key);
     } catch (error) {
-      missing.push(`${key} (${error.message})`);
+      finalMissing.push(`${key} (${error.message})`);
     }
   }
-  if (missing.length > 0) {
-    throw new Error(`Bucket verification failed for assets: ${missing.join(", ")}`);
-  }
+  if (finalMissing.length > 0) throw new Error(`Bucket verification failed for assets: ${finalMissing.join(", ")}`);
 }
 
 async function main() {
