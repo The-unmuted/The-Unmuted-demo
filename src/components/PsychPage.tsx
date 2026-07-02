@@ -15,6 +15,8 @@ interface Hotline {
   name: string;
   nameEn: string;
   phone: string;
+  location: string;
+  locationEn: string;
   hours: string;
   hoursEn: string;
   coverage: string;
@@ -27,63 +29,59 @@ interface Hotline {
 const HOTLINES: Hotline[] = [
   {
     id: "h1",
-    name: "北京大学第六医院心理援助热线",
-    nameEn: "PKU-6 National Mental Health Hotline",
-    phone: "010-82951332",
+    name: "全国统一心理援助热线",
+    nameEn: "National Mental Health Hotline",
+    phone: "12356",
+    location: "全国统一接入",
+    locationEn: "Nationwide unified access",
     hours: "24小时",
     hoursEn: "24 / 7",
     coverage: "全国",
     coverageEn: "Nationwide",
-    description: "北京大学第六医院运营，全国可拨，提供免费心理疏导与危机干预",
-    descriptionEn: "Operated by Peking University 6th Hospital — free crisis intervention, nationwide",
+    description: "国家卫生健康委统一号码。2025年起全国推广，用于心理咨询、疏导与危机干预",
+    descriptionEn: "National Health Commission unified hotline for mental health consultation, support, and crisis intervention",
   },
   {
     id: "h2",
-    name: "全国心理援助热线（卫健委）",
-    nameEn: "National Health Commission Hotline",
-    phone: "400-161-9995",
+    name: "北京市心理援助热线",
+    nameEn: "Beijing Psychological Assistance Hotline",
+    phone: "010-82951332",
+    location: "北京回龙观医院 / 北京",
+    locationEn: "Beijing Huilongguan Hospital / Beijing",
     hours: "24小时",
     hoursEn: "24 / 7",
-    coverage: "全国",
-    coverageEn: "Nationwide",
-    description: "国家卫生健康委员会指定热线，免费，保密，24小时接听",
-    descriptionEn: "National Health Commission designated hotline — free, confidential, 24/7",
+    coverage: "北京",
+    coverageEn: "Beijing",
+    description: "由北京心理危机研究与干预中心、北京回龙观医院运营的官方心理援助热线",
+    descriptionEn: "Official hotline run by the Beijing Psychological Crisis Research and Intervention Center and Beijing Huilongguan Hospital",
   },
   {
     id: "h3",
-    name: "上海市心理援助热线",
+    name: "上海市心理热线",
     nameEn: "Shanghai Mental Health Hotline",
-    phone: "021-12320-5",
+    phone: "962525",
+    location: "上海市精神卫生中心 / 上海",
+    locationEn: "Shanghai Mental Health Center / Shanghai",
     hours: "24小时",
     hoursEn: "24 / 7",
     coverage: "上海",
     coverageEn: "Shanghai",
-    description: "上海市卫生热线12320心理援助分线，由专业心理咨询师接听",
-    descriptionEn: "Extension of Shanghai health hotline 12320, staffed by licensed counselors",
+    description: "上海市官方心理热线，7×24小时接听；自2025年起同步接入全国12356",
+    descriptionEn: "Official Shanghai hotline, staffed 24/7; connected to the national 12356 system since 2025",
   },
   {
     id: "h4",
     name: "广州心理援助热线",
     nameEn: "Guangzhou Mental Health Hotline",
-    phone: "020-12320-5",
+    phone: "020-81899120",
+    location: "广州市 / 广州",
+    locationEn: "Guangzhou / Guangzhou",
     hours: "24小时",
     hoursEn: "24 / 7",
     coverage: "广州",
     coverageEn: "Guangzhou",
-    description: "广州市卫生热线心理援助分线，免费保密",
-    descriptionEn: "Guangzhou health hotline mental health extension — free, confidential",
-  },
-  {
-    id: "h5",
-    name: "希望24热线",
-    nameEn: "Hope 24 Hotline",
-    phone: "400-161-9995",
-    hours: "24小时",
-    hoursEn: "24 / 7",
-    coverage: "全国",
-    coverageEn: "Nationwide",
-    description: "专注自杀预防与危机干预，由经培训志愿者接听，完全保密",
-    descriptionEn: "Suicide prevention and crisis intervention, trained volunteers, fully confidential",
+    description: "广州市官方心理援助热线，24小时免费；自2025年起与全国12356并轨运行",
+    descriptionEn: "Official Guangzhou hotline, free 24/7; merged with the national 12356 system in 2025",
   },
 ];
 
@@ -135,15 +133,21 @@ export default function PsychPage({ language }: PsychPageProps) {
                     <Clock className="h-3 w-3 shrink-0" />
                     <span>{copyFor(language, h.hoursEn, h.hours)}</span>
                   </div>
+                  <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                    <MapPin className="h-3 w-3 shrink-0" />
+                    <span>{copyFor(language, h.locationEn, h.location)}</span>
+                  </div>
                 </div>
               </div>
-              <a
-                href={`tel:${h.phone}`}
-                className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-primary/10 py-2.5 text-sm font-bold text-primary transition-transform active:scale-95"
-              >
-                <Phone className="h-4 w-4" />
-                {h.phone}
-              </a>
+              <div className="mt-3">
+                <a
+                  href={`tel:${h.phone}`}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary/10 py-2.5 text-sm font-bold text-primary transition-transform active:scale-95"
+                >
+                  <Phone className="h-4 w-4" />
+                  {h.phone}
+                </a>
+              </div>
             </div>
           ))}
         </div>

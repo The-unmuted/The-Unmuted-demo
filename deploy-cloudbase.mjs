@@ -20,6 +20,7 @@ const cos = new COS({ SecretId, SecretKey });
 const BUCKET = "45b6-static-theunmuted-v2-d2gyh0rux2a05de92-1434116173";
 const REGION = "ap-shanghai";
 const DIST_DIR = path.join(__dirname, "dist");
+const INDEX_HTML_PATH = path.join(DIST_DIR, "index.html");
 
 function getAllFiles(dir, base = "") {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -57,6 +58,20 @@ function getContentType(key) {
   return map[ext] || "application/octet-stream";
 }
 
+function extractBucketAssetKeys(html) {
+  const matches = html.matchAll(/(?:src|href)="\/([^"]+)"/g);
+  return [...new Set([...matches].map((match) => match[1]).filter(Boolean))];
+}
+
+function ensureLocalAssetFiles(indexHtml) {
+  const assetKeys = extractBucketAssetKeys(indexHtml);
+  const missing = assetKeys.filter((key) => !fs.existsSync(path.join(DIST_DIR, key)));
+  if (missing.length > 0) {
+    throw new Error(`index.html references missing local assets: ${missing.join(", ")}`);
+  }
+  return assetKeys;
+}
+
 async function uploadFile(fullPath, key) {
   const isHtml = key.endsWith(".html");
   return new Promise((resolve, reject) => {
@@ -67,6 +82,7 @@ async function uploadFile(fullPath, key) {
         Key: key,
         Body: fs.createReadStream(fullPath),
         ContentType: getContentType(key),
+        ContentDisposition: isHtml ? "inline" : undefined,
         CacheControl: isHtml ? "no-cache, no-store, must-revalidate" : "public, max-age=31536000, immutable",
       },
       (err, data) => {
@@ -77,7 +93,53 @@ async function uploadFile(fullPath, key) {
   });
 }
 
+async function headObject(key) {
+  return new Promise((resolve, reject) => {
+    cos.headObject({ Bucket: BUCKET, Region: REGION, Key: key }, (err, data) => {
+      if (err) reject(err);
+      else resolve(data);
+    });
+  });
+}
+
+async function verifyBucketAssets(keys) {
+  let missing = keys.slice();
+
+  for (let attempt = 1; attempt <= 5 && missing.length > 0; attempt++) {
+    const nextMissing = [];
+    for (const key of missing) {
+      try {
+        await headObject(key);
+      } catch (error) {
+        nextMissing.push(`${key} (${error.message})`);
+      }
+    }
+
+    if (nextMissing.length === 0) return;
+
+    missing = nextMissing.map((entry) => entry.replace(/ \(.+$/, ""));
+    console.warn(`Asset verification attempt ${attempt} failed for ${missing.length} file(s)`);
+    if (attempt < 5) {
+      await new Promise((resolve) => setTimeout(resolve, attempt * 2000));
+    }
+  }
+
+  const finalMissing = [];
+  for (const key of missing) {
+    try {
+      await headObject(key);
+    } catch (error) {
+      finalMissing.push(`${key} (${error.message})`);
+    }
+  }
+  if (finalMissing.length > 0) throw new Error(`Bucket verification failed for assets: ${finalMissing.join(", ")}`);
+}
+
 async function main() {
+  const indexHtml = fs.readFileSync(INDEX_HTML_PATH, "utf8");
+  const referencedAssets = ensureLocalAssetFiles(indexHtml);
+  console.log(`index.html references ${referencedAssets.length} asset files`);
+
   const files = getAllFiles(DIST_DIR);
   console.log(`Found ${files.length} files to upload`);
 
@@ -113,6 +175,14 @@ async function main() {
     await Promise.all(batch.map((f) => uploadWithRetry(f)));
   }
 
+  if (failed.length > 0) {
+    console.error(`Failed before publishing HTML: ${failed.join(", ")}`);
+    process.exit(1);
+  }
+
+  console.log("\nVerifying referenced assets in bucket before publishing HTML...");
+  await verifyBucketAssets(referencedAssets);
+
   // Upload HTML files last (one at a time)
   for (const f of htmlFiles) {
     await uploadWithRetry(f);
@@ -126,19 +196,20 @@ async function main() {
 
   // Verify index.html
   console.log("\nVerifying index.html content in bucket...");
-  await new Promise((resolve, reject) => {
+  const bucketAssets = await new Promise((resolve, reject) => {
     cos.getObject(
       { Bucket: BUCKET, Region: REGION, Key: "index.html" },
       (err, data) => {
         if (err) return reject(err);
         const html = data.Body.toString();
-        const hasAmap = html.includes("amap") || html.includes("assets/");
-        console.log(`index.html in bucket — Has amap ref or assets: ${hasAmap}`);
+        const referencedKeys = extractBucketAssetKeys(html);
+        console.log(`index.html in bucket — Referenced assets: ${referencedKeys.length}`);
         console.log(`index.html size: ${html.length} bytes`);
-        resolve();
+        resolve(referencedKeys);
       }
     );
   });
+  await verifyBucketAssets(bucketAssets);
 }
 
 main().catch((e) => {
