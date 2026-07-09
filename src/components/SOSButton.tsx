@@ -11,6 +11,7 @@ import {
   useEmergencyContacts,
   loadContacts,
   buildSmsUri,
+  buildGroupSmsUri,
   type EmergencyContact,
   type LocationExtras,
 } from "@/hooks/useEmergencyContacts";
@@ -158,18 +159,23 @@ export default function SOSButton({
     // Read pre-set message template (also fresh from localStorage)
     const situationNote = loadSosTemplate();
 
-    // Open SMS for first contact immediately (with full location block)
-    const [first, ...rest] = freshContacts;
-    const uri = buildSmsUri(first, lat, lng, situationNote, extras);
+    // Open one SMS compose addressed to ALL contacts at once
+    const uri = buildGroupSmsUri(freshContacts, lat, lng, situationNote, extras);
     window.location.href = uri;
 
     setTriggeredNote(situationNote);
-    setExtraContacts(rest);
+    // Keep individual links as fallback — group sms: recipients can be
+    // silently dropped by some Android SMS apps
+    setExtraContacts(freshContacts.length > 1 ? freshContacts : []);
     setState("success");
 
     if (!isSilent) {
       toast.success(
-        copyFor(language, `SMS opening for ${first.name}`, `正在向 ${first.name} 发送短信`)
+        copyFor(
+          language,
+          `SMS opening for ${freshContacts.length} contact${freshContacts.length > 1 ? "s" : ""}`,
+          `正在向 ${freshContacts.length} 位联系人发送短信`
+        )
       );
     }
   }, [contacts, isSilent, voiceDeterrent, customAudioUrl, language]);
@@ -355,7 +361,11 @@ export default function SOSButton({
             className="mt-4 w-full max-w-xs space-y-2"
           >
             <p className="text-center text-xs text-muted-foreground">
-              {copyFor(language, "Also alert:", "同时通知：")}
+              {copyFor(
+                language,
+                "If anyone is missing from the group SMS, send individually:",
+                "如群发短信有遗漏，可单独发送："
+              )}
             </p>
             {extraContacts.map((c) => (
               <a
