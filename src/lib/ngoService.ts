@@ -2,12 +2,7 @@
  * NGO directory service — Supabase queries for ngo_organizations and ngo_applications.
  */
 
-import { createClient } from "@supabase/supabase-js";
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
-const db =
-  supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
+import { supabase as db } from "./supabaseClient";
 
 export type ServiceType = "legal" | "psych" | "shelter" | "hotline";
 

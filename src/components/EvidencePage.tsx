@@ -4,16 +4,24 @@ import {
   Camera, Video, Mic, MicOff, CheckCircle2, Loader2,
   ArrowLeft, Clock, Download, ExternalLink, ShieldCheck, Copy, ChevronDown,
   ClipboardList, HeartPulse, MapPin, ShieldAlert,
-  Lock, ChevronRight, Eye, EyeOff, Archive, Share2, AlertTriangle,
+  Lock, ChevronRight, Eye, EyeOff, Archive, Share2, AlertTriangle, Scale,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useEvidenceVault } from "@/hooks/useEvidenceVault";
-import { shortenHash } from "@/hooks/useWallet"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { formatBytes, buildKeyBundle } from "@/lib/evidenceCrypto";
-import { CHAINMAKER_NETWORK } from "@/lib/chainmakerService";
+import { shortenHash } from "@/hooks/useWallet";
+import { formatBytes } from "@/lib/evidenceCrypto";
 import { AppLanguage, copyFor } from "@/lib/locale";
 import { hasReportNotes, saveEncryptedReportNotes, type EncryptedReportNoteRecord } from "@/lib/reportNotesVault";
 import { hasPassword, verifyPassword } from "@/lib/userCredentials";
+import { unlockWithPassword } from "@/lib/keyVaultService";
+import type { EvidenceRecord } from "@/lib/evidenceVaultService";
+import { buildCourtPackage, courtPackageName } from "@/lib/evidenceExport";
+import {
+  gradeForFile,
+  getCaptureLocation,
+  getDeviceInfo,
+  type CaptureLocation,
+} from "@/lib/captureMetadata";
 
 // ── helpers ────────────────────────────────────────────────────────────────────
 
@@ -35,8 +43,16 @@ function copyToClipboard(text: string, language: AppLanguage) {
   navigator.clipboard.writeText(text).then(() => toast.success(copyFor(language, "Copied", "已复制")));
 }
 
-function formatTs(ts: number, language: AppLanguage) {
-  return new Date(ts * 1000).toLocaleString(language === "zh" ? "zh-CN" : "en-US");
+function GradeBadge({ grade, language }: { grade: 1 | 2; language: AppLanguage }) {
+  return grade === 1 ? (
+    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-400">
+      {copyFor(language, "Captured live", "现场取证")}
+    </span>
+  ) : (
+    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+      {copyFor(language, "Added later", "事后导入")}
+    </span>
+  );
 }
 
 type SituationId = "memory-gap" | "assault" | "stalking" | "unsafe-date";
@@ -335,7 +351,6 @@ function ReceiptCard({
   result,
   selectedSituation,
   reportNotes,
-  onDownloadKey,
   onReset,
   onComplete,
   language,
@@ -343,7 +358,6 @@ function ReceiptCard({
   result: NonNullable<ReturnType<typeof useEvidenceVault>["result"]>;
   selectedSituation: SituationId;
   reportNotes: ReportNotes;
-  onDownloadKey: () => void;
   onReset: () => void;
   onComplete?: () => void;
   language: AppLanguage;
@@ -366,17 +380,43 @@ function ReceiptCard({
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sos-success/15">
           <ShieldCheck className="h-5 w-5 text-sos-success" />
         </div>
-        <div>
-          <p className="font-bold text-foreground">{copyFor(language, "Evidence Secured", "存证完成")}</p>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="font-bold text-foreground">{copyFor(language, "Evidence Secured", "存证完成")}</p>
+            <GradeBadge grade={record.captureGrade} language={language} />
+          </div>
           <p className="text-xs text-muted-foreground">
-            {getMimeIcon(record.mimeType)} {getMimeLabel(record.mimeType, language)} ·{" "}
-            {formatBytes(record.originalSize)} · {new Date(record.createdAt).toLocaleString(language === "zh" ? "zh-CN" : "en-US")}
+            {getMimeIcon(record.meta.mimeType)} {getMimeLabel(record.meta.mimeType, language)} ·{" "}
+            {formatBytes(record.meta.originalSize)} ·{" "}
+            {new Date(record.clientTime).toLocaleString(language === "zh" ? "zh-CN" : "en-US")}
           </p>
         </div>
       </div>
 
-      {/* Key save section — most important action */}
-      <KeySaveSection result={result} onDownloadKey={onDownloadKey} language={language} />
+      {/* Where it lives now — plain-language reassurance */}
+      {record.syncStatus === "synced" ? (
+        <div className="flex items-start gap-2 rounded-xl bg-sos-success/8 border border-sos-success/25 px-3 py-2.5">
+          <Lock className="mt-0.5 h-4 w-4 shrink-0 text-sos-success" />
+          <p className="text-[11px] leading-4 text-muted-foreground">
+            {copyFor(
+              language,
+              "Locked and saved to your cloud vault. Even if this phone is lost, sign in with your email and password to get it back. Nobody else can open it — not even us.",
+              "已加密保存到你的云端保险柜。就算手机丢了，用邮箱和密码登录就能找回。除了你，任何人都打不开——包括我们。"
+            )}
+          </p>
+        </div>
+      ) : (
+        <div className="flex items-start gap-2 rounded-xl bg-amber-500/8 border border-amber-500/20 px-3 py-2.5">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+          <p className="text-[11px] leading-4 text-amber-400/90">
+            {copyFor(
+              language,
+              "No internet right now — saved on this phone, locked. It will upload to your cloud vault automatically when you're back online.",
+              "现在没有网络——已加密存在这台手机上。等有网络时会自动上传到你的云端保险柜。"
+            )}
+          </p>
+        </div>
+      )}
 
       {noteRows.length > 0 && (
         <div className="rounded-2xl border border-primary/18 bg-primary/8 p-3">
@@ -438,78 +478,55 @@ function ReceiptCard({
               language={language}
             />
 
-            {/* Cloud storage */}
-            <div className="space-y-1">
-              <div className="flex items-center gap-1.5">
-                <p className="text-xs font-semibold text-muted-foreground">
-                  {copyFor(language, "Encrypted file storage", "加密文件云端存储")}
-                </p>
-                {record.arweaveUrl ? (
-                  <span className="rounded px-1 py-0.5 text-[10px] font-bold bg-sos-success/15 text-sos-success">
-                    {copyFor(language, "Cloud ✓", "云端 ✓")}
-                  </span>
-                ) : (
-                  <span className="rounded px-1 py-0.5 text-[10px] font-bold bg-amber-500/15 text-amber-400">
-                    {copyFor(language, "Local only", "仅本地")}
-                  </span>
-                )}
-              </div>
-              {record.arweaveUrl ? (
-                <div className="flex items-center gap-2 rounded-lg bg-card px-3 py-2">
-                  <p className="flex-1 font-mono text-xs text-foreground truncate">
-                    {record.arweaveTxId.slice(0, 12)}…{record.arweaveTxId.slice(-6)}
-                  </p>
-                  <button onClick={() => copyToClipboard(record.arweaveTxId, language)}>
-                    <Copy className="h-3.5 w-3.5 text-muted-foreground" />
-                  </button>
-                  <a href={record.arweaveUrl} target="_blank" rel="noopener noreferrer" className="text-primary">
-                    <ExternalLink className="h-3.5 w-3.5" />
-                  </a>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 rounded-lg bg-amber-500/8 border border-amber-500/20 px-3 py-2">
-                  <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-400" />
-                  <p className="text-xs text-amber-400/90">
-                    {copyFor(language,
-                      "Stored on this device only. Clear browser data = file lost.",
-                      "仅存储在本设备。清除浏览器数据后文件将丢失。"
-                    )}
-                  </p>
-                </div>
-              )}
-            </div>
+            {/* Original file fingerprint (needed for future timestamp anchoring) */}
+            <HashRow
+              label={copyFor(language, "Original file fingerprint (SHA-256)", "原始文件指纹 (SHA-256)")}
+              value={record.originalHash}
+              short={shortenHash("0x" + record.originalHash.slice(0, 8) + record.originalHash.slice(-8))}
+              language={language}
+            />
 
-            {/* Chain TX — ChainMaker */}
-            <div className="space-y-1">
-              <div className="flex items-center gap-1.5">
+            {/* Capture-instant metadata (from sealed meta — only this device can read it) */}
+            {record.meta.capturedAt && (
+              <div className="space-y-1">
                 <p className="text-xs font-semibold text-muted-foreground">
-                  {copyFor(language, "长安链 ChainMaker Timestamp", "长安链时间戳 / ChainMaker Timestamp")}
+                  {copyFor(language, "Captured at", "拍摄时间")}
                 </p>
-                {record.isSimulated && (
-                  <span className="rounded px-1 py-0.5 text-[10px] font-bold bg-sos-offline/15 text-sos-offline">
-                    {copyFor(language, "Demo", "演示模式")}
-                  </span>
-                )}
+                <div className="rounded-lg bg-card px-3 py-2">
+                  <p className="text-xs text-foreground">
+                    {new Date(record.meta.capturedAt).toLocaleString(language === "zh" ? "zh-CN" : "en-US")}
+                  </p>
+                </div>
               </div>
+            )}
+            {record.meta.location && (
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-muted-foreground">
+                  {copyFor(language, "Captured at location (only you can see this)", "拍摄地点（只有你能看到）")}
+                </p>
+                <div className="flex items-center gap-2 rounded-lg bg-card px-3 py-2">
+                  <MapPin className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <p className="text-xs text-foreground">
+                    {record.meta.location.lat.toFixed(6)}, {record.meta.location.lng.toFixed(6)}
+                    {record.meta.location.accuracy != null ? ` (±${record.meta.location.accuracy}m)` : ""}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Record ID */}
+            <div className="space-y-1">
+              <p className="text-xs font-semibold text-muted-foreground">
+                {copyFor(language, "Record ID", "记录编号")}
+              </p>
               <div className="flex items-center gap-2 rounded-lg bg-card px-3 py-2">
                 <p className="flex-1 font-mono text-xs text-foreground truncate">
-                  {record.chainTxHash.slice(0, 8)}…{record.chainTxHash.slice(-6)}
+                  {record.txId.slice(0, 12)}…{record.txId.slice(-6)}
                 </p>
-                <button onClick={() => copyToClipboard(record.chainTxHash, language)}>
+                <button onClick={() => copyToClipboard(record.txId, language)}>
                   <Copy className="h-3.5 w-3.5 text-muted-foreground" />
                 </button>
-                <a
-                  href={record.chainExplorerUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary"
-                >
-                  <ExternalLink className="h-3.5 w-3.5" />
-                </a>
               </div>
-              <p className="text-[11px] text-muted-foreground">
-                {copyFor(language, "Block time", "区块时间")}：{formatTs(record.blockTimestamp, language)}
-              </p>
             </div>
           </motion.div>
         )}
@@ -547,147 +564,6 @@ function HashRow({
           <Copy className="h-3.5 w-3.5 text-muted-foreground" />
         </button>
       </div>
-    </div>
-  );
-}
-
-// ── Key save section ───────────────────────────────────────────────────────────
-/**
- * 密钥保存区块
- *
- * AES-256 密钥是解密证据的唯一凭证，丢失后无法恢复文件。
- * 提供三种保存方式，适配手机用户：
- *   1. 分享（Web Share API）— 发给自己的备忘录 / 微信文件助手
- *   2. 复制文本          — 粘贴到任意备忘录
- *   3. 下载 JSON 文件    — 传统下载（桌面端友好）
- */
-function KeySaveSection({
-  result,
-  onDownloadKey,
-  language,
-}: {
-  result: NonNullable<ReturnType<typeof useEvidenceVault>["result"]>;
-  onDownloadKey: () => void;
-  language: AppLanguage;
-}) {
-  const [copied, setCopied] = useState(false);
-
-  // 将密钥序列化为 Base64 字符串，方便复制粘贴
-  const keyText = (() => {
-    try {
-      const bundle = buildKeyBundle(result.encryptionResult);
-      return btoa(unescape(encodeURIComponent(JSON.stringify(bundle))));
-    } catch {
-      return "";
-    }
-  })();
-
-  const handleCopyText = async () => {
-    try {
-      await navigator.clipboard.writeText(keyText);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // clipboard not available
-    }
-  };
-
-  const handleShare = async () => {
-    const ts = new Date(result.record.createdAt).toISOString().slice(0, 10);
-    const fileName = `the-unmuted-key-${ts}.json`;
-    try {
-      const bundle = buildKeyBundle(result.encryptionResult);
-      const file = new File(
-        [JSON.stringify(bundle, null, 2)],
-        fileName,
-        { type: "application/json" }
-      );
-      if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title: "非默存证密钥" });
-        return;
-      }
-    } catch {
-      // share failed or cancelled — fall through to text share
-    }
-    // 降级：分享纯文本
-    try {
-      await navigator.share({
-        title: "非默存证密钥",
-        text: keyText,
-      });
-    } catch {
-      // user cancelled or not supported
-    }
-  };
-
-  const canShare = typeof navigator.share === "function";
-
-  return (
-    <div className="space-y-2">
-      {/* 警告标题 */}
-      <div className="flex items-start gap-2 rounded-xl bg-primary/8 border border-primary/20 px-3 py-2.5">
-        <Lock className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-        <div>
-          <p className="text-xs font-bold text-foreground">
-            {copyFor(language, "Save your decryption key", "保存解密密钥")}
-          </p>
-          <p className="mt-0.5 text-[11px] leading-4 text-muted-foreground">
-            {copyFor(
-              language,
-              "This key is the ONLY way to recover your evidence. If you lose it, the file cannot be opened by anyone.",
-              "这是恢复证据的唯一凭证。丢失后任何人（包括我们）都无法恢复原始文件。"
-            )}
-          </p>
-        </div>
-      </div>
-
-      {/* 三个保存按钮 */}
-      <div className="grid grid-cols-3 gap-2">
-        {/* 1. 分享 */}
-        {canShare && (
-          <button
-            onClick={handleShare}
-            className="flex flex-col items-center gap-1 rounded-xl border border-border bg-card py-3 text-xs font-semibold text-foreground active:scale-95 transition-transform"
-          >
-            <Share2 className="h-5 w-5 text-primary" />
-            {copyFor(language, "Share", "分享")}
-          </button>
-        )}
-        {/* 2. 复制文本 */}
-        <button
-          onClick={handleCopyText}
-          className={`flex flex-col items-center gap-1 rounded-xl border py-3 text-xs font-semibold active:scale-95 transition-all ${
-            copied
-              ? "border-sos-success/40 bg-sos-success/10 text-sos-success"
-              : "border-border bg-card text-foreground"
-          } ${!canShare ? "col-span-1" : ""}`}
-        >
-          {copied ? (
-            <CheckCircle2 className="h-5 w-5 text-sos-success" />
-          ) : (
-            <Copy className="h-5 w-5 text-primary" />
-          )}
-          {copied
-            ? copyFor(language, "Copied!", "已复制")
-            : copyFor(language, "Copy text", "复制文本")}
-        </button>
-        {/* 3. 下载文件 */}
-        <button
-          onClick={onDownloadKey}
-          className="flex flex-col items-center gap-1 rounded-xl border border-border bg-card py-3 text-xs font-semibold text-foreground active:scale-95 transition-transform"
-        >
-          <Download className="h-5 w-5 text-primary" />
-          {copyFor(language, "Download", "下载文件")}
-        </button>
-      </div>
-
-      <p className="text-center text-[11px] text-muted-foreground leading-4">
-        {copyFor(
-          language,
-          'Tip: "Share" sends to WeChat / Notes / Files app directly.',
-          '提示：点「分享」可直接发到微信文件助手或备忘录。'
-        )}
-      </p>
     </div>
   );
 }
@@ -750,12 +626,14 @@ export default function EvidencePage({
   const vault = useEvidenceVault(language);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   // Navigation within the evidence section
   const [view, setView] = useState<EvidenceView>("hub");
 
   // Capture sub-view state
   const [showHowItWorks, setShowHowItWorks] = useState(false);
+  const [showLegalTips, setShowLegalTips] = useState(false);
 
   // Notes sub-view state
   const [selectedSituation, setSelectedSituation] = useState<SituationId>("memory-gap");
@@ -771,10 +649,17 @@ export default function EvidencePage({
 
   // Check if user has a password when records view opens
   useEffect(() => {
-    if (view === "records" && userEmail && hasPwd === null) {
+    if (view !== "records") return;
+    if (vault.canUseVault) {
+      // Production: vault password always exists; also refresh the cloud index
+      setHasPwd(true);
+      void vault.refreshHistory();
+      void vault.syncNow();
+    } else if (userEmail && hasPwd === null) {
       hasPassword(userEmail).then(setHasPwd);
     }
-  }, [view, userEmail, hasPwd]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view, userEmail, hasPwd, vault.canUseVault]);
 
   const goHub = useCallback(() => {
     if (vault.step !== "idle") vault.reset();
@@ -796,26 +681,79 @@ export default function EvidencePage({
     setReportNotes(emptyReportNotes());
   }, []);
 
+  // Pre-warm a location fix when the capture view opens (same pattern as the
+  // SOS button) so coordinates are ready at the capture instant. Best-effort:
+  // denial or timeout never blocks saving evidence.
+  const captureLocationRef = useRef<CaptureLocation | null>(null);
+  useEffect(() => {
+    if (view !== "capture") return;
+    let cancelled = false;
+    void getCaptureLocation().then((loc) => {
+      if (!cancelled && loc) captureLocationRef.current = loc;
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [view]);
+
   const audioRecorder = useAudioRecorder(
-    (blob) => vault.processFile(blob, "audio/webm"),
+    (blob) =>
+      // In-app recording is always grade 1 — the hash is computed the moment
+      // the recording stops (processFile encrypts + hashes immediately).
+      vault.processFile(blob, "audio/webm", {
+        captureGrade: 1,
+        capturedAt: new Date().toISOString(),
+        location: captureLocationRef.current ?? undefined,
+        deviceInfo: getDeviceInfo(),
+      }),
     language
   );
 
-  const handleFileInput = useCallback(
+  // Camera inputs (`capture="environment"`): trust the file's own timestamp —
+  // a just-taken photo is grade 1, a gallery pick shows its age honestly.
+  const handleCameraInput = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
-      vault.processFile(file, file.type);
+      const grade = gradeForFile(file);
+      vault.processFile(file, file.type, {
+        fileName: file.name,
+        captureGrade: grade,
+        capturedAt: grade === 1 ? new Date(file.lastModified).toISOString() : undefined,
+        location: grade === 1 ? captureLocationRef.current ?? undefined : undefined,
+        deviceInfo: getDeviceInfo(),
+      });
+      e.target.value = "";
+    },
+    [vault]
+  );
+
+  // Explicit import path: always grade 2 (事后导入), no location attached —
+  // where the user is when importing is not where the evidence happened.
+  const handleImportInput = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      vault.processFile(file, file.type, {
+        fileName: file.name,
+        captureGrade: 2,
+        deviceInfo: getDeviceInfo(),
+      });
       e.target.value = "";
     },
     [vault]
   );
 
   const handleUnlock = async () => {
-    if (!userEmail) { setIsUnlocked(true); return; }
     setUnlocking(true);
     setUnlockError(false);
-    const ok = await verifyPassword(userEmail, unlockPwd);
+    // Production: re-verify against the vault's password box (privacy gate for
+    // a phone grabbed while unlocked). Legacy fallback: local bcrypt check.
+    const ok = vault.canUseVault && vault.userId
+      ? (await unlockWithPassword(vault.userId, unlockPwd)) !== null
+      : userEmail
+        ? await verifyPassword(userEmail, unlockPwd)
+        : true;
     setUnlocking(false);
     if (ok) {
       setIsUnlocked(true);
@@ -824,10 +762,7 @@ export default function EvidencePage({
     }
   };
 
-  const isProcessing =
-    vault.step === "encrypting" ||
-    vault.step === "uploading" ||
-    vault.step === "anchoring";
+  const isProcessing = vault.step === "encrypting" || vault.step === "saving";
 
   // ── Hub ──────────────────────────────────────────────────────────────────────
   if (view === "hub") {
@@ -866,8 +801,8 @@ export default function EvidencePage({
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
                   {copyFor(
                     language,
-                    "Photo, video, or audio — encrypted & timestamped on-chain.",
-                    "拍照、录像或录音，自动加密并写入区块链存证。"
+                    "Photo, video, or audio — encrypted on the spot, with time and place recorded.",
+                    "拍照、录像或录音，当场加密，并记下时间和地点。"
                   )}
                 </p>
               </div>
@@ -952,11 +887,18 @@ export default function EvidencePage({
         </div>
 
         {vault.step === "idle" && (
-          <HowItWorksDisclosure
-            open={showHowItWorks}
-            onToggle={() => setShowHowItWorks((c) => !c)}
-            language={language}
-          />
+          <div className="space-y-2">
+            <HowItWorksDisclosure
+              open={showHowItWorks}
+              onToggle={() => setShowHowItWorks((c) => !c)}
+              language={language}
+            />
+            <LegalTipsDisclosure
+              open={showLegalTips}
+              onToggle={() => setShowLegalTips((c) => !c)}
+              language={language}
+            />
+          </div>
         )}
 
         <AnimatePresence mode="wait">
@@ -999,8 +941,39 @@ export default function EvidencePage({
                 }
                 onClick={audioRecorder.recording ? audioRecorder.stop : audioRecorder.start}
               />
-              <input ref={photoInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileInput} />
-              <input ref={videoInputRef} type="file" accept="video/*" capture="environment" className="hidden" onChange={handleFileInput} />
+              <input ref={photoInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleCameraInput} />
+              <input ref={videoInputRef} type="file" accept="video/*" capture="environment" className="hidden" onChange={handleCameraInput} />
+
+              {/* Import pre-existing files — honestly graded as 事后导入 */}
+              <button
+                onClick={() => importInputRef.current?.click()}
+                className="col-span-3 rounded-2xl border border-dashed border-border bg-card/60 px-4 py-3 text-left active:scale-[0.98] transition-transform"
+              >
+                <div className="flex items-center gap-3">
+                  <Download className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-foreground">
+                      {copyFor(language, "Import an existing photo, recording or file", "导入已有的照片、录音或文件")}
+                    </p>
+                    <p className="mt-0.5 text-[11px] leading-4 text-muted-foreground">
+                      {copyFor(
+                        language,
+                        "Imported records are honestly labeled \"added later\" — captured-live records carry more weight.",
+                        "导入的记录会如实标注\"事后导入\"——当场拍摄的记录更有分量。"
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </button>
+              <input ref={importInputRef} type="file" accept="image/*,video/*,audio/*,.pdf,.txt" className="hidden" onChange={handleImportInput} />
+
+              <p className="col-span-3 text-center text-[11px] leading-4 text-muted-foreground">
+                {copyFor(
+                  language,
+                  "Capture time and location are saved with the file and locked together. Only you can see them.",
+                  "拍摄时间和所在位置会和文件一起加密保存，只有你自己能看到。"
+                )}
+              </p>
             </motion.div>
           )}
 
@@ -1012,19 +985,14 @@ export default function EvidencePage({
                 {copyFor(language, "Processing...", "正在处理...")}
               </p>
               <StepRow
-                label={copyFor(language, "AES-256-GCM Local encryption", "AES-256-GCM 本地加密")}
-                sublabel={copyFor(language, "Done on your device. Data never leaves unencrypted.", "在设备端完成，数据不离开本机")}
+                label={copyFor(language, "Locking the file (AES-256 encryption)", "锁上文件（AES-256 加密）")}
+                sublabel={copyFor(language, "Done on your phone. Nothing leaves unencrypted.", "在你的手机上完成，未加密的内容不会离开本机")}
                 status={vault.steps.encrypting}
               />
               <StepRow
-                label={copyFor(language, "Upload to Arweave permanent storage", "上传至 Arweave 永久存储")}
-                sublabel={copyFor(language, "Only encrypted originals are stored.", "加密原件，任何人无法解读内容")}
-                status={vault.steps.uploading}
-              />
-              <StepRow
-                label={copyFor(language, "ChainMaker (长安链) timestamp", "长安链时间戳")}
-                sublabel={copyFor(language, "Hash anchored on ChainMaker judicial alliance chain.", "哈希写入长安链（司法联盟链），不可篡改")}
-                status={vault.steps.anchoring}
+                label={copyFor(language, "Saving to your cloud vault", "存入你的云端保险柜")}
+                sublabel={copyFor(language, "Only the locked file is stored. No one can open it but you.", "只保存加密后的文件，除了你没有人能打开")}
+                status={vault.steps.saving}
               />
             </motion.div>
           )}
@@ -1035,7 +1003,6 @@ export default function EvidencePage({
                 result={vault.result}
                 selectedSituation={selectedSituation}
                 reportNotes={reportNotes}
-                onDownloadKey={vault.downloadKey}
                 onReset={resetReport}
                 onComplete={onComplete ? finishReport : undefined}
                 language={language}
@@ -1168,15 +1135,30 @@ export default function EvidencePage({
             </div>
           )}
         </div>
-      ) : vault.history.length === 0 ? (
-        <div className="rounded-2xl border border-border/60 bg-card/50 p-6 text-center">
-          <ShieldCheck className="mx-auto mb-2 h-8 w-8 text-primary/40" />
-          <p className="text-sm text-muted-foreground">
-            {copyFor(language, "No evidence records yet.", "暂无存证记录。")}
-          </p>
-        </div>
       ) : (
-        <VaultHistory records={vault.history} language={language} />
+        <>
+          {vault.history.length === 0 && vault.legacyHistory.length === 0 ? (
+            <div className="rounded-2xl border border-border/60 bg-card/50 p-6 text-center">
+              <ShieldCheck className="mx-auto mb-2 h-8 w-8 text-primary/40" />
+              <p className="text-sm text-muted-foreground">
+                {copyFor(language, "No evidence records yet.", "暂无存证记录。")}
+              </p>
+            </div>
+          ) : (
+            <>
+              {vault.history.length > 0 && (
+                <CloudVaultHistory
+                  records={vault.history}
+                  onOpen={vault.openFile}
+                  language={language}
+                />
+              )}
+              {vault.legacyHistory.length > 0 && (
+                <LegacyVaultHistory records={vault.legacyHistory} language={language} />
+              )}
+            </>
+          )}
+        </>
       )}
     </div>
   );
@@ -1397,18 +1379,18 @@ function HowItWorksDisclosure({
   const items = [
     [
       "🔒",
-      copyFor(language, "AES-256 encryption", "AES-256 加密"),
-      copyFor(language, "Files are encrypted locally. Only you hold the key.", "文件在设备本地加密，密钥仅你持有"),
+      copyFor(language, "Encrypted on your device", "当场加密"),
+      copyFor(language, "Files are encrypted on your device before anything is uploaded. Only you hold the key.", "文件先在你的设备上加密再上传，钥匙只在你手里"),
     ],
     [
-      "🌐",
-      copyFor(language, "Arweave storage", "Arweave 存储"),
-      copyFor(language, "Encrypted originals are permanently stored on a decentralized network.", "加密原件永久存储于去中心化网络"),
+      "☁️",
+      copyFor(language, "Private cloud vault", "云端保险柜"),
+      copyFor(language, "Encrypted files go into your private vault — the cloud only ever sees sealed content.", "加密后的文件存入你的私人保险柜，云端只能看到加密后的内容"),
     ],
     [
-      "⛓",
-      copyFor(language, "ChainMaker (长安链) timestamp", "长安链时间戳"),
-      copyFor(language, "Hashes are anchored on ChainMaker judicial alliance chain.", "哈希写入长安链（司法联盟链），不可篡改"),
+      "🕒",
+      copyFor(language, "Fingerprint & time, fixed at capture", "指纹与时间当场固定"),
+      copyFor(language, "The file's fingerprint and time are fixed the moment you capture — any later change is detectable. Trusted timestamping is being integrated.", "取证瞬间记下文件指纹和时间，此后任何改动都能被发现；可信时间戳服务接入中"),
     ],
   ];
 
@@ -1450,7 +1432,233 @@ function HowItWorksDisclosure({
   );
 }
 
-function VaultHistory({
+function LegalTipsDisclosure({
+  open,
+  onToggle,
+  language,
+}: {
+  open: boolean;
+  onToggle: () => void;
+  language: AppLanguage;
+}) {
+  const items: Array<[string, string, string]> = [
+    [
+      "🚔",
+      copyFor(language, "Police records are strongest", "报警记录最有力"),
+      copyFor(
+        language,
+        "Police reports and dispatch records are among the strongest evidence in court. For sexual assault, report promptly and get a forensic exam — avoid washing yourself or the clothing involved first. For domestic violence, also ask for a written warning (告诫书). Call the police when it is safe to do so.",
+        "报警回执与出警记录是法院最认可的证据之一。遭遇性侵害的，尽快报警并接受人身检查最关键，报警前尽量不要洗澡或清洗衣物；属于家庭暴力的，还可要求公安出具告诫书。在安全的情况下尽量报警。"
+      ),
+    ],
+    [
+      "📷",
+      copyFor(language, "Injury photos", "伤情拍摄"),
+      copyFor(
+        language,
+        "Photograph injuries with your face and the wound in the same frame, from several angles. Seek medical care promptly and keep all records — a forensic injury assessment carries the most weight.",
+        "拍摄伤情时让面部与伤处同框，多角度拍摄。尽快就医并保留病历，伤情鉴定的证明力最强。"
+      ),
+    ],
+    [
+      "💬",
+      copyFor(language, "Chat records", "聊天记录"),
+      copyFor(
+        language,
+        "Screenshots should include the other party's name/avatar and full context. Never delete the original conversation on your phone — courts may ask to verify it.",
+        "截图需包含对方昵称/头像和完整上下文。不要删除手机里的原始对话，法院可能需要核对原始载体。"
+      ),
+    ],
+    [
+      "🎙",
+      copyFor(language, "Audio & video", "录音录像"),
+      copyFor(
+        language,
+        "When recording, try to capture the date, place and who is present. Recordings made to protect your own rights are generally admissible.",
+        "录制时尽量说明或体现时间、地点和在场人。为维护自身权益的录音一般可作为证据。"
+      ),
+    ],
+    [
+      "🤝",
+      copyFor(language, "Other evidence", "其他证据"),
+      copyFor(
+        language,
+        "Witness statements, and help records from neighborhood committees, the Women's Federation (妇联) or hospitals also count as evidence.",
+        "证人证言，以及居委会、妇联、医院的求助与接访记录同样可以作为证据。"
+      ),
+    ],
+  ];
+
+  return (
+    <div className="space-y-2">
+      <button
+        onClick={onToggle}
+        aria-expanded={open}
+        className="inline-flex min-h-0 items-center gap-1.5 rounded-full border border-border bg-card/60 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+      >
+        {copyFor(language, "What counts as evidence?", "哪些能作为证据？")}
+        <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.18 }}
+            className="overflow-hidden"
+          >
+            <div className="rounded-xl border border-border bg-card/50 px-4 py-3 space-y-2.5">
+              {items.map(([icon, title, desc]) => (
+                <div key={title} className="flex items-start gap-2.5 text-xs leading-5">
+                  <span>{icon}</span>
+                  <div>
+                    <span className="font-semibold text-foreground">{title}</span>
+                    <span className="text-muted-foreground"> — {desc}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function CloudVaultHistory({
+  records,
+  onOpen,
+  language,
+}: {
+  records: EvidenceRecord[];
+  onOpen: (record: EvidenceRecord) => Promise<Blob | null>;
+  language: AppLanguage;
+}) {
+  const [openingTx, setOpeningTx] = useState<string | null>(null);
+  const [exportingTx, setExportingTx] = useState<string | null>(null);
+
+  const handleExport = async (record: EvidenceRecord) => {
+    setExportingTx(record.txId);
+    try {
+      const blob = await onOpen(record);
+      if (!blob) {
+        toast.error(
+          copyFor(language, "Could not open this file right now.", "暂时无法打开这个文件，请稍后再试。")
+        );
+        return;
+      }
+      const pkg = await buildCourtPackage(record, blob);
+      const url = URL.createObjectURL(pkg);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = courtPackageName(record);
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success(
+        copyFor(
+          language,
+          "Court package saved: original file + description + how to verify. The encrypted copy stays in your vault.",
+          "举证包已保存：原件 + 证据说明 + 校验方法。加密原件仍留在你的保险柜里。"
+        )
+      );
+    } finally {
+      setExportingTx(null);
+    }
+  };
+
+  const handleOpen = async (record: EvidenceRecord) => {
+    setOpeningTx(record.txId);
+    const blob = await onOpen(record);
+    setOpeningTx(null);
+    if (!blob) {
+      toast.error(
+        copyFor(language, "Could not open this file right now.", "暂时无法打开这个文件，请稍后再试。")
+      );
+      return;
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download =
+      record.meta.fileName ||
+      `evidence-${record.clientTime.slice(0, 10)}.${(record.meta.mimeType.split("/")[1] ?? "bin").split(";")[0]}`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(
+      copyFor(
+        language,
+        "File unlocked and saved to this device. Delete it after use if this phone isn't safe.",
+        "文件已解锁并保存到本机。如果这台手机不安全，用完后记得删除。"
+      )
+    );
+  };
+
+  return (
+    <div className="space-y-2">
+      <h3 className="text-sm font-bold text-foreground">
+        {copyFor(language, "Cloud Vault", "云端保险柜")}
+      </h3>
+      {records.map((r) => (
+        <div key={r.txId} className="rounded-xl border border-border bg-card p-3 space-y-1.5">
+          <div className="flex items-center gap-2">
+            <span className="text-base">{getMimeIcon(r.meta.mimeType)}</span>
+            <span className="text-xs font-medium text-foreground">
+              {getMimeLabel(r.meta.mimeType, language)} · {formatBytes(r.meta.originalSize)}
+            </span>
+            <span className="ml-auto" />
+            <GradeBadge grade={r.captureGrade} language={language} />
+            <span
+              className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                r.syncStatus === "synced"
+                  ? "bg-sos-success/15 text-sos-success"
+                  : "bg-amber-500/15 text-amber-400"
+              }`}
+            >
+              {r.syncStatus === "synced"
+                ? copyFor(language, "In cloud vault ✓", "已进保险柜 ✓")
+                : copyFor(language, "Waiting to upload", "等待上传")}
+            </span>
+          </div>
+          <p className="font-mono text-[11px] text-muted-foreground">
+            SHA-256: {r.encryptedHash.slice(0, 16)}…
+          </p>
+          <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+            <Clock className="h-3 w-3 shrink-0" />
+            <span>{new Date(r.clientTime).toLocaleString(language === "zh" ? "zh-CN" : "en-US")}</span>
+            <button
+              onClick={() => handleExport(r)}
+              disabled={exportingTx === r.txId || openingTx === r.txId}
+              className="ml-auto flex items-center gap-1 text-primary disabled:opacity-60"
+            >
+              {exportingTx === r.txId ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <Scale className="h-3 w-3" />
+              )}
+              {copyFor(language, "Court package", "导出举证包")}
+            </button>
+            <button
+              onClick={() => handleOpen(r)}
+              disabled={openingTx === r.txId || exportingTx === r.txId}
+              className="flex items-center gap-1 text-primary disabled:opacity-60"
+            >
+              {openingTx === r.txId ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <Download className="h-3 w-3" />
+              )}
+              {copyFor(language, "Unlock & save", "解锁查看")}
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function LegacyVaultHistory({
   records,
   language,
 }: {
@@ -1460,7 +1668,7 @@ function VaultHistory({
   return (
     <div className="space-y-2">
       <h3 className="text-sm font-bold text-foreground">
-        {copyFor(language, "Evidence History", "存证记录")}
+        {copyFor(language, "Older records (need your saved key file)", "旧版记录（需要你当时保存的密钥文件）")}
       </h3>
       {records.slice(0, 10).map((r) => (
         <div key={r.id} className="rounded-xl border border-border bg-card p-3 space-y-1.5">
@@ -1476,7 +1684,7 @@ function VaultHistory({
                   : "bg-sos-success/15 text-sos-success"
               }`}
             >
-              {r.isSimulated ? copyFor(language, "Demo", "演示") : copyFor(language, "On-chain", "已上链")}
+              {r.isSimulated ? copyFor(language, "Demo", "演示") : copyFor(language, "Test chain (legacy)", "测试链（旧版）")}
             </span>
           </div>
           <p className="font-mono text-[11px] text-muted-foreground">
@@ -1502,38 +1710,4 @@ function VaultHistory({
   );
 }
 
-function SOSHistory({ language }: { language: AppLanguage }) {
-  const history = loadSOSHistory();
-  if (history.length === 0) return null;
-
-  return (
-    <div className="space-y-2">
-      <h3 className="text-sm font-bold text-foreground">
-        {copyFor(language, "SOS History", "SOS 记录")}
-      </h3>
-      {history.slice(0, 5).map((rec, i) => (
-        <div key={i} className="rounded-xl border border-border bg-card p-3 space-y-1">
-          <div className="flex items-center gap-2">
-            <span className={`text-xs font-semibold ${rec.status === "success" ? "text-sos-success" : "text-sos-offline"}`}>
-              {rec.status === "success"
-                ? copyFor(language, "✓ On-chain", "✓ 已上链")
-                : copyFor(language, "⚠ Saved locally", "⚠ 本地存储")}
-            </span>
-            <span className="ml-auto text-[11px] text-muted-foreground">{formatTs(rec.timestamp, language)}</span>
-          </div>
-          {rec.txHash && (
-            <a
-              href={`https://testnet.snowtrace.io/tx/${rec.txHash}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-mono text-xs text-primary underline"
-            >
-              TX: {shortenHash(rec.txHash)}
-            </a>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
 

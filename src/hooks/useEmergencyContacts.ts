@@ -46,7 +46,8 @@ function saveContacts(contacts: EmergencyContact[]): void {
 // Algorithm: public domain, widely used in China mapping libraries.
 
 const GCJ_A  = 6378245.0;
-const GCJ_EE = 0.00669342162296594323;
+// Same double as the canonical 0.00669342162296594323, trimmed to representable digits
+const GCJ_EE = 0.006693421622965943;
 
 function _gcjTransformLat(x: number, y: number): number {
   let r = -100 + 2 * x + 3 * y + 0.2 * y * y + 0.1 * x * y + 0.2 * Math.sqrt(Math.abs(x));
@@ -65,7 +66,7 @@ function _gcjTransformLng(x: number, y: number): number {
 }
 
 /** Convert WGS-84 GPS coordinates to GCJ-02 (required for Gaode map URLs). */
-function wgs84ToGcj02(lat: number, lng: number): { lat: number; lng: number } {
+export function wgs84ToGcj02(lat: number, lng: number): { lat: number; lng: number } {
   // Outside mainland China — no offset needed
   if (lng < 72.004 || lng > 137.8347 || lat < 0.8293 || lat > 55.8271) {
     return { lat, lng };
@@ -149,10 +150,34 @@ export function buildSmsUri(
   return `sms:${contact.phone}?body=${body}`;
 }
 
+/**
+ * Build a single sms: URI addressed to ALL contacts at once.
+ * Recipient separator differs by platform: iOS expects ",", Android ";".
+ */
+export function buildGroupSmsUri(
+  contacts: EmergencyContact[],
+  lat: number,
+  lng: number,
+  template?: string,
+  extras?: LocationExtras
+): string {
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const separator = isIOS ? "," : ";";
+  const recipients = contacts
+    .slice(0, MAX_EMERGENCY_CONTACTS)
+    .map((c) => c.phone)
+    .join(separator);
+  const body = encodeURIComponent(buildSmsBody(lat, lng, template, extras));
+  return `sms:${recipients}?body=${body}`;
+}
+
+export const MAX_EMERGENCY_CONTACTS = 2;
+
 export function useEmergencyContacts() {
   const [contacts, setContacts] = useState<EmergencyContact[]>(() => loadContacts());
 
-  const addContact = useCallback((name: string, phone: string): EmergencyContact => {
+  const addContact = useCallback((name: string, phone: string): EmergencyContact | null => {
+    if (loadContacts().length >= MAX_EMERGENCY_CONTACTS) return null;
     const contact: EmergencyContact = {
       id: crypto.randomUUID(),
       name: name.trim(),

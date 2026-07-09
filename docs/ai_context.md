@@ -1,0 +1,140 @@
+# AI Context — The Unmuted (非默)
+
+_This file captures the current project state for AI assistants. Update before ending each work session._
+
+_Last updated: 2026-07-09_
+
+---
+
+## What This Project Is
+
+A bilingual (EN/ZH) mobile-first safety app for survivors of gender-based harm — domestic violence, sexual assault, stalking/harassment and other侵害 (D-021: never frame copy as DV-only) — built for mainland China compliance. Primary concern is survivor safety and privacy — personal data (emergency contacts) stays on-device; evidence is encrypted client-side so the server only ever sees ciphertext.
+
+Core mission (all evidence work is judged against this): 帮助用户加密存储私密信息，并在未来有需要的时候能够作为有效证据进行举证。
+
+Live: https://the-unmuted.vercel.app/
+
+---
+
+## Current State
+
+**Active branch:** `feature/feedback-login` (production-track Phase 1+2+3 work, uncommitted as of 2026-07-08; commit pending user confirmation)
+**Status:** **Phases 1, 2, 3 and 4a+4b are complete (4b: 2026-07-09)**; Phases 1–3 browser-verified on a clean production build. Phase 1+2: OTP login (6-digit) → cloud key-vault password unlock → capture → encrypt → private-bucket save (现场取证 badge, 已进保险柜) → password re-verify → decrypt/export with exact SHA-256 match against the sealed original hash. Phase 3 (D-020): 导出举证包 button → plain ZIP (decrypted original + self-contained bilingual 举证说明.html with hashes, certutil/shasum verification instructions, 3 scenario guides) — extracted-file hash verified against both the HTML-stated fingerprint and the record. Phase 4a (honest copy) and 4b (P2P chat/Gun.js removal, 2026-07-09) done; 4c (72h delete cooling-off) and 4d (login/feedback polish) remain. Test suite: 23/23 vitest, tsc + eslint clean.
+
+**Deployments (both live, still running pre-Phase-1 build):**
+- Vercel (overseas): https://the-unmuted.vercel.app/
+- Tencent CloudBase (mainland China): https://theunmuted-v2-d2gyh0rux2a05de92-1434116173.tcloudbaseapp.com
+
+**Repo topology:** two GitHub repos, unified 2026-07-02 onto one `main` lineage.
+- `origin` = The-unmuted/The-Unmuted-demo (no CI secrets)
+- `v2` = The-unmuted/The-Unmuted-v2 (has TENCENT_SECRET_ID/KEY + VITE_* secrets → CloudBase deploys run here)
+- Push `main` to **both** remotes to keep them in sync; only the v2 push triggers a working CloudBase deploy.
+
+**What works now (verified 2026-07-07: tsc clean, eslint 0 errors, 14/14 vitest passing; login → evidence hub → capture view browser-verified via local fallback):**
+- Login flow renders and handles errors correctly (full OTP path untestable until Supabase restored)
+- SOS flow (5s hold → group SMS with GCJ-02 Gaode link) — user-validated, do not touch
+- Evidence pipeline: encrypt → private bucket + encrypted cloud index → in-app decrypt/export, with offline pending queue
+- Capture view: 拍照/录像/录音 + 导入已有文件 entry, capture-instant metadata (time / GCJ-02 location / device) sealed into meta, 现场取证/事后导入 badges (D-019)
+- Legacy evidence records readable (read-only, need user's old key file)
+- NGO directory (Supabase or hardcoded fallback)
+- Fixed 2026-07-07: `useEvidenceVault` TDZ crash that broke EvidencePage on mount (Phase-1 regression, caught in browser)
+- 举证 court export (2026-07-08, D-020): `src/lib/evidenceExport.ts` + 导出举证包 button on each cloud record — plain ZIP with decrypted original + bilingual verification/guidance HTML; verifiable with certutil/shasum, no app dependency
+
+---
+
+## Supabase state (unblocked 2026-07-08)
+
+Restored from pause; migration `0001_key_vault_and_evidence.sql` applied; Magic Link template uses `{{ .Token }}`; Email OTP length set to 6. Full E2E passed 2026-07-08.
+
+Remaining before real users:
+1. **Custom SMTP** — built-in SMTP is rate-limited (~4 emails/hour).
+2. **`portraits` bucket is public** (origin unknown) — review/remove.
+
+---
+
+## Auth & Evidence Architecture (D-017 / D-018 — read docs/decisions.md before changing)
+
+Two layers:
+- **Account layer** = Supabase email OTP. Server-enforced, resettable. Persistent session per device.
+- **Data layer** = login password + 12-char paper recovery code. Each wraps the same master key (PBKDF2-SHA256 310k → KEK → AES-GCM). Password is **never sent to any server** — it only derives the KEK client-side. Losing both password and recovery code = permanent data loss (by design; server cannot decrypt).
+- Master key lives **only in memory** → every page load starts locked; records view re-verifies the password even when unlocked.
+- Per-file AES-256-GCM keys are wrapped by the master key (`sealJson`) and stored in `evidence_records.wrapped_file_key`. All metadata is sealed too — cloud sees only ciphertext + hashes + timestamps.
+
+Key files: `src/lib/keyVault.ts` (pure crypto), `src/lib/keyVaultService.ts` (Supabase-backed vault ops + session master key), `src/lib/authService.ts` (OTP), `src/lib/evidenceVaultService.ts` (storage + index + pending queue), `src/hooks/useEvidenceVault.ts` (UI pipeline), `src/components/LoginFlow.tsx`, `src/components/EvidencePage.tsx`.
+
+---
+
+## Known Issues
+
+### Security / Production Gaps
+1. **ChainMaker API key exposed in browser** — `VITE_CHAINMAKER_API_KEY` still browser-bundled. Legacy path only now; retire or proxy before production (Phase 4).
+2. ~~Gun.js chat is not E2E~~ — resolved 2026-07-09 (Phase 4b): all P2P chat / support-network / 预警地图 code deleted, `gun` dependency removed. SOSPage now contains only the validated SOS button + contacts + message template.
+
+### Technical
+4. ~~`MapPage.tsx` orphaned~~ — deleted 2026-07-09 (Phase 4b) along with useGeoAlert; `geoAlert.ts` lib kept (SOSButton imports it).
+5. **`programs/the_unmuted_program/`** — Solana dead code from v1.0.
+6. **Test coverage thin** — 23 unit tests (keyVault, captureMetadata grading, evidenceExport); no tests for evidenceVaultService, locale, or E2E (Playwright configured, no test files).
+7. **SOS broadcast not wired to `useOfflineBuffer`** — evidence upload queue is done; SOS path still isn't.
+
+### UX
+8. **SMS SOS on desktop** — degraded experience (opens default mail/message client).
+9. **Login flow error messaging + feedback widget polish** — Phase 4 item.
+
+---
+
+## Active Goals (as of 2026-07-06)
+
+1. ~~Phase 1: accounts + key hierarchy + secure storage~~ ✅ E2E accepted 2026-07-08
+2. ~~Phase 2 — 取证~~ ✅ E2E accepted 2026-07-08 (capture metadata + D-019 grading)
+3. ~~Phase 3 — 举证~~ ✅ complete 2026-07-08 (D-020: one-tap court package, browser-verified hash round-trip)
+4. Phase 4 — honest cleanup: retire simulated anchoring copy, 72h delete cooling-off, remove P2P chat code, login/feedback polish ← **current**
+5. Gated on company entity: TSA anchoring (+ backfill), Tencent Cloud migration (D-016), phone OTP (D-012)
+
+---
+
+## Environment Variables Required
+
+| Variable | Required | Purpose |
+|----------|----------|---------|
+| `VITE_SUPABASE_URL` | **Yes (production track)** | Auth OTP, key vault, evidence storage + index, NGO directory, feedback. |
+| `VITE_SUPABASE_ANON_KEY` | **Yes (production track)** | Required with Supabase URL. |
+| `VITE_PRIVY_APP_ID` | No | Legacy optional Privy OTP. Superseded by Supabase auth. |
+| `VITE_CHAINMAKER_API_KEY` | No | Legacy path only. Without it, deterministic simulation runs. |
+| `VITE_CHAINMAKER_ENDPOINT` | No | Custom ChainMaker BaaS endpoint. |
+| `TENCENT_SECRET_ID` / `KEY` | CI only | CloudBase deployment (v2 repo GitHub Secrets only). |
+
+---
+
+## Key Architectural Constraints
+
+- **No server-side personal data** — emergency contacts, passwords stay on-device. The evidence cloud vault stores **ciphertext only**; this complies with the rule's intent (server subpoena/breach reveals nothing).
+- **Password never leaves the device** — it derives the KEK; only wrapped keys go to the cloud.
+- **China-first deployment** — CloudBase mirror required; Gaode maps; `curl --noproxy '*'` needed on the dev machine for China endpoints.
+- **No wallet features, no chat feature, max 2 emergency contacts.**
+- **Plain-language copy** — 保险柜/钥匙, never 哈希/密钥/助记词 in user-facing text; all copy via `copyFor()`.
+- **Never overclaim security** (Aspire News lesson) — new-pipeline copy says hashes are locally fixed, timestamp service 接入中.
+- **Recovery code shown exactly once** — never stored anywhere except the user's paper.
+
+---
+
+## Files to Read Before Major Changes
+
+| File | Why |
+|------|-----|
+| `src/pages/Index.tsx` | Unlock gating + tab routing; changes affect the whole app |
+| `src/lib/keyVault.ts` / `keyVaultService.ts` | D-017 key hierarchy — do not change without reading D-017 附录 Q1–Q9 |
+| `src/lib/evidenceVaultService.ts` | Storage, index, pending queue, integrity check |
+| `src/hooks/useEvidenceVault.ts` | Evidence UI pipeline |
+| `src/components/LoginFlow.tsx` | OTP + password/recovery-code unlock UX |
+| `src/components/SOSPage.tsx` | SOS flow — user-validated, don't touch location logic |
+| `src/lib/locale.tsx` | All new copy needs `copyFor()` |
+| `docs/decisions.md` | D-012–D-018: why things are built this way |
+
+---
+
+## Unresolved Problems
+
+- **Timestamp anchoring** — no trusted timestamp until company entity exists (TSA API needs one). Schema keeps original hash + dual timestamps so old records can be retroactively anchored (补锚定).
+- **Production SMS delivery** — `sms:` URI unreliable on some Android; server-side SMS API gated on entity + SMS signature filing.
+- **NGO admin approval workflow** — `ngo_applications` has no admin UI.
+- **Supabase → Tencent migration path (D-016)** — planned at launch; service layer kept thin to ease the swap.

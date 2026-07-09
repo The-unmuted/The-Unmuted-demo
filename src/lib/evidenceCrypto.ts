@@ -70,6 +70,23 @@ export async function encryptFile(
   };
 }
 
+/** Decrypt an encrypted evidence blob back to the original file */
+export async function decryptFile(
+  encryptedBlob: Blob,
+  keyJwk: JsonWebKey,
+  ivHex: string,
+  mimeType: string
+): Promise<Blob> {
+  const key = await crypto.subtle.importKey('jwk', keyJwk, { name: 'AES-GCM' }, false, ['decrypt']);
+  const iv = new Uint8Array(ivHex.match(/.{2}/g)!.map(h => parseInt(h, 16)));
+  const plaintext = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    await encryptedBlob.arrayBuffer()
+  );
+  return new Blob([plaintext], { type: mimeType });
+}
+
 /** Build a downloadable JSON key bundle the user must keep safe */
 export function buildKeyBundle(result: EncryptionResult): KeyBundle {
   return {

@@ -1,128 +1,160 @@
-import { useState, useRef, useCallback } from 'react';
-import { encryptFile, buildKeyBundle, downloadKeyBundle, type EncryptionResult } from '@/lib/evidenceCrypto';
-import { uploadToArweave, type ArweaveUploadResult } from '@/lib/arweaveService';
-import { anchorOnChain, type AnchorResult } from '@/lib/chainmakerService';
-import { addVaultRecord, loadVaultRecords, type VaultRecord } from '@/lib/localStorage';
+/**
+ * Evidence pipeline hook (production track, D-016/D-017).
+ *
+ * Encrypt on device → ciphertext to the private cloud vault, record into the
+ * encrypted cloud index. No key files for the user to babysit: per-file keys
+ * are wrapped by the session master key (password / paper recovery code).
+ *
+ * Legacy demo records (localStorage + user-held JSON key bundles) remain
+ * readable via `legacyHistory` but nothing new is written to that path.
+ */
+
+import { useState, useEffect, useCallback } from 'react';
+import { encryptFile, type EncryptionResult } from '@/lib/evidenceCrypto';
+import {
+  saveEvidence,
+  listEvidence,
+  openEvidenceFile,
+  syncPendingEvidence,
+  type EvidenceRecord,
+  type SaveEvidenceOptions,
+} from '@/lib/evidenceVaultService';
+import { getSessionMasterKey } from '@/lib/keyVaultService';
+import { getCurrentUser } from '@/lib/authService';
+import { loadVaultRecords, type VaultRecord } from '@/lib/localStorage';
 import { AppLanguage, copyFor } from '@/lib/locale';
 
-export type VaultStep = 'idle' | 'encrypting' | 'uploading' | 'anchoring' | 'done' | 'error';
+export type VaultStep = 'idle' | 'encrypting' | 'saving' | 'done' | 'error';
 
 export interface VaultStepStatus {
   encrypting: 'pending' | 'running' | 'done' | 'error';
-  uploading:  'pending' | 'running' | 'done' | 'error';
-  anchoring:  'pending' | 'running' | 'done' | 'error';
+  saving: 'pending' | 'running' | 'done' | 'error';
 }
 
 export interface VaultResult {
-  record: VaultRecord;
+  record: EvidenceRecord;
   encryptionResult: EncryptionResult;
 }
 
 export function useEvidenceVault(language: AppLanguage = 'en') {
   const [step, setStep] = useState<VaultStep>('idle');
-  const [steps, setSteps] = useState<VaultStepStatus>({
-    encrypting: 'pending',
-    uploading:  'pending',
-    anchoring:  'pending',
-  });
+  const [steps, setSteps] = useState<VaultStepStatus>({ encrypting: 'pending', saving: 'pending' });
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<VaultResult | null>(null);
-  const [history, setHistory] = useState<VaultRecord[]>(() => loadVaultRecords());
-  const latestResult = useRef<EncryptionResult | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [history, setHistory] = useState<EvidenceRecord[]>([]);
+  const [legacyHistory] = useState<VaultRecord[]>(() => loadVaultRecords());
 
-  const setStepStatus = (
-    key: keyof VaultStepStatus,
-    status: VaultStepStatus[keyof VaultStepStatus]
-  ) => setSteps(prev => ({ ...prev, [key]: status }));
+  const canUseVault = Boolean(userId && getSessionMasterKey());
 
-  const processFile = useCallback(async (blob: Blob, mimeType: string) => {
-    setStep('encrypting');
-    setError(null);
-    setResult(null);
-    setSteps({ encrypting: 'running', uploading: 'pending', anchoring: 'pending' });
+  useEffect(() => {
+    getCurrentUser().then((u) => setUserId(u?.id ?? null));
+  }, []);
 
-    let encResult: EncryptionResult;
-    let arweaveResult: ArweaveUploadResult;
-    let anchorResult: AnchorResult;
-
-    // Step 1 — AES-256-GCM local encryption
+  const refreshHistory = useCallback(async () => {
+    if (!userId || !getSessionMasterKey()) return;
     try {
-      encResult = await encryptFile(blob, mimeType);
-      latestResult.current = encResult;
-      setStepStatus('encrypting', 'done');
-    } catch (e) {
-      setStepStatus('encrypting', 'error');
-      setError(copyFor(language, 'Encryption failed: ', '加密失败：') + (e instanceof Error ? e.message : String(e)));
-      setStep('error');
-      return;
+      setHistory(await listEvidence(userId));
+    } catch {
+      // vault locked or offline with no mirror — leave the list as-is
     }
+  }, [userId]);
 
-    // Step 2 — Upload encrypted file to Arweave
-    setStep('uploading');
-    setStepStatus('uploading', 'running');
-    try {
-      arweaveResult = await uploadToArweave(
-        encResult.encryptedBlob,
-        encResult.originalHash,
-        mimeType
-      );
-      setStepStatus('uploading', 'done');
-    } catch (e) {
-      setStepStatus('uploading', 'error');
-      setError(copyFor(language, 'Arweave upload failed: ', 'Arweave 上传失败：') + (e instanceof Error ? e.message : String(e)));
-      setStep('error');
-      return;
-    }
+  // Flush the pending queue whenever the network comes back
+  useEffect(() => {
+    if (!userId) return;
+    const retry = () => void syncPendingEvidence(userId).then(() => refreshHistory());
+    window.addEventListener('online', retry);
+    return () => window.removeEventListener('online', retry);
+  }, [userId, refreshHistory]);
 
-    // Step 3 — Anchor hash on ChainMaker (长安链)
-    setStep('anchoring');
-    setStepStatus('anchoring', 'running');
-    try {
-      anchorResult = await anchorOnChain(encResult.encryptedHash, arweaveResult.txId);
-      setStepStatus('anchoring', 'done');
-    } catch (e) {
-      setStepStatus('anchoring', 'error');
-      setError(copyFor(language, 'On-chain anchoring failed: ', '链上存证失败：') + (e instanceof Error ? e.message : String(e)));
-      setStep('error');
-      return;
-    }
+  const processFile = useCallback(
+    async (blob: Blob, mimeType: string, opts: SaveEvidenceOptions = {}) => {
+      setStep('encrypting');
+      setError(null);
+      setResult(null);
+      setSteps({ encrypting: 'running', saving: 'pending' });
 
-    const record: VaultRecord = {
-      id: crypto.randomUUID(),
-      mimeType,
-      originalSize: encResult.originalSize,
-      originalHash: encResult.originalHash,
-      encryptedHash: encResult.encryptedHash,
-      arweaveTxId: arweaveResult.txId,
-      arweaveUrl: arweaveResult.arweaveUrl,
-      chainTxHash: anchorResult.txHash,
-      chainExplorerUrl: anchorResult.explorerUrl,
-      blockTimestamp: anchorResult.blockTimestamp,
-      isSimulated: anchorResult.isSimulated,
-      createdAt: Date.now(),
-      status: 'anchored',
-    };
+      if (!userId || !getSessionMasterKey()) {
+        setSteps({ encrypting: 'error', saving: 'pending' });
+        setError(
+          copyFor(
+            language,
+            'Please sign in with your cloud account first — evidence is stored in your encrypted cloud vault.',
+            '请先登录云端账号——证据会存入你的加密云端保险柜。'
+          )
+        );
+        setStep('error');
+        return;
+      }
 
-    addVaultRecord(record);
-    setHistory(loadVaultRecords());
-    setResult({ record, encryptionResult: encResult });
-    setStep('done');
-  }, [language]);
+      let enc: EncryptionResult;
+      try {
+        enc = await encryptFile(blob, mimeType);
+        setSteps({ encrypting: 'done', saving: 'running' });
+        setStep('saving');
+      } catch (e) {
+        setSteps({ encrypting: 'error', saving: 'pending' });
+        setError(copyFor(language, 'Encryption failed: ', '加密失败：') + (e instanceof Error ? e.message : String(e)));
+        setStep('error');
+        return;
+      }
 
-  const downloadKey = useCallback(() => {
-    if (!latestResult.current || !result) return;
-    const bundle = buildKeyBundle(latestResult.current);
-    const ts = new Date(result.record.createdAt).toISOString().slice(0, 10);
-    downloadKeyBundle(bundle, `the-unmuted-key-${ts}.json`);
-  }, [result]);
+      try {
+        const record = await saveEvidence(userId, enc, opts);
+        setSteps({ encrypting: 'done', saving: 'done' });
+        setResult({ record, encryptionResult: enc });
+        setHistory((prev) => [record, ...prev]);
+        setStep('done');
+      } catch (e) {
+        setSteps({ encrypting: 'done', saving: 'error' });
+        setError(copyFor(language, 'Could not save: ', '保存失败：') + (e instanceof Error ? e.message : String(e)));
+        setStep('error');
+      }
+    },
+    [language, userId]
+  );
+
+  /** Decrypt one record back to the original file (cache or cloud) */
+  const openFile = useCallback(
+    async (record: EvidenceRecord): Promise<Blob | null> => {
+      if (!userId) return null;
+      try {
+        return await openEvidenceFile(userId, record);
+      } catch {
+        return null;
+      }
+    },
+    [userId]
+  );
+
+  /** Retry pending uploads; refresh statuses afterwards */
+  const syncNow = useCallback(async () => {
+    if (!userId) return;
+    await syncPendingEvidence(userId);
+    await refreshHistory();
+  }, [userId, refreshHistory]);
 
   const reset = useCallback(() => {
     setStep('idle');
-    setSteps({ encrypting: 'pending', uploading: 'pending', anchoring: 'pending' });
+    setSteps({ encrypting: 'pending', saving: 'pending' });
     setError(null);
     setResult(null);
-    latestResult.current = null;
   }, []);
 
-  return { step, steps, error, result, history, processFile, downloadKey, reset };
+  return {
+    step,
+    steps,
+    error,
+    result,
+    history,
+    legacyHistory,
+    userId,
+    canUseVault,
+    processFile,
+    openFile,
+    refreshHistory,
+    syncNow,
+    reset,
+  };
 }

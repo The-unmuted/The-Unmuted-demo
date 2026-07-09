@@ -1,14 +1,9 @@
-import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
+import { supabase as db } from "./supabaseClient";
 
 // Password stored in localStorage only (no server round-trip, no RLS issues)
 const PASS_KEY_PREFIX = "unmuted_pwd_";
 const USERNAME_KEY = "unmuted_username";
-
-// Supabase used for username sync only
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
-const db = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
 
 /** Check if an email already has a password set (localStorage) */
 export async function hasPassword(email: string): Promise<boolean> {

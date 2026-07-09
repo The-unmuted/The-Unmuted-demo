@@ -1,13 +1,7 @@
 import { useState } from "react";
 import { Mail, X, Send, CheckCircle2, Loader2 } from "lucide-react";
-import { createClient } from "@supabase/supabase-js";
 import { copyFor } from "@/lib/locale";
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
-const supabase = supabaseUrl && supabaseKey
-  ? createClient(supabaseUrl, supabaseKey)
-  : null;
+import { supabase } from "@/lib/supabaseClient";
 
 type FeedbackType = "bug" | "suggestion" | "other";
 

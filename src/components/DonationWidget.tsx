@@ -75,8 +75,8 @@ export default function DonationWidget({ language }: DonationWidgetProps) {
           <p className="mb-4 text-xs leading-5 text-muted-foreground">
             {copyFor(
               language,
-              "All donations go directly to on-chain evidence anchoring fees and platform maintenance. We are students building this for free.",
-              "所有捐款将全部用于区块链存证上链费用及平台维护。我们是学生团队，免费构建这个平台。"
+              "All donations go directly to platform operation and maintenance. We are students building this for free.",
+              "所有捐款将全部用于平台运营与维护。我们是学生团队，免费构建这个平台。"
             )}
           </p>
 

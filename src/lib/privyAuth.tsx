@@ -65,7 +65,10 @@ export function emailFromPrivyUser(user: User | null) {
 export function PrivyAuthProvider({ children }: { children: ReactNode }) {
   const config = getPrivyAuthConfig();
 
-  if (!config.ready) {
+  // Privy's SDK mounts an embedded-wallet iframe that throws outside secure
+  // contexts (e.g. LAN http:// during device testing) and crashes the whole
+  // React tree. Fall back to local-only auth instead of crashing.
+  if (!config.ready || !window.isSecureContext) {
     return <PrivyAuthContext.Provider value={fallbackPrivyAuth}>{children}</PrivyAuthContext.Provider>;
   }
 
