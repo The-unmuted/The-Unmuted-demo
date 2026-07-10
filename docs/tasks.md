@@ -17,7 +17,7 @@ _Last updated: 2026-07-10_
 - [x] Offline resilience: pending upload queue + auto-retry on `online` event + per-record 已同步/待上传 badge
 - [x] ~~BLOCKER: Supabase project paused~~ — restored 2026-07-08; migration applied; OTP template `{{ .Token }}`; OTP length set to 6
   - [ ] Built-in SMTP is rate-limited (~4 emails/hour) — custom SMTP needed before real users
-  - [ ] `portraits` bucket is public — origin identified 2026-07-10: leftover from Katie's discontinued "Chroma" project (real ID-style photos, publicly readable); Katie to delete the bucket in the dashboard
+  - [x] `portraits` bucket (public, leftover from Katie's discontinued "Chroma" project with real ID-style photos) — **files deleted by Katie 2026-07-10**; empty bucket itself still to be deleted (⋮ → Delete bucket)
   - [ ] Consider moving 非默 to a dedicated Supabase project — it currently shares the "Chroma" project with a defunct app (shared trust boundary: keys, RLS, buckets)
   - [x] End-to-end browser test of signup → recovery code → upload → unlock-and-decrypt — **passed 2026-07-08 on production build** (hash round-trip verified)
 
