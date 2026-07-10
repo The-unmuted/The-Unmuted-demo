@@ -12,7 +12,10 @@
 - tsc clean, ESLint 0 errors on the 3 changed files, 23/23 tests, production build OK. Browser E2E on the preview build: wrong password at the login gate and at the recovery gate both show the persistent inline error; correct-password paths through all three gates re-verified by the user.
 
 ### Housekeeping (Supabase, not code)
-- **`portraits` public bucket mystery solved**: it's a leftover from Katie's discontinued "Chroma" project (real ID-style photos, publicly readable), which shares the same Supabase project as 非默. Zero references in this codebase → Katie deleting it in the dashboard. New backlog item: consider moving 非默 to a dedicated Supabase project (shared trust boundary today).
+- **`portraits` public bucket mystery solved**: it's a leftover from Katie's discontinued "Chroma" project (real ID-style photos, publicly readable), which shares the same Supabase project as 非默. Zero references in this codebase → **files deleted by Katie 2026-07-10** (empty bucket still to be removed). New backlog item: consider moving 非默 to a dedicated Supabase project (shared trust boundary today).
+
+### Fixed (CI)
+- **CloudBase deploy: multipart upload for large assets** — the 2.6MB main bundle failed twice with COS "User network is too slow" (single-shot `putObject` over the GitHub→ap-shanghai link). `deploy-cloudbase.mjs` now uses `cos.uploadFile` with 1MB `SliceSize` so parts retry independently. Deploy of `3b8a7d6` succeeded; live site verified serving the new bundle. The fail-before-publishing-HTML safety worked as designed — the site never served a partial deploy.
 
 ## 2026-07-09 — Phase 4c: 72h delete cooling-off with hidden recovery (D-022)
 
