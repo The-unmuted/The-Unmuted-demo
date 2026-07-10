@@ -2,7 +2,7 @@
 
 _This file captures the current project state for AI assistants. Update before ending each work session._
 
-_Last updated: 2026-07-09_
+_Last updated: 2026-07-10_
 
 ---
 
@@ -18,8 +18,8 @@ Live: https://the-unmuted.vercel.app/
 
 ## Current State
 
-**Active branch:** `main` (Phase 1-3 + 4a/4b committed & deployed 2026-07-09 as 2b74749; Phase 4c changes uncommitted)
-**Status:** **Phases 1, 2, 3 and 4a+4b+4c are complete (4b/4c: 2026-07-09)**; Phases 1–3 browser-verified on a clean production build. Phase 1+2: OTP login (6-digit) → cloud key-vault password unlock → capture → encrypt → private-bucket save (现场取证 badge, 已进保险柜) → password re-verify → decrypt/export with exact SHA-256 match against the sealed original hash. Phase 3 (D-020): 导出举证包 button → plain ZIP (decrypted original + self-contained bilingual 举证说明.html with hashes, certutil/shasum verification instructions, 3 scenario guides) — extracted-file hash verified against both the HTML-stated fingerprint and the record. Phase 4a (honest copy), 4b (P2P chat/Gun.js removal, 2026-07-09) and 4c (72h delete cooling-off with hidden password-gated recovery, D-022, browser-E2E-verified 2026-07-09) done; only 4d (login error messaging + feedback polish) remains. Test suite: 23/23 vitest, tsc + eslint clean.
+**Active branch:** `main` (Phase 1-3 + 4a/4b/4c committed & deployed; **Phase 4d changes uncommitted**: `keyVaultService.ts`, `LoginFlow.tsx`, `EvidencePage.tsx` + docs)
+**Status:** **Phase 4 is complete** (4a/4b: honest copy + chat removal; 4c: D-022 delete cooling-off; 4d 2026-07-10: persistent inline unlock errors at all five password gates, vault-unavailable vs wrong-secret distinction in `UnlockResult`, whitespace-trim retry on unlock + trim at password creation — fixes the 2026-07-09 pasted-space lockout; FeedbackWidget reviewed and deliberately unchanged). Phases 1–3 browser-verified on a clean production build: OTP login (6-digit) → cloud key-vault password unlock → capture → encrypt → private-bucket save (现场取证 badge) → password re-verify → decrypt/export with exact SHA-256 match; 导出举证包 (D-020) verified end to end. Test suite: 23/23 vitest, tsc + eslint clean.
 
 **Deployments (both live, still running pre-Phase-1 build):**
 - Vercel (overseas): https://the-unmuted.vercel.app/
@@ -48,7 +48,8 @@ Restored from pause; migration `0001_key_vault_and_evidence.sql` applied; Magic 
 
 Remaining before real users:
 1. **Custom SMTP** — built-in SMTP is rate-limited (~4 emails/hour).
-2. **`portraits` bucket is public** (origin unknown) — review/remove.
+2. **`portraits` bucket is public** — origin identified 2026-07-10: leftover from Katie's discontinued "Chroma" project (real ID-style photos, publicly readable; zero references in this codebase). Katie is deleting it in the dashboard.
+3. **Shared Supabase project** — 非默 shares the "Chroma" project with a defunct app (shared keys/RLS/bucket namespace). Consider a dedicated project (backlog).
 
 ---
 
@@ -78,7 +79,7 @@ Key files: `src/lib/keyVault.ts` (pure crypto), `src/lib/keyVaultService.ts` (Su
 
 ### UX
 8. **SMS SOS on desktop** — degraded experience (opens default mail/message client).
-9. **Login flow error messaging + feedback widget polish** — Phase 4 item.
+9. ~~Login flow error messaging + feedback widget polish~~ — done 2026-07-10 (Phase 4d): persistent inline errors, vault-unavailable vs wrong-secret, whitespace trim; FeedbackWidget reviewed, unchanged.
 
 ---
 
@@ -87,8 +88,8 @@ Key files: `src/lib/keyVault.ts` (pure crypto), `src/lib/keyVaultService.ts` (Su
 1. ~~Phase 1: accounts + key hierarchy + secure storage~~ ✅ E2E accepted 2026-07-08
 2. ~~Phase 2 — 取证~~ ✅ E2E accepted 2026-07-08 (capture metadata + D-019 grading)
 3. ~~Phase 3 — 举证~~ ✅ complete 2026-07-08 (D-020: one-tap court package, browser-verified hash round-trip)
-4. Phase 4 — honest cleanup: retire simulated anchoring copy, 72h delete cooling-off, remove P2P chat code, login/feedback polish ← **current**
-5. Gated on company entity: TSA anchoring (+ backfill), Tencent Cloud migration (D-016), phone OTP (D-012)
+4. ~~Phase 4 — honest cleanup~~ ✅ complete 2026-07-10 (4a copy, 4b chat removal, 4c D-022 cooling-off, 4d login error messaging)
+5. Gated on company entity: TSA anchoring (+ backfill), Tencent Cloud migration (D-016), phone OTP (D-012) ← **next frontier** (plus pre-launch: custom SMTP, dedicated Supabase project)
 
 ---
 

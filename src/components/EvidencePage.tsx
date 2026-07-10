@@ -14,7 +14,7 @@ import { formatBytes } from "@/lib/evidenceCrypto";
 import { AppLanguage, copyFor } from "@/lib/locale";
 import { hasReportNotes, saveEncryptedReportNotes, type EncryptedReportNoteRecord } from "@/lib/reportNotesVault";
 import { hasPassword, verifyPassword } from "@/lib/userCredentials";
-import { unlockWithPassword } from "@/lib/keyVaultService";
+import { unlockWithPassword, type UnlockFailureReason } from "@/lib/keyVaultService";
 import {
   listDeletedEvidence,
   restoreEvidence,
@@ -651,7 +651,7 @@ export default function EvidencePage({
   const [showRecovery, setShowRecovery] = useState(false);
   const [unlockPwd, setUnlockPwd] = useState("");
   const [showPwd, setShowPwd] = useState(false);
-  const [unlockError, setUnlockError] = useState(false);
+  const [unlockError, setUnlockError] = useState<UnlockFailureReason | null>(null);
   const [unlocking, setUnlocking] = useState(false);
   const [hasPwd, setHasPwd] = useState<boolean | null>(null);
 
@@ -754,20 +754,20 @@ export default function EvidencePage({
 
   const handleUnlock = async () => {
     setUnlocking(true);
-    setUnlockError(false);
+    setUnlockError(null);
     // Production: re-verify against the vault's password box (privacy gate for
     // a phone grabbed while unlocked). Legacy fallback: local bcrypt check.
-    const ok = vault.canUseVault && vault.userId
-      ? (await unlockWithPassword(vault.userId, unlockPwd)) !== null
-      : userEmail
-        ? await verifyPassword(userEmail, unlockPwd)
-        : true;
-    setUnlocking(false);
-    if (ok) {
-      setIsUnlocked(true);
-    } else {
-      setUnlockError(true);
+    if (vault.canUseVault && vault.userId) {
+      const res = await unlockWithPassword(vault.userId, unlockPwd);
+      setUnlocking(false);
+      if (res.ok) setIsUnlocked(true);
+      else setUnlockError(res.reason);
+      return;
     }
+    const ok = userEmail ? await verifyPassword(userEmail, unlockPwd) : true;
+    setUnlocking(false);
+    if (ok) setIsUnlocked(true);
+    else setUnlockError("wrong-secret");
   };
 
   const isProcessing = vault.step === "encrypting" || vault.step === "saving";
@@ -1128,8 +1128,14 @@ export default function EvidencePage({
                 </button>
               </div>
               {unlockError && (
-                <p className="text-xs text-destructive">
-                  {copyFor(language, "Incorrect password.", "密码错误。")}
+                <p className="text-xs leading-5 text-destructive">
+                  {unlockError === "vault-unavailable"
+                    ? copyFor(
+                        language,
+                        "Couldn't open your vault right now. Check your connection and try again.",
+                        "暂时打不开你的保险柜。请检查网络后再试。"
+                      )
+                    : copyFor(language, "Incorrect password. Please try again.", "密码错误，请再试一次。")}
                 </p>
               )}
               <button
@@ -1751,18 +1757,18 @@ function DeletedRecordsRecovery({
   const [pwd, setPwd] = useState("");
   const [showPwd, setShowPwd] = useState(false);
   const [checking, setChecking] = useState(false);
-  const [pwdError, setPwdError] = useState(false);
+  const [pwdError, setPwdError] = useState<UnlockFailureReason | null>(null);
   const [records, setRecords] = useState<DeletedEvidenceRecord[] | null>(null);
   const [restoringTx, setRestoringTx] = useState<string | null>(null);
 
   const handleVerify = async () => {
     setChecking(true);
-    setPwdError(false);
-    const ok = (await unlockWithPassword(userId, pwd)) !== null;
-    if (ok) {
+    setPwdError(null);
+    const res = await unlockWithPassword(userId, pwd);
+    if (res.ok) {
       setRecords(await listDeletedEvidence(userId).catch(() => []));
     } else {
-      setPwdError(true);
+      setPwdError(res.reason);
     }
     setChecking(false);
   };
@@ -1827,8 +1833,14 @@ function DeletedRecordsRecovery({
             </button>
           </div>
           {pwdError && (
-            <p className="text-xs text-destructive">
-              {copyFor(language, "Incorrect password.", "密码错误。")}
+            <p className="text-xs leading-5 text-destructive">
+              {pwdError === "vault-unavailable"
+                ? copyFor(
+                    language,
+                    "Couldn't open your vault right now. Check your connection and try again.",
+                    "暂时打不开你的保险柜。请检查网络后再试。"
+                  )
+                : copyFor(language, "Incorrect password. Please try again.", "密码错误，请再试一次。")}
             </p>
           )}
           <button

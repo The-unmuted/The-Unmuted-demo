@@ -1,5 +1,19 @@
 # Changelog — The Unmuted (非默)
 
+## 2026-07-10 — Phase 4d: login/unlock inline error messaging + whitespace tolerance
+
+### Changed
+- **Persistent inline errors replace the easy-to-miss 密码错误 toast** at every password gate: LoginFlow unlock / recovery-code / local-login stages, EvidencePage records gate, and the hidden 最近删除 recovery gate. Error text renders in small destructive type between the input and the submit button, and stays until the next attempt or stage change.
+- **Failure reasons distinguished (`keyVaultService.ts`)**: `unlockWithPassword` / `unlockWithRecoveryCode` now return `UnlockResult` with `reason: "vault-unavailable" | "wrong-secret"`. "vault-unavailable" = key boxes couldn't be loaded at all (fresh device offline / cloud row unreadable — the secret was never checked) → 「暂时打不开你的保险柜。请检查网络后再试。」; "wrong-secret" → 「密码错误，请再试一次。」 (recovery path: 「恢复钥匙不正确，请逐个字符对照纸上的内容。」).
+- **Whitespace tolerance**: unlock retries with a trimmed password before failing, and new passwords are trimmed at creation (set-password + recovery re-wrap) — fixes the 2026-07-09 pasted-leading-space lockout incident.
+- **FeedbackWidget reviewed, deliberately unchanged** — it already has inline errors, disabled-while-sending submit, and collects no user ID; nothing met the "needed AND wrong" bar.
+
+### Verified
+- tsc clean, ESLint 0 errors on the 3 changed files, 23/23 tests, production build OK. Browser E2E on the preview build: wrong password at the login gate and at the recovery gate both show the persistent inline error; correct-password paths through all three gates re-verified by the user.
+
+### Housekeeping (Supabase, not code)
+- **`portraits` public bucket mystery solved**: it's a leftover from Katie's discontinued "Chroma" project (real ID-style photos, publicly readable), which shares the same Supabase project as 非默. Zero references in this codebase → Katie deleting it in the dashboard. New backlog item: consider moving 非默 to a dedicated Supabase project (shared trust boundary today).
+
 ## 2026-07-09 — Phase 4c: 72h delete cooling-off with hidden recovery (D-022)
 
 ### Added (anti-coercion design — deletion must LOOK final; see D-022)
