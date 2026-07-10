@@ -61,6 +61,12 @@ export default function LoginFlow({
   const [userId, setUserId] = useState("");
   const [busy, setBusy] = useState(false);
   const [recoveryCode, setRecoveryCode] = useState("");
+  const [unlockError, setUnlockError] = useState<string | null>(null);
+
+  const goTo = (next: Stage) => {
+    setUnlockError(null);
+    setStage(next);
+  };
 
   const cloud = isCloudAuthAvailable();
 
@@ -120,7 +126,9 @@ export default function LoginFlow({
     setStage(exists ? "unlock" : "set-password");
   };
 
-  const handleSetPassword = async (password: string) => {
+  const handleSetPassword = async (rawPassword: string) => {
+    // Trim so a pasted leading/trailing space never becomes part of the password
+    const password = rawPassword.trim();
     if (password.length < 8) {
       toast.error(copyFor(language, "Use at least 8 characters.", "密码至少8位。"));
       return;
@@ -155,17 +163,27 @@ export default function LoginFlow({
 
   const handleUnlock = async (password: string) => {
     setBusy(true);
-    const key = await unlockWithPassword(userId, password);
+    setUnlockError(null);
+    const res = await unlockWithPassword(userId, password);
     setBusy(false);
-    if (!key) {
-      toast.error(copyFor(language, "Incorrect password.", "密码错误。"));
+    if (!res.ok) {
+      setUnlockError(
+        res.reason === "vault-unavailable"
+          ? copyFor(
+              language,
+              "Couldn't open your vault right now. Check your connection and try again, or sign in again.",
+              "暂时打不开你的保险柜。请检查网络后再试，或重新登录。"
+            )
+          : copyFor(language, "Incorrect password. Please try again.", "密码错误，请再试一次。")
+      );
       return;
     }
     toast.success(copyFor(language, "Welcome back!", "欢迎回来！"));
     onUnlocked(email);
   };
 
-  const handleRecoveryUnlock = async (code: string, newPassword: string) => {
+  const handleRecoveryUnlock = async (code: string, rawNewPassword: string) => {
+    const newPassword = rawNewPassword.trim();
     if (!isValidRecoveryCodeFormat(code)) {
       toast.error(
         copyFor(language, "That doesn't look like a recovery key.", "恢复钥匙格式不对，请检查。")
@@ -177,11 +195,22 @@ export default function LoginFlow({
       return;
     }
     setBusy(true);
-    const key = await unlockWithRecoveryCode(userId, code, newPassword);
+    setUnlockError(null);
+    const res = await unlockWithRecoveryCode(userId, code, newPassword);
     setBusy(false);
-    if (!key) {
-      toast.error(
-        copyFor(language, "Recovery key doesn't match.", "恢复钥匙不正确，请对照纸上的内容。")
+    if (!res.ok) {
+      setUnlockError(
+        res.reason === "vault-unavailable"
+          ? copyFor(
+              language,
+              "Couldn't open your vault right now. Check your connection and try again, or sign in again.",
+              "暂时打不开你的保险柜。请检查网络后再试，或重新登录。"
+            )
+          : copyFor(
+              language,
+              "Recovery key doesn't match. Check your paper copy character by character.",
+              "恢复钥匙不正确，请逐个字符对照纸上的内容。"
+            )
       );
       return;
     }
@@ -197,8 +226,9 @@ export default function LoginFlow({
 
   // Legacy local-only fallback
   const handleLocalLogin = async (password: string) => {
+    setUnlockError(null);
     if (!(await verifyPassword(email, password))) {
-      toast.error(copyFor(language, "Incorrect password.", "密码错误。"));
+      setUnlockError(copyFor(language, "Incorrect password. Please try again.", "密码错误，请再试一次。"));
       return;
     }
     onUnlocked(email);
@@ -216,7 +246,7 @@ export default function LoginFlow({
     await signOut();
     setEmail("");
     setUserId("");
-    setStage("email");
+    goTo("email");
   };
 
   return (
@@ -287,11 +317,12 @@ export default function LoginFlow({
             hint={email}
             cta={copyFor(language, "Unlock", "解锁")}
             minLength={1}
+            error={unlockError}
             onSubmit={handleUnlock}
             footer={
               <div className="space-y-2">
                 <button
-                  onClick={() => setStage("recovery-unlock")}
+                  onClick={() => goTo("recovery-unlock")}
                   className="w-full text-xs text-muted-foreground underline"
                 >
                   {copyFor(language, "Forgot password? Use recovery key", "忘记密码？用纸上的恢复钥匙")}
@@ -308,7 +339,8 @@ export default function LoginFlow({
           <RecoveryUnlockStep
             language={language}
             busy={busy}
-            onBack={() => setStage("unlock")}
+            error={unlockError}
+            onBack={() => goTo("unlock")}
             onSubmit={handleRecoveryUnlock}
           />
         )}
@@ -321,6 +353,7 @@ export default function LoginFlow({
             hint={email}
             cta={copyFor(language, "Sign in", "登录")}
             minLength={1}
+            error={unlockError}
             onSubmit={handleLocalLogin}
           />
         )}
@@ -454,6 +487,7 @@ function PasswordStep({
   hint,
   cta,
   minLength,
+  error,
   onSubmit,
   footer,
 }: {
@@ -463,6 +497,7 @@ function PasswordStep({
   hint: string;
   cta: string;
   minLength: number;
+  error?: string | null;
   onSubmit: (password: string) => void;
   footer?: React.ReactNode;
 }) {
@@ -496,6 +531,7 @@ function PasswordStep({
             {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         </div>
+        {error && <p className="text-xs leading-5 text-destructive">{error}</p>}
         <button
           onClick={() => onSubmit(password)}
           disabled={password.length < minLength || busy}
@@ -635,11 +671,13 @@ function ConfirmRecoveryStep({
 function RecoveryUnlockStep({
   language,
   busy,
+  error,
   onBack,
   onSubmit,
 }: {
   language: AppLanguage;
   busy: boolean;
+  error?: string | null;
   onBack: () => void;
   onSubmit: (code: string, newPassword: string) => void;
 }) {
@@ -683,9 +721,10 @@ function RecoveryUnlockStep({
             {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         </div>
+        {error && <p className="text-xs leading-5 text-destructive">{error}</p>}
         <button
           onClick={() => onSubmit(code, newPassword)}
-          disabled={busy || normalizeRecoveryCode(code).length !== 12 || newPassword.length < 8}
+          disabled={busy || normalizeRecoveryCode(code).length !== 12 || newPassword.trim().length < 8}
           className="w-full rounded-2xl bg-primary py-3 text-sm font-bold text-primary-foreground disabled:opacity-60"
         >
           {busy ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : copyFor(language, "Unlock evidence", "解锁证据")}

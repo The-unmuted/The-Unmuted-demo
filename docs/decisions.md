@@ -310,3 +310,11 @@ Per-file keys (random per evidence file) ──encrypt──▶ evidence blobs
 - Pending (never-uploaded) records are still deleted outright — there is no cloud copy to recover.
 
 **Trade-off accepted:** a survivor who genuinely wants data gone immediately cannot force-purge from the UI; 72h is the anti-coercion price. The password gate means an abuser who saw the grey line but doesn't know the vault password still cannot confirm anything was ever deleted.
+
+## D-023 — 解锁密码容忍首尾空白（trim 重试 + 创建时 trim）(2026-07-10)
+
+**Decision:** `unlockWithPassword` tries the raw password first, then retries with `password.trim()` if it differs; new passwords are trimmed at creation (set-password and recovery re-wrap) so the stored wrap never contains stray edge whitespace.
+
+**Why:** 2026-07-09 incident — a pasted password with a leading space failed to unlock and the toast-only error gave no clue. Survivors often paste passwords from notes apps; edge whitespace is invisible and the cost of a false "wrong password" here is a user believing their evidence is lost.
+
+**Trade-off accepted:** passwords that *intentionally* differ only by edge whitespace become equivalent — a negligible loss of password space against PBKDF2-310k, vastly outweighed by the lockout-avoidance benefit. Interior whitespace is untouched.

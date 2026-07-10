@@ -115,20 +115,34 @@ export async function createVault(
   return { masterKey, recoveryCode };
 }
 
-export async function unlockWithPassword(
-  userId: string,
-  password: string
-): Promise<CryptoKey | null> {
+/**
+ * "vault-unavailable" = the key boxes could not be loaded at all (fresh device
+ * while offline, or cloud row unreadable) — the secret was never even checked.
+ * "wrong-secret" = boxes loaded fine but the password / recovery code failed.
+ */
+export type UnlockFailureReason = "vault-unavailable" | "wrong-secret";
+
+export type UnlockResult =
+  | { ok: true; key: CryptoKey }
+  | { ok: false; reason: UnlockFailureReason };
+
+export async function unlockWithPassword(userId: string, password: string): Promise<UnlockResult> {
   const boxes = await loadBoxes(userId);
-  if (!boxes) return null;
-  try {
-    const key = await openWithPassword(password, boxes.passwordBox);
-    sessionMasterKey = key;
-    void syncPendingBoxes(userId);
-    return key;
-  } catch {
-    return null;
+  if (!boxes) return { ok: false, reason: "vault-unavailable" };
+  // Copy-paste often drags in stray whitespace; retry trimmed before failing.
+  const trimmed = password.trim();
+  const candidates = trimmed && trimmed !== password ? [password, trimmed] : [password];
+  for (const candidate of candidates) {
+    try {
+      const key = await openWithPassword(candidate, boxes.passwordBox);
+      sessionMasterKey = key;
+      void syncPendingBoxes(userId);
+      return { ok: true, key };
+    } catch {
+      // try the next candidate
+    }
   }
+  return { ok: false, reason: "wrong-secret" };
 }
 
 /** Recovery path: unlock with the paper code, then re-wrap with a new password */
@@ -136,17 +150,17 @@ export async function unlockWithRecoveryCode(
   userId: string,
   code: string,
   newPassword: string
-): Promise<CryptoKey | null> {
+): Promise<UnlockResult> {
   const boxes = await loadBoxes(userId);
-  if (!boxes) return null;
+  if (!boxes) return { ok: false, reason: "vault-unavailable" };
   try {
     const key = await openWithRecoveryCode(code, boxes.recoveryBox);
     const passwordBox = await rewrapPasswordBox(key, newPassword);
     await persistBoxes(userId, { passwordBox, recoveryBox: boxes.recoveryBox });
     sessionMasterKey = key;
-    return key;
+    return { ok: true, key };
   } catch {
-    return null;
+    return { ok: false, reason: "wrong-secret" };
   }
 }
 
