@@ -75,12 +75,16 @@ function ensureLocalAssetFiles(indexHtml) {
 async function uploadFile(fullPath, key) {
   const isHtml = key.endsWith(".html");
   return new Promise((resolve, reject) => {
-    cos.putObject(
+    // uploadFile switches to multipart above SliceSize; single-shot putObject
+    // stalls on large files over the slow GitHub→ap-shanghai link ("User
+    // network is too slow"), while 1MB parts retry independently.
+    cos.uploadFile(
       {
         Bucket: BUCKET,
         Region: REGION,
         Key: key,
-        Body: fs.createReadStream(fullPath),
+        FilePath: fullPath,
+        SliceSize: 1024 * 1024,
         ContentType: getContentType(key),
         ContentDisposition: isHtml ? "inline" : undefined,
         CacheControl: isHtml ? "no-cache, no-store, must-revalidate" : "public, max-age=31536000, immutable",
