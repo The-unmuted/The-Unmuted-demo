@@ -29,7 +29,7 @@ QueryClientProvider (react-query)
 `Index` owns all top-level state: auth/unlock, active tab, language. The master key is memory-only (D-017), so **every page load starts locked** — `LoginFlow` shows until the vault is unlocked, even when a Supabase session persists.
 
 ```
-<header>          — logo, brand banner, language toggle, DonationWidget, FeedbackWidget, SettingsWidget
+<header>          — logo, brand banner, language toggle, FeedbackWidget, SettingsWidget (incl. 修改密码)
 <LoginFlow>        — shown until account + vault are unlocked
   OR
 <main>            — scrollable content area
@@ -134,8 +134,7 @@ src/
 │   ├── NGOPage.tsx         — NGO directory + post-SOS suggestion sheet
 │   ├── BottomNav.tsx       — 4-tab navigation
 │   ├── FeedbackWidget.tsx  — feedback submission (Supabase)
-│   ├── DonationWidget.tsx  — donation links
-│   ├── SettingsWidget.tsx  — logout, settings
+│   ├── SettingsWidget.tsx  — logout, change password, language
 │   ├── DeterrentAudioPanel.tsx — deterrent audio playback
 │   └── ui/                 — shadcn/ui components
 ├── hooks/
