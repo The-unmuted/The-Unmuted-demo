@@ -18,10 +18,10 @@ Live: https://the-unmuted.vercel.app/
 
 ## Current State
 
-**Active branch:** `main` (Phase 1-3 + 4a/4b/4c committed & deployed; **Phase 4d changes uncommitted**: `keyVaultService.ts`, `LoginFlow.tsx`, `EvidencePage.tsx` + docs)
+**Active branch:** `main` (Phase 1-4 all committed & deployed; 2026-07-10 UX batch also deployed and verified live on both platforms: real-2s SOS hold, in-app 修改密码 in settings, DonationWidget + display-name setting removed)
 **Status:** **Phase 4 is complete** (4a/4b: honest copy + chat removal; 4c: D-022 delete cooling-off; 4d 2026-07-10: persistent inline unlock errors at all five password gates, vault-unavailable vs wrong-secret distinction in `UnlockResult`, whitespace-trim retry on unlock + trim at password creation — fixes the 2026-07-09 pasted-space lockout; FeedbackWidget reviewed and deliberately unchanged). Phases 1–3 browser-verified on a clean production build: OTP login (6-digit) → cloud key-vault password unlock → capture → encrypt → private-bucket save (现场取证 badge) → password re-verify → decrypt/export with exact SHA-256 match; 导出举证包 (D-020) verified end to end. Test suite: 23/23 vitest, tsc + eslint clean.
 
-**Deployments (both live, still running pre-Phase-1 build):**
+**Deployments (both live, verified 2026-07-10 serving the UX-batch build):**
 - Vercel (overseas): https://the-unmuted.vercel.app/
 - Tencent CloudBase (mainland China): https://theunmuted-v2-d2gyh0rux2a05de92-1434116173.tcloudbaseapp.com
 
@@ -29,10 +29,11 @@ Live: https://the-unmuted.vercel.app/
 - `origin` = The-unmuted/The-Unmuted-demo (no CI secrets)
 - `v2` = The-unmuted/The-Unmuted-v2 (has TENCENT_SECRET_ID/KEY + VITE_* secrets → CloudBase deploys run here)
 - Push `main` to **both** remotes to keep them in sync; only the v2 push triggers a working CloudBase deploy.
+- 2026-07-10 CI hardening: deploy script uses COS multipart upload (`cos.uploadFile`, 1MB slices — single-shot `putObject` stalled on the 2.6MB bundle); workflow has a repo guard (`if: github.repository == 'The-unmuted/The-Unmuted-v2'`) so the demo mirror no longer emails guaranteed failures.
 
 **What works now (verified 2026-07-07: tsc clean, eslint 0 errors, 14/14 vitest passing; login → evidence hub → capture view browser-verified via local fallback):**
 - Login flow renders and handles errors correctly (full OTP path untestable until Supabase restored)
-- SOS flow (5s hold → group SMS with GCJ-02 Gaode link) — user-validated, do not touch
+- SOS flow (2s hold since 2026-07-10, previously 5s → group SMS with GCJ-02 Gaode link) — user-validated, do not touch; the post-hold "确认发送" prompt is OS-level (sms: URI) and cannot be removed by the app
 - Evidence pipeline: encrypt → private bucket + encrypted cloud index → in-app decrypt/export, with offline pending queue
 - Capture view: 拍照/录像/录音 + 导入已有文件 entry, capture-instant metadata (time / GCJ-02 location / device) sealed into meta, 现场取证/事后导入 badges (D-019)
 - Legacy evidence records readable (read-only, need user's old key file)
