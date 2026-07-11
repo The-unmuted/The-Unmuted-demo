@@ -12,6 +12,9 @@ concurrency:
 
 jobs:
   deploy:
+    # Only the v2 repo has the Tencent secrets; skip in the demo mirror so
+    # every push doesn't email a guaranteed failure.
+    if: github.repository == 'The-unmuted/The-Unmuted-v2'
     runs-on: ubuntu-latest
 
     steps:
