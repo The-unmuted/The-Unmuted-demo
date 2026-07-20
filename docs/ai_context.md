@@ -2,7 +2,9 @@
 
 _This file captures the current project state for AI assistants. Update before ending each work session._
 
-_Last updated: 2026-07-19_
+_Last updated: 2026-07-20_
+
+**2026-07-20 session:** D-026 aid directory + seed list pushed & deployed. D-027 committed locally (Argon2id KDF upgrade with verify-then-replace migration + password strength policy; 43/43 tests) — NOT yet pushed, awaiting Katie. New team doc: `docs/非默-功能与安全说明-团队版.md`. GitHub repos → private pending Katie's `gh auth login`. Security self-assessment given to Katie: 70/100 overall; top gaps = browser-history traces, no external audit, web-delivery model.
 
 ---
 
@@ -50,7 +52,7 @@ Restored from pause; migration `0001_key_vault_and_evidence.sql` applied; Magic 
 Remaining before real users:
 1. **Custom SMTP** — built-in SMTP is rate-limited (~4 emails/hour).
 2. **`portraits` bucket is public** — origin identified 2026-07-10: leftover from Katie's discontinued "Chroma" project (real ID-style photos, publicly readable; zero references in this codebase). Katie is deleting it in the dashboard.
-3. **Shared Supabase project** — 非默 shares the "Chroma" project with a defunct app (shared keys/RLS/bucket namespace). Consider a dedicated project (backlog).
+3. **Shared Supabase project** — resolved by decision 2026-07-19 (Katie): Chroma is discontinued, 非默 keeps this project; remaining work is dashboard cleanup of Chroma leftovers (old tables/buckets/policies incl. empty `portraits` bucket).
 
 ---
 

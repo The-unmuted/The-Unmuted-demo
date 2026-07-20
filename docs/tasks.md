@@ -18,7 +18,7 @@ _Last updated: 2026-07-10_
 - [x] ~~BLOCKER: Supabase project paused~~ — restored 2026-07-08; migration applied; OTP template `{{ .Token }}`; OTP length set to 6
   - [ ] Built-in SMTP is rate-limited (~4 emails/hour) — custom SMTP needed before real users
   - [x] `portraits` bucket (public, leftover from Katie's discontinued "Chroma" project with real ID-style photos) — **files deleted by Katie 2026-07-10**; empty bucket itself still to be deleted (⋮ → Delete bucket)
-  - [ ] Consider moving 非默 to a dedicated Supabase project — it currently shares the "Chroma" project with a defunct app (shared trust boundary: keys, RLS, buckets)
+  - [ ] ~~Consider moving 非默 to a dedicated Supabase project~~ — decided 2026-07-19 (Katie): Chroma is discontinued, 非默 keeps this project. Instead: **clean up Chroma leftovers** in the dashboard (delete old tables/buckets/policies incl. empty `portraits` bucket; keep only key_vaults / evidence_records / ngo_applications / feedback)
   - [x] End-to-end browser test of signup → recovery code → upload → unlock-and-decrypt — **passed 2026-07-08 on production build** (hash round-trip verified)
 
 **Phase 2 — 取证 (in-app capture)** _(code complete 2026-07-07; **E2E accepted 2026-07-08** on production build)_
@@ -57,6 +57,12 @@ _Last updated: 2026-07-10_
 - [ ] **China data expansion**: seed list first batch drafted 2026-07-19 (成都/杭州/武汉/南京/西安, `docs/援助目录种子清单-待核实.md`) — team phone-verifies each before entering aidDirectory.json; later batches follow `{省}.12348.gov.cn` pattern (重庆、天津、长沙、郑州、济南…)
 - [ ] **Global country-level hotlines** (~50–100 countries, before the UN hackathon): national DV/sexual-violence hotline + legal aid entry + local emergency number per country
 - [ ] Tag-based filtering UI ("我遇到了什么事") — activate once entries per city grow beyond a screenful
+
+### Security hardening (D-027, Katie's 2026-07-19/20 direction: data safety is the absolute core)
+- [x] Argon2id KDF upgrade with verify-then-replace auto-migration + enforced password strength — done 2026-07-20, 43/43 tests, awaiting push + Katie's phone verification
+- [ ] **Make both GitHub repos private** — Katie asked 2026-07-20; blocked on `gh auth login` (her keyring token expired); fallback: manual Danger Zone steps
+- [ ] **Browser-history / usage-trace exposure** — top remaining survivor-threat gap (disguise mode or private-browsing guidance); surfaced in 2026-07-19 security review
+- [ ] External security audit — hackathon goal; "self-review isn't enough" acknowledged
 
 ### Core UX
 - [ ] **Biometric unlock (Face ID / fingerprint)** — replace daily password entry with platform biometrics (WebAuthn/passkey + PRF wrapping the master key); password remains the fallback + new-device path. Requested by Katie 2026-07-10 after friction feedback.

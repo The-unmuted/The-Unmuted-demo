@@ -1,5 +1,14 @@
 # Changelog — The Unmuted (非默)
 
+## 2026-07-20 — Argon2id KDF upgrade + enforced password strength (D-027)
+
+### Changed
+- **Key derivation upgraded to Argon2id** (`keyVault.ts`): new vaults wrap with Argon2id (64 MiB memory-hard, GPU-cracking resistant); `KeyBoxV2` format with `libsodium-wrappers-sumo` pinned exact. Legacy PBKDF2 v1 boxes still open; each box auto-migrates in the background on the next successful unlock with that secret, using **verify-then-replace** (`rewrapBoxVerified` proves the new box opens before persisting — a failed migration keeps the old box, user loses nothing).
+- **Password strength enforced** at all three creation points (vault setup, recovery reset, settings change): ≥8 chars, no digits-only, no repeated single char, common-password blocklist — bilingual errors (`passwordPolicy.ts`).
+
+### Verified
+- tsc clean, 43/43 vitest (8 new: v2 roundtrip, legacy v1 compatibility, verify-then-replace, password policy), eslint clean on touched files, production build OK. **Not yet deployed — awaiting Katie's push go-ahead + phone verification of unlock speed.**
+
 ## 2026-07-19 — Aid resource directory: city search + automated source monitoring (D-026)
 
 ### Added

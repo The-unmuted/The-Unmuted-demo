@@ -354,3 +354,13 @@ Per-file keys (random per evidence file) ──encrypt──▶ evidence blobs
 4. **What is NOT done:** no robo-dialing of hotlines to test them (unethical — would occupy crisis lines), no GPS-based city detection (manual picker only; browsing aid resources must not request location).
 
 **Why:** a survivor in crisis who dials a dead number may not try a second one. Verification-before-listing plus automated source monitoring is the strongest guarantee available without calling hotlines by machine.
+
+## D-027 — Argon2id 密钥派生升级 + 强制密码强度 (2026-07-20)
+
+**Decision:** (1) Key-box KDF upgraded from PBKDF2-SHA256 (310k) to Argon2id (libsodium INTERACTIVE preset: opslimit 2, memlimit 64 MiB) — new `KeyBoxV2` format; legacy v1 boxes remain openable and are migrated opportunistically on the next successful unlock. (2) Password creation (vault setup, recovery reset, change password) now enforces a strength policy: ≥8 chars, not digits-only, not one repeated char, not on a common-password blocklist (`src/lib/passwordPolicy.ts`).
+
+**Migration safety (verify-then-replace):** `rewrapBoxVerified` wraps with the new KDF and then PROVES the new box opens before it is ever persisted; any failure keeps the old box — a migration bug can never lock a user out. Password box migrates on password unlock; recovery box migrates only when the paper code is actually entered (its KEK can't be derived without it). Migration runs in the background and never blocks or fails the unlock itself.
+
+**Dependency rule:** `libsodium-wrappers-sumo` pinned to an exact version (no `^`) — upgrades are deliberate and the diff is reviewed before bumping (supply-chain discipline agreed with Katie).
+
+**Why:** Katie's direction 2026-07-20: "我们这个软件最最重要的核心永远是让用户的数据安全地保管在我们的软件上". Argon2id's memory-hardness (64 MiB per guess) defeats GPU-parallel cracking that PBKDF2 is weak against; the password-strength gate closes the weak-password hole that no KDF can fix. Chosen over the zero-dependency alternative (raising PBKDF2 iterations, ~2× gain) after the supply-chain trade-off was explained.

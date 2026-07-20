@@ -3,6 +3,7 @@ import { Settings, X, LogOut, Loader2, KeyRound } from "lucide-react";
 import { copyFor } from "@/lib/locale";
 import { getCurrentUser } from "@/lib/authService";
 import { unlockWithPassword, changePassword } from "@/lib/keyVaultService";
+import { checkPassword, passwordIssueCopy } from "@/lib/passwordPolicy";
 
 interface SettingsWidgetProps {
   language: "en" | "zh";
@@ -30,8 +31,9 @@ export default function SettingsWidget({ language, onLogout }: SettingsWidgetPro
     const trimmedNew = newPwd.trim();
     setPwdError(null);
     setPwdDone(false);
-    if (trimmedNew.length < 8) {
-      setPwdError(copyFor(language, "New password needs at least 8 characters.", "新密码至少需要 8 个字符。"));
+    const issue = checkPassword(trimmedNew);
+    if (issue) {
+      setPwdError(passwordIssueCopy(language, issue));
       return;
     }
     setPwdBusy(true);

@@ -32,6 +32,7 @@ import {
   unlockWithRecoveryCode,
 } from "@/lib/keyVaultService";
 import { normalizeRecoveryCode, isValidRecoveryCodeFormat } from "@/lib/keyVault";
+import { checkPassword, passwordIssueCopy } from "@/lib/passwordPolicy";
 import { hasPassword, verifyPassword, savePassword } from "@/lib/userCredentials";
 import UnlockSOSEntry from "./UnlockSOSEntry";
 
@@ -130,8 +131,9 @@ export default function LoginFlow({
   const handleSetPassword = async (rawPassword: string) => {
     // Trim so a pasted leading/trailing space never becomes part of the password
     const password = rawPassword.trim();
-    if (password.length < 8) {
-      toast.error(copyFor(language, "Use at least 8 characters.", "密码至少8位。"));
+    const issue = checkPassword(password);
+    if (issue) {
+      toast.error(passwordIssueCopy(language, issue));
       return;
     }
     setBusy(true);
@@ -191,8 +193,9 @@ export default function LoginFlow({
       );
       return;
     }
-    if (newPassword.length < 8) {
-      toast.error(copyFor(language, "New password: at least 8 characters.", "新密码至少8位。"));
+    const newPasswordIssue = checkPassword(newPassword);
+    if (newPasswordIssue) {
+      toast.error(passwordIssueCopy(language, newPasswordIssue));
       return;
     }
     setBusy(true);

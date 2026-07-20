@@ -7,9 +7,12 @@ import {
   openWithPassword,
   openWithRecoveryCode,
   rewrapPasswordBox,
+  rewrapBoxVerified,
+  boxNeedsUpgrade,
   rotateRecoveryCode,
   wrapFileKey,
   unwrapFileKey,
+  type KeyBoxV1,
 } from "./keyVault";
 
 async function randomFileKeyJwk(): Promise<JsonWebKey> {
@@ -88,5 +91,79 @@ describe("key vault lifecycle", () => {
     const viaNewCode = await openWithRecoveryCode(recoveryCode, recoveryBox);
     expect(await unwrapFileKey(viaNewCode, wrapped)).toEqual(fileKey);
     await expect(openWithRecoveryCode("ABCD-EFGH-2345", recoveryBox)).rejects.toThrow();
+  });
+});
+
+// ── D-027: Argon2id upgrade + legacy PBKDF2 compatibility ─────────────────────
+
+function b64(buf: ArrayBuffer | Uint8Array): string {
+  const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
+  let s = "";
+  for (const b of bytes) s += String.fromCharCode(b);
+  return btoa(s);
+}
+
+/** Reproduces the pre-2026-07 v1 wrap so we can prove old vaults still open. */
+async function legacyWrapV1(masterKeyRaw: ArrayBuffer, secret: string): Promise<KeyBoxV1> {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const material = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    "PBKDF2",
+    false,
+    ["deriveKey"]
+  );
+  const kek = await crypto.subtle.deriveKey(
+    { name: "PBKDF2", hash: "SHA-256", salt: salt as BufferSource, iterations: 310_000 },
+    material,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt", "decrypt"]
+  );
+  const data = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, kek, masterKeyRaw);
+  return {
+    v: 1,
+    kdf: "PBKDF2-SHA256",
+    iterations: 310_000,
+    salt: b64(salt),
+    iv: b64(iv),
+    data: b64(data),
+  };
+}
+
+describe("Argon2id KDF upgrade (D-027)", () => {
+  it("new vaults are wrapped with Argon2id (v2 boxes)", async () => {
+    const { passwordBox, recoveryBox } = await setupKeyVault("pw-argon-1", "ABCD-EFGH-2345");
+    expect(passwordBox.v).toBe(2);
+    expect(passwordBox.kdf).toBe("Argon2id");
+    expect(recoveryBox.v).toBe(2);
+    expect(boxNeedsUpgrade(passwordBox)).toBe(false);
+  });
+
+  it("legacy v1 PBKDF2 boxes still open with the right password", async () => {
+    const masterKeyRaw = crypto.getRandomValues(new Uint8Array(32)).buffer;
+    const v1Box = await legacyWrapV1(masterKeyRaw, "old-user-pw");
+    expect(boxNeedsUpgrade(v1Box)).toBe(true);
+
+    const key = await openWithPassword("old-user-pw", v1Box);
+    expect(key.type).toBe("secret");
+    await expect(openWithPassword("wrong-pw", v1Box)).rejects.toThrow();
+  });
+
+  it("verify-then-replace: upgraded box opens the same master key", async () => {
+    const masterKeyRaw = crypto.getRandomValues(new Uint8Array(32)).buffer;
+    const v1Box = await legacyWrapV1(masterKeyRaw, "old-user-pw");
+    const masterKey = await openWithPassword("old-user-pw", v1Box);
+
+    const fileKey = await randomFileKeyJwk();
+    const wrapped = await wrapFileKey(masterKey, fileKey);
+
+    const v2Box = await rewrapBoxVerified(masterKey, "old-user-pw");
+    expect(v2Box.kdf).toBe("Argon2id");
+
+    const reopened = await openWithPassword("old-user-pw", v2Box);
+    expect(await unwrapFileKey(reopened, wrapped)).toEqual(fileKey);
+    await expect(openWithPassword("wrong-pw", v2Box)).rejects.toThrow();
   });
 });
