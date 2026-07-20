@@ -12,8 +12,11 @@ import {
   openWithPassword,
   openWithRecoveryCode,
   rewrapPasswordBox,
+  rewrapBoxVerified,
+  boxNeedsUpgrade,
   rotateRecoveryCode,
   generateRecoveryCode,
+  normalizeRecoveryCode,
   type KeyBox,
 } from "./keyVault";
 
@@ -126,6 +129,35 @@ export type UnlockResult =
   | { ok: true; key: CryptoKey }
   | { ok: false; reason: UnlockFailureReason };
 
+/**
+ * Opportunistic KDF migration (PBKDF2 → Argon2id) after a successful unlock.
+ * Verify-then-replace: `rewrapBoxVerified` throws unless the NEW box provably
+ * opens, so any failure leaves the old box in place — the user can never be
+ * locked out by a migration bug. Runs in the background; unlock never waits.
+ */
+async function upgradeLegacyBoxes(
+  userId: string,
+  masterKey: CryptoKey,
+  boxes: KeyBoxes,
+  secrets: { password?: string; recoveryCode?: string }
+): Promise<void> {
+  try {
+    let { passwordBox, recoveryBox } = boxes;
+    let changed = false;
+    if (secrets.password && boxNeedsUpgrade(passwordBox)) {
+      passwordBox = await rewrapBoxVerified(masterKey, secrets.password);
+      changed = true;
+    }
+    if (secrets.recoveryCode && boxNeedsUpgrade(recoveryBox)) {
+      recoveryBox = await rewrapBoxVerified(masterKey, normalizeRecoveryCode(secrets.recoveryCode));
+      changed = true;
+    }
+    if (changed) await persistBoxes(userId, { passwordBox, recoveryBox });
+  } catch {
+    // Old boxes stay valid; migration retries on a future unlock.
+  }
+}
+
 export async function unlockWithPassword(userId: string, password: string): Promise<UnlockResult> {
   const boxes = await loadBoxes(userId);
   if (!boxes) return { ok: false, reason: "vault-unavailable" };
@@ -137,6 +169,7 @@ export async function unlockWithPassword(userId: string, password: string): Prom
       const key = await openWithPassword(candidate, boxes.passwordBox);
       sessionMasterKey = key;
       void syncPendingBoxes(userId);
+      void upgradeLegacyBoxes(userId, key, boxes, { password: candidate });
       return { ok: true, key };
     } catch {
       // try the next candidate
@@ -156,7 +189,15 @@ export async function unlockWithRecoveryCode(
   try {
     const key = await openWithRecoveryCode(code, boxes.recoveryBox);
     const passwordBox = await rewrapPasswordBox(key, newPassword);
-    await persistBoxes(userId, { passwordBox, recoveryBox: boxes.recoveryBox });
+    let recoveryBox = boxes.recoveryBox;
+    if (boxNeedsUpgrade(recoveryBox)) {
+      try {
+        recoveryBox = await rewrapBoxVerified(key, normalizeRecoveryCode(code));
+      } catch {
+        // keep the legacy recovery box — same paper code keeps working
+      }
+    }
+    await persistBoxes(userId, { passwordBox, recoveryBox });
     sessionMasterKey = key;
     return { ok: true, key };
   } catch {

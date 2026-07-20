@@ -11,13 +11,21 @@
  * All derivation and unwrapping happens on-device via Web Crypto.
  */
 
+import sodium from "libsodium-wrappers-sumo";
+
 // Charset excludes ambiguous characters (0/O, 1/I/L) — codes are hand-copied on paper
 const CODE_CHARSET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 const CODE_LENGTH = 12;
 
 const PBKDF2_ITERATIONS = 310_000;
 
-export interface KeyBox {
+// libsodium OPSLIMIT/MEMLIMIT_INTERACTIVE — the standard preset for login-time
+// derivation; memory-hardness (64 MiB per guess) is what defeats GPU cracking.
+const ARGON2_OPSLIMIT = 2;
+const ARGON2_MEMLIMIT = 67_108_864;
+
+/** Legacy boxes (pre 2026-07). Still openable; migrated on next successful unlock. */
+export interface KeyBoxV1 {
   v: 1;
   kdf: "PBKDF2-SHA256";
   iterations: number;
@@ -25,6 +33,18 @@ export interface KeyBox {
   iv: string;   // base64
   data: string; // base64 — master key encrypted by the derived KEK
 }
+
+export interface KeyBoxV2 {
+  v: 2;
+  kdf: "Argon2id";
+  opslimit: number;
+  memlimit: number;
+  salt: string; // base64
+  iv: string;   // base64
+  data: string; // base64 — master key encrypted by the derived KEK
+}
+
+export type KeyBox = KeyBoxV1 | KeyBoxV2;
 
 export interface KeyVaultSetup {
   masterKey: CryptoKey;
@@ -72,7 +92,7 @@ export function isValidRecoveryCodeFormat(input: string): boolean {
 
 // ── KDF + wrap/unwrap primitives ──────────────────────────────────────────────
 
-async function deriveKek(
+async function deriveKekPbkdf2(
   secret: string,
   salt: Uint8Array,
   iterations: number
@@ -93,15 +113,45 @@ async function deriveKek(
   );
 }
 
+async function deriveKekArgon2id(
+  secret: string,
+  salt: Uint8Array,
+  opslimit: number,
+  memlimit: number
+): Promise<CryptoKey> {
+  await sodium.ready;
+  const raw = sodium.crypto_pwhash(
+    32,
+    secret,
+    salt,
+    opslimit,
+    memlimit,
+    sodium.crypto_pwhash_ALG_ARGON2ID13
+  );
+  return crypto.subtle.importKey("raw", raw as BufferSource, { name: "AES-GCM" }, false, [
+    "encrypt",
+    "decrypt",
+  ]);
+}
+
+function kekForBox(box: KeyBox, secret: string): Promise<CryptoKey> {
+  if (box.kdf === "Argon2id") {
+    return deriveKekArgon2id(secret, fromB64(box.salt), box.opslimit, box.memlimit);
+  }
+  return deriveKekPbkdf2(secret, fromB64(box.salt), box.iterations);
+}
+
+/** New wraps always use the current KDF (Argon2id, v2). */
 async function wrapMasterKey(masterKeyRaw: ArrayBuffer, secret: string): Promise<KeyBox> {
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  const kek = await deriveKek(secret, salt, PBKDF2_ITERATIONS);
+  const kek = await deriveKekArgon2id(secret, salt, ARGON2_OPSLIMIT, ARGON2_MEMLIMIT);
   const data = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, kek, masterKeyRaw);
   return {
-    v: 1,
-    kdf: "PBKDF2-SHA256",
-    iterations: PBKDF2_ITERATIONS,
+    v: 2,
+    kdf: "Argon2id",
+    opslimit: ARGON2_OPSLIMIT,
+    memlimit: ARGON2_MEMLIMIT,
     salt: toB64(salt),
     iv: toB64(iv),
     data: toB64(data),
@@ -109,7 +159,7 @@ async function wrapMasterKey(masterKeyRaw: ArrayBuffer, secret: string): Promise
 }
 
 async function unwrapMasterKey(box: KeyBox, secret: string): Promise<CryptoKey> {
-  const kek = await deriveKek(secret, fromB64(box.salt), box.iterations);
+  const kek = await kekForBox(box, secret);
   const raw = await crypto.subtle.decrypt(
     { name: "AES-GCM", iv: fromB64(box.iv) as BufferSource },
     kek,
@@ -150,13 +200,26 @@ export function openWithRecoveryCode(code: string, recoveryBox: KeyBox): Promise
   return unwrapMasterKey(recoveryBox, normalizeRecoveryCode(code));
 }
 
-/** After password change: re-wrap the password box; the recovery box is untouched */
-export async function rewrapPasswordBox(
-  masterKey: CryptoKey,
-  newPassword: string
-): Promise<KeyBox> {
+/** True for legacy PBKDF2 boxes that should be re-wrapped with Argon2id. */
+export function boxNeedsUpgrade(box: KeyBox): boolean {
+  return box.kdf !== "Argon2id";
+}
+
+/**
+ * Re-wrap with the current KDF, then PROVE the new box opens before returning
+ * it. If anything is wrong the throw happens here — callers keep the old box
+ * and the user loses nothing (verify-then-replace).
+ */
+export async function rewrapBoxVerified(masterKey: CryptoKey, secret: string): Promise<KeyBox> {
   const raw = await crypto.subtle.exportKey("raw", masterKey);
-  return wrapMasterKey(raw, newPassword);
+  const box = await wrapMasterKey(raw, secret);
+  await unwrapMasterKey(box, secret);
+  return box;
+}
+
+/** After password change: re-wrap the password box; the recovery box is untouched */
+export function rewrapPasswordBox(masterKey: CryptoKey, newPassword: string): Promise<KeyBox> {
+  return rewrapBoxVerified(masterKey, newPassword);
 }
 
 /** Rotate the recovery code: returns the new code + its box; old box must be discarded */
@@ -164,8 +227,7 @@ export async function rotateRecoveryCode(
   masterKey: CryptoKey
 ): Promise<{ recoveryCode: string; recoveryBox: KeyBox }> {
   const recoveryCode = generateRecoveryCode();
-  const raw = await crypto.subtle.exportKey("raw", masterKey);
-  const recoveryBox = await wrapMasterKey(raw, normalizeRecoveryCode(recoveryCode));
+  const recoveryBox = await rewrapBoxVerified(masterKey, normalizeRecoveryCode(recoveryCode));
   return { recoveryCode, recoveryBox };
 }
 
