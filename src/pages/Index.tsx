@@ -8,6 +8,7 @@ import PsychPage from "@/components/PsychPage";
 import LegalPage from "@/components/LegalPage";
 import { useLocale, copyFor } from "@/lib/locale";
 import FeedbackWidget from "@/components/FeedbackWidget";
+import { QuickExitButton } from "@/components/QuickExit";
 import SettingsWidget from "@/components/SettingsWidget";
 import LoginFlow from "@/components/LoginFlow";
 import { signOut } from "@/lib/authService";
@@ -63,6 +64,7 @@ export default function Index() {
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1">
+          <QuickExitButton language={language} />
           <FeedbackWidget language={language} />
           {isSignedIn && (
             <SettingsWidget language={language} onLogout={handleLogout} />

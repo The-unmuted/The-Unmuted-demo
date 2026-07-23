@@ -364,3 +364,9 @@ Per-file keys (random per evidence file) ──encrypt──▶ evidence blobs
 **Dependency rule:** `libsodium-wrappers-sumo` pinned to an exact version (no `^`) — upgrades are deliberate and the diff is reviewed before bumping (supply-chain discipline agreed with Katie).
 
 **Why:** Katie's direction 2026-07-20: "我们这个软件最最重要的核心永远是让用户的数据安全地保管在我们的软件上". Argon2id's memory-hardness (64 MiB per guess) defeats GPU-parallel cracking that PBKDF2 is weak against; the password-strength gate closes the weak-password hole that no KDF can fix. Chosen over the zero-dependency alternative (raising PBKDF2 iterations, ~2× gain) after the supply-chain trade-off was explained.
+
+## D-028 — 使用痕迹防护：快速离开 + 安全使用提示 (2026-07-22)
+
+**Decision:** (1) A "离开/Exit" quick-exit pill sits in the header on every screen, locked or unlocked; one tap runs `location.replace` to a neutral weather search (baidu 天气 for zh, Google weather for en), so the Back button cannot return to the app. (2) A plain-language "如何安全地使用本站" sheet (link under the login card + entry in Settings) teaches private browsing, history clearing (iOS Safari / Android Chrome steps), and using a safer device when the phone may be inspected (`QuickExit.tsx`).
+
+**Why:** the 2026-07-19 security review identified usage-trace exposure — someone close to the user picking up her phone or reading browser history — as the most realistic remaining leak vector (server-side content leakage is already near-zero by architecture). Quick exit + private-browsing guidance is the standard mitigation on DV-support sites. Chosen over a full "disguise mode" (app pretending to be something else) for now: honest scope, no new attack surface, shippable without entity. Limits acknowledged: JS cannot clear existing history; `location.replace` only removes the current entry — hence the guidance sheet.

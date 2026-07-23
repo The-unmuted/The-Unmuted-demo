@@ -2,7 +2,9 @@
 
 _This file captures the current project state for AI assistants. Update before ending each work session._
 
-_Last updated: 2026-07-20_
+_Last updated: 2026-07-22_
+
+**2026-07-22:** D-027 pushed & deployed (Katie's phone verification of unlock/migration still pending). D-028 quick-exit + safe-use tips implemented, committed, awaiting push. GitHub repos still public — blocked: Katie's account is org *member*, not admin; an org owner (likely the teammate who created The-unmuted org) must promote her or flip visibility themselves. WeChat mini-program evaluated: gated on entity + ICP + D-016; privacy concern (WeChat usage traces) noted — if ever done, entry-point only, core stays in the web app. Entity decision: register right after the UN hackathon, prep (name/legal-rep/budget) beforehand.
 
 **2026-07-20 session:** D-026 aid directory + seed list pushed & deployed. D-027 committed locally (Argon2id KDF upgrade with verify-then-replace migration + password strength policy; 43/43 tests) — NOT yet pushed, awaiting Katie. New team doc: `docs/非默-功能与安全说明-团队版.md`. GitHub repos → private pending Katie's `gh auth login`. Security self-assessment given to Katie: 70/100 overall; top gaps = browser-history traces, no external audit, web-delivery model.
 

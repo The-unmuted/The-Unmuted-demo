@@ -1,5 +1,14 @@
 # Changelog — The Unmuted (非默)
 
+## 2026-07-22 — Usage-trace protection: quick exit + safe-use tips (D-028)
+
+### Added
+- **Quick-exit button** ("离开/Exit", `QuickExit.tsx`) in the header on all screens including the login wall: one tap replaces the page with a neutral weather search via `location.replace` — Back cannot return to the app.
+- **Safe-use tips sheet**: link under the login card + "安全使用提示" entry in Settings — private-browsing how-to (iOS Safari / Android Chrome), history clearing steps, safer-device advice. All copy bilingual.
+
+### Verified
+- tsc clean, 43/43 vitest, eslint clean, production build OK. UI not browser-tested locally — Katie to verify on her phone after deploy.
+
 ## 2026-07-20 — Argon2id KDF upgrade + enforced password strength (D-027)
 
 ### Changed

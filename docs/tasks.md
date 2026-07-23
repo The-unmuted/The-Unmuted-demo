@@ -61,7 +61,7 @@ _Last updated: 2026-07-10_
 ### Security hardening (D-027, Katie's 2026-07-19/20 direction: data safety is the absolute core)
 - [x] Argon2id KDF upgrade with verify-then-replace auto-migration + enforced password strength — done 2026-07-20, 43/43 tests, awaiting push + Katie's phone verification
 - [ ] **Make both GitHub repos private** — Katie asked 2026-07-20; blocked on `gh auth login` (her keyring token expired); fallback: manual Danger Zone steps
-- [ ] **Browser-history / usage-trace exposure** — top remaining survivor-threat gap (disguise mode or private-browsing guidance); surfaced in 2026-07-19 security review
+- [x] **Browser-history / usage-trace exposure** — first mitigation shipped 2026-07-22 (D-028): header quick-exit button + safe-use tips sheet; full disguise mode remains a future option if warranted
 - [ ] External security audit — hackathon goal; "self-review isn't enough" acknowledged
 
 ### Core UX

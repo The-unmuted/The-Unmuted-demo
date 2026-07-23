@@ -35,6 +35,7 @@ import { normalizeRecoveryCode, isValidRecoveryCodeFormat } from "@/lib/keyVault
 import { checkPassword, passwordIssueCopy } from "@/lib/passwordPolicy";
 import { hasPassword, verifyPassword, savePassword } from "@/lib/userCredentials";
 import UnlockSOSEntry from "./UnlockSOSEntry";
+import { SafetyTips } from "./QuickExit";
 
 const LOGO_SRC = "/the-unmuted-mark.png";
 
@@ -373,6 +374,7 @@ export default function LoginFlow({
             onSubmit={handleLocalSetPassword}
           />
         )}
+        <SafetyTips language={language} variant="link" />
       </div>
 
       <UnlockSOSEntry language={language} />

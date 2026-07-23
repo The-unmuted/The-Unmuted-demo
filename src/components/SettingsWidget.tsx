@@ -4,6 +4,7 @@ import { copyFor } from "@/lib/locale";
 import { getCurrentUser } from "@/lib/authService";
 import { unlockWithPassword, changePassword } from "@/lib/keyVaultService";
 import { checkPassword, passwordIssueCopy } from "@/lib/passwordPolicy";
+import { SafetyTips } from "./QuickExit";
 
 interface SettingsWidgetProps {
   language: "en" | "zh";
@@ -144,6 +145,10 @@ export default function SettingsWidget({ language, onLogout }: SettingsWidgetPro
 
           {/* Divider */}
           <div className="my-4 h-px bg-border" />
+
+          <div className="mb-3">
+            <SafetyTips language={language} variant="menu-item" />
+          </div>
 
           {/* Logout */}
           <button
