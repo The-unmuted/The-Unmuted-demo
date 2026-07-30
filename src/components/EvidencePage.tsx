@@ -773,7 +773,100 @@ export default function EvidencePage({
     else setUnlockError("wrong-secret");
   };
 
+  // D-031: signed in via OTP without the password — the whole evidence section
+  // stays behind this gate until the vault password is entered once.
+  const vaultGateLocked = Boolean(vault.userId) && !vault.canUseVault;
+  const [gatePwd, setGatePwd] = useState("");
+  const [gateShowPwd, setGateShowPwd] = useState(false);
+  const [gateBusy, setGateBusy] = useState(false);
+  const [gateError, setGateError] = useState<UnlockFailureReason | null>(null);
+  const [, bumpVaultTick] = useState(0);
+
+  const handleVaultGateUnlock = async () => {
+    if (!vault.userId) return;
+    setGateBusy(true);
+    setGateError(null);
+    const res = await unlockWithPassword(vault.userId, gatePwd);
+    setGateBusy(false);
+    if (!res.ok) {
+      setGateError(res.reason);
+      return;
+    }
+    setGatePwd("");
+    bumpVaultTick((t) => t + 1);
+    void vault.refreshHistory();
+    void vault.syncNow();
+  };
+
   const isProcessing = vault.step === "encrypting" || vault.step === "saving";
+
+  if (vaultGateLocked) {
+    return (
+      <div className="flex flex-col gap-5 px-4 py-4">
+        <div className="pt-2 text-center">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
+            <Lock className="h-6 w-6 text-primary" />
+          </div>
+          <h1 className="text-xl font-black text-foreground">
+            {copyFor(language, "Evidence Vault is locked", "存证保险柜已锁定")}
+          </h1>
+          <p className="mt-2 text-sm leading-5 text-muted-foreground">
+            {copyFor(
+              language,
+              "You signed in with an email code. Your evidence is encrypted with your password — enter it once to unlock this section.",
+              "你是用邮箱验证码登录的。证据是用你的密码加密的——输入一次密码即可解锁存证。"
+            )}
+          </p>
+        </div>
+        <div className="rounded-[1.75rem] border border-border bg-card/80 p-4">
+          <div className="space-y-3">
+            <div className="relative">
+              <input
+                value={gatePwd}
+                onChange={(e) => setGatePwd(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && gatePwd && handleVaultGateUnlock()}
+                placeholder={copyFor(language, "Password", "密码")}
+                type={gateShowPwd ? "text" : "password"}
+                className="w-full rounded-2xl border border-border bg-background px-4 py-3 pr-11 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
+              />
+              <button
+                onClick={() => setGateShowPwd(!gateShowPwd)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              >
+                {gateShowPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+            {gateError && (
+              <p className="text-xs leading-5 text-destructive">
+                {gateError === "vault-unavailable"
+                  ? copyFor(
+                      language,
+                      "Couldn't open your vault right now. Check your connection and try again.",
+                      "暂时打不开你的保险柜。请检查网络后再试。"
+                    )
+                  : copyFor(language, "Incorrect password. Please try again.", "密码错误，请再试一次。")}
+              </p>
+            )}
+            <button
+              onClick={handleVaultGateUnlock}
+              disabled={!gatePwd || gateBusy}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3 text-sm font-bold text-primary-foreground disabled:opacity-60"
+            >
+              {gateBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
+              {copyFor(language, "Unlock evidence", "解锁存证")}
+            </button>
+            <p className="text-[11px] leading-4 text-muted-foreground">
+              {copyFor(
+                language,
+                "Only your password can decrypt your evidence — the server never sees it. Forgot it? Sign out and use your paper recovery key.",
+                "只有密码能解密你的证据——服务器看不到密码和证据内容。忘记密码？退出登录后用纸上的恢复钥匙进入。"
+              )}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // ── Hub ──────────────────────────────────────────────────────────────────────
   if (view === "hub") {

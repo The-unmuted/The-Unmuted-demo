@@ -62,7 +62,8 @@ recovery code ──PBKDF2────────> KEK₂ ──AES-GCM──> 
 ```
 
 - Wrapped master-key boxes live in the `key_vaults` table; the **password itself never leaves the device**.
-- Persistent Supabase session per device → OTP only on new devices; but the master key is memory-only, so every page load requires the password.
+- Persistent Supabase session per device → OTP only on new devices; the master key is memory-only.
+- **Entry choice (D-031):** each page load the user enters via password (full unlock) OR email code (`LoginFlow` — "改用邮箱验证码登录" / post-OTP "先直接进入"). Code entry opens the app with the vault sealed; the 存证 tab shows a one-time password gate (`EvidencePage` vault gate). A code can never decrypt evidence — only the password/recovery code derive the KEK.
 - Losing both password and recovery code = permanent data loss (by design — the server cannot decrypt, even under compulsion).
 - Recovery code is displayed exactly once at signup and never stored.
 - Legacy: `useZKPIdentity` (localStorage commitment) still provides the local identity object; bcrypt local passwords remain only for legacy accounts.

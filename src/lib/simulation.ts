@@ -38,7 +38,7 @@ export interface SimScene {
   /** Who speaks the `line` bubble (民警 / 律师 / …). */
   speaker?: SimText;
   line?: SimText;
-  /** Grey coach hint (同类产品-style). */
+  /** Grey coach hint shown between bubbles. */
   coach?: SimText;
   choices?: SimChoice[];
   /** Flag-dependent auto-advance (evaluated in order; last entry must be unconditional). */

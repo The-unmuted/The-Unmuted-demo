@@ -57,7 +57,8 @@ export default function LoginFlow({
   onUnlocked,
 }: {
   language: AppLanguage;
-  onUnlocked: (email: string) => void;
+  /** vaultLocked = signed in via OTP without the password; evidence stays sealed until unlocked in the vault. */
+  onUnlocked: (email: string, opts?: { vaultLocked?: boolean }) => void;
 }) {
   const [stage, setStage] = useState<Stage>("checking");
   const [email, setEmail] = useState("");
@@ -65,6 +66,10 @@ export default function LoginFlow({
   const [busy, setBusy] = useState(false);
   const [recoveryCode, setRecoveryCode] = useState("");
   const [unlockError, setUnlockError] = useState<string | null>(null);
+  // D-031: user picked "sign in with code instead" from the unlock screen
+  const [otpLogin, setOtpLogin] = useState(false);
+  // OTP was completed this session, so the unlock screen may offer "enter now, unlock evidence later"
+  const [cameViaOtp, setCameViaOtp] = useState(false);
 
   const goTo = (next: Stage) => {
     setUnlockError(null);
@@ -126,7 +131,19 @@ export default function LoginFlow({
     setUserId(user.id);
     const exists = await hasVault(user.id);
     setBusy(false);
+    if (exists && otpLogin) {
+      // User chose the code path on purpose — enter now, evidence stays sealed.
+      toast.success(copyFor(language, "Welcome back!", "欢迎回来！"));
+      onUnlocked(email, { vaultLocked: true });
+      return;
+    }
+    setCameViaOtp(true);
     setStage(exists ? "unlock" : "set-password");
+  };
+
+  const handleOtpLoginInstead = async () => {
+    setOtpLogin(true);
+    await handleEmail(email);
   };
 
   const handleSetPassword = async (rawPassword: string) => {
@@ -326,6 +343,37 @@ export default function LoginFlow({
             onSubmit={handleUnlock}
             footer={
               <div className="space-y-2">
+                {cameViaOtp ? (
+                  <button
+                    onClick={() => onUnlocked(email, { vaultLocked: true })}
+                    className="w-full rounded-2xl border border-border bg-card py-3 text-sm font-bold text-foreground active:scale-[0.98]"
+                  >
+                    {copyFor(
+                      language,
+                      "Enter without password (evidence unlocks later)",
+                      "先直接进入（打开存证时再输密码）"
+                    )}
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleOtpLoginInstead}
+                    disabled={busy}
+                    className="w-full rounded-2xl border border-border bg-card py-3 text-sm font-bold text-foreground active:scale-[0.98] disabled:opacity-60"
+                  >
+                    {copyFor(
+                      language,
+                      "Sign in with email code instead",
+                      "改用邮箱验证码登录"
+                    )}
+                  </button>
+                )}
+                <p className="text-[11px] leading-4 text-muted-foreground">
+                  {copyFor(
+                    language,
+                    "The code signs you in; only your password can decrypt your evidence — the server never sees it.",
+                    "验证码用于登录；证据只有密码才能解密——服务器看不到你的密码和证据内容。"
+                  )}
+                </p>
                 <button
                   onClick={() => goTo("recovery-unlock")}
                   className="w-full text-xs text-muted-foreground underline"

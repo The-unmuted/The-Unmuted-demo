@@ -70,7 +70,7 @@ _Last updated: 2026-07-30_
 
 ### 模拟功能 (报案流程模拟器, D-030 — design doc: `docs/模拟功能-调研与设计方案.md`; Katie confirmed all 4 decisions 2026-07-30)
 - [x] Research: mainland China legal process maps (criminal main line + 家暴三轨 + 性侵 + 性骚扰三路径) with authoritative sources — done 2026-07-30
-- [x] 同类产品 screenshots provided by Katie 2026-07-30 → mechanism analysis in design doc; **decision: script dialogue, no AI/free-text** (privacy + content safety + static architecture)
+- [x] Mechanism analysis of comparable process-simulator products in design doc (2026-07-30); **decision: script dialogue, no AI/free-text** (privacy + content safety + static architecture)
 - [x] **Phase 1 build — done 2026-07-30**: 援助 tab merge (`AidPage`), simulator framework (`simulation.ts` + integrity tests), chat player UI, 家暴 scenario (11 scenes / 5 endings / 14 debrief rules); 62/62 tests, headless smoke clean
 - [ ] **Katie/team: find legal reviewer** (公益律师 / 法学院志愿者 / 妇联渠道) — scenario text carries "模拟版本 · 待法律校对" badge until reviewed; revise with lawyers per Katie 2026-07-30
 - [x] **Phase 2+3 build — done 2026-07-30**: 性骚扰 scenario (12 scenes / 7 endings / 13 debrief rules; 三路径 + 6个月治安时效) and 性侵 scenario (12 scenes / 7 endings / 15 debrief rules; 黄金72小时, aftermath-only writing, non-blaming debrief, 复议/立案监督, 私了陷阱); picker placeholders removed; 72/72 tests, headless smoke clean. All three scenarios await lawyer review before badge removal.
