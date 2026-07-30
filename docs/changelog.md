@@ -1,5 +1,11 @@
 # Changelog — The Unmuted (非默)
 
+## 2026-07-30 — Git history purge of competitor name (both repos)
+
+### Changed
+- Rewrote the full git history of both GitHub repos with `git filter-repo --replace-text/--replace-message` — every historical file blob and two commit messages that contained the competitor mini-program's name now say 同类产品 instead. Force-pushed to The-Unmuted-v2 (`main`) and The-Unmuted-demo (`main` + `feature/feedback-login`). **All commit hashes changed** (old hash references in docs/notes are stale); teammates must re-clone or `git fetch && git reset --hard origin/main`. GitHub may still serve old dangling commits by direct SHA URL until garbage collection — a GitHub Support request (or deleting the demo repo) removes those.
+- Demo repo deletion requested by Katie but blocked: her account is an org **member** (admin: false) on that repo — only an org owner can delete it (Settings → Danger Zone).
+
 ## 2026-07-30 — Login choice: code or password + competitor-name scrub (D-031)
 
 ### Added
@@ -7,7 +13,7 @@
 - 性侵 scenario title made direct per Katie: 「我被性侵后」/ "After I Was Sexually Assaulted".
 
 ### Removed
-- All references to the competitor mini-program name scrubbed from docs and code comments (design doc, decisions, ai_context, tasks, changelog, `simulation.ts`). Note: the name still exists in old git commits; erasing that would require a history rewrite + force-push.
+- All references to the competitor mini-program name scrubbed from docs and code comments (design doc, decisions, ai_context, tasks, changelog, `simulation.ts`). (The name was later purged from git history too — see the entry above.)
 
 ### Verified
 - tsc clean, 72/72 vitest, eslint clean on touched files, production build OK, headless-Chrome boot smoke zero errors. Live OTP/password flows to be phone-tested by Katie.
