@@ -6,8 +6,8 @@ import { ShieldCheck } from "lucide-react";
 import SOSPage from "@/components/SOSPage";
 import BottomNav, { type MainTab } from "@/components/BottomNav";
 import EvidencePage from "@/components/EvidencePage";
-import PsychPage from "@/components/PsychPage";
-import LegalPage from "@/components/LegalPage";
+import AidPage from "@/components/AidPage";
+import SimulationPage from "@/components/SimulationPage";
 import { useLocale, copyFor } from "@/lib/locale";
 import FeedbackWidget from "@/components/FeedbackWidget";
 import { QuickExitButton } from "@/components/QuickExit";
@@ -121,8 +121,10 @@ export default function Index() {
             {activeTab === "evidence" && (
               <EvidencePage language={language} userEmail={pendingEmail || undefined} />
             )}
-            {activeTab === "psych" && <PsychPage language={language} />}
-            {activeTab === "legal" && <LegalPage language={language} />}
+            {activeTab === "aid" && <AidPage language={language} />}
+            {activeTab === "simulation" && (
+              <SimulationPage language={language} onGoToAid={() => setActiveTab("aid")} />
+            )}
           </main>
 
           {/* Bottom nav */}

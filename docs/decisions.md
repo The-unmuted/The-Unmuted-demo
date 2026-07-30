@@ -382,3 +382,13 @@ Per-file keys (random per evidence file) ──encrypt──▶ evidence blobs
 **Decision 3 — CSP + security headers (review item 2, partial):** `vercel.json` now sends `Content-Security-Policy` (default-src 'self'; connect-src limited to Supabase + ChainMaker BaaS; fonts allowed from Google Fonts; frame-ancestors 'none'), `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer` (external links — hotline sites, quick-exit target — never learn the user came from 非默), `Permissions-Policy` (camera/mic/geolocation self-only), and HSTS. Verified with headers applied locally: zero CSP violations, fonts + Supabase reachable. **Limit:** headers apply on Vercel only; CloudBase COS static hosting doesn't send them — revisit at D-016 migration. Stale `index.html` meta description ("Web3 匿名举报…") replaced with the neutral brand line.
 
 **Still open from the review (tracked, not this round):** TSA/RFC3161 anchoring + record-level tamper evidence (needs entity), reproducible builds/release hashes, ChainMaker serverless proxy.
+
+## D-030 — 模拟功能一期：脚本对话模拟器（不接 AI）+ 援助 tab 合并 (2026-07-30)
+
+**Context:** Katie 提出参照"同类产品"小程序做一个"从案发到结案"的报案流程模拟器（调研文档：`docs/模拟功能-调研与设计方案.md`）。她提供的截图显示"同类产品"的自由文本输入背后是大模型实时扮演对方并打分。
+
+**Decision 1 — 脚本对话，不接 AI、不收自由文本（Katie 确认 2026-07-30）:** 采用"同类产品"的聊天式体验形态（旁白/对方气泡/快捷选项/灰色教练提示/即时反馈/结局复盘），但全部内容来自法律校对的 JSON 脚本。三个理由：(1) 隐私红线——用户自由输入的受害经历发给任何 AI API 就离开设备，与"服务器只见乱码"承诺冲突；(2) 内容安全——家暴/性侵语境下 AI 实时输出无法逐句校对，错误法律信息代价极高；(3) 架构——纯静态 SPA 无服务器，接 AI 需 serverless 代理 + 生成式 AI 合规。AI 自由输入留作远期可选项，且永不用于施暴相关叙述。不做"剩余次数"限制（那是 AI 成本控制产物；练习应鼓励重复）。
+
+**Decision 2 — 援助 tab 合并:** 心理 + 法律合并为一个"援助"tab（`AidPage.tsx` 顶部分段切换，内部原样复用 PsychPage/LegalPage），空出第 4 格给"模拟"。底部导航：求助 / 存证 / 援助 / 模拟。
+
+**Decision 3 — 内容与代码分离 + 诚实标注:** 场景 JSON 在 `src/data/simulations/`（双语、flags→复盘规则、法条依据字段），`src/lib/simulation.ts` 提供类型/加载/结构校验（所有指针可达、双语完整、无环——单元测试强制）。一期家暴场景（11 幕、5 结局、14 条复盘规则）依据反家暴法第15/16/23-32条、最高法2022保护令规定、民法典1091条撰写；UI 上明确标注"模拟版本 · 待法律校对"徽章 + 免责声明，**律师通读校对前不得移除徽章**。安全红线落地：不渲染暴力细节、每幕常驻"我现在就需要真实帮助"出口（110/12338/12348 + 援助目录）、复盘语言指向环节与方法而非用户本人、选择零保存零上传。

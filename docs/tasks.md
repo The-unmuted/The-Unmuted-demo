@@ -68,13 +68,12 @@ _Last updated: 2026-07-30_
 - [ ] **Security headers on CloudBase** — vercel.json headers don't apply to the China mirror (COS static hosting); revisit at D-016 Tencent migration
 - [ ] External security audit (human, paid) — hackathon goal; "self-review isn't enough" acknowledged
 
-### 模拟功能 (报案流程模拟器, proposed 2026-07-30 — design doc: `docs/模拟功能-调研与设计方案.md`, awaiting Katie's confirmation)
+### 模拟功能 (报案流程模拟器, D-030 — design doc: `docs/模拟功能-调研与设计方案.md`; Katie confirmed all 4 decisions 2026-07-30)
 - [x] Research: mainland China legal process maps (criminal main line + 家暴三轨 + 性侵 + 性骚扰三路径) with authoritative sources — done 2026-07-30
-- [ ] **Katie: provide 同类产品 mini-program screenshots/录屏** (场景页/决策页/复盘页) — WeChat mini-program content is not on the open web
-- [ ] **Katie: confirm phasing** (家暴 scenario first) + approve merging 心理+法律 into one 援助 tab (frees the 4th nav slot for 模拟)
-- [ ] **Katie/team: find legal reviewer** (公益律师 / 法学院志愿者 / 妇联渠道) — all scenario text must be legally reviewed before launch
-- [ ] Phase 1 build (after confirmation): 援助 tab merge + simulator framework (JSON scenario trees + flags→复盘) + one complete 家暴 scenario
-- [ ] Phase 2: 性骚扰 scenario; Phase 3: 性侵 scenario (most sensitive, last)
+- [x] 同类产品 screenshots provided by Katie 2026-07-30 → mechanism analysis in design doc; **decision: script dialogue, no AI/free-text** (privacy + content safety + static architecture)
+- [x] **Phase 1 build — done 2026-07-30**: 援助 tab merge (`AidPage`), simulator framework (`simulation.ts` + integrity tests), chat player UI, 家暴 scenario (11 scenes / 5 endings / 14 debrief rules); 62/62 tests, headless smoke clean
+- [ ] **Katie/team: find legal reviewer** (公益律师 / 法学院志愿者 / 妇联渠道) — scenario text carries "模拟版本 · 待法律校对" badge until reviewed; revise with lawyers per Katie 2026-07-30
+- [ ] Phase 2: 性骚扰 scenario (三路径, 6个月治安时效); Phase 3: 性侵 scenario (most sensitive, last)
 
 ### Core UX
 - [ ] **Biometric unlock (Face ID / fingerprint)** — replace daily password entry with platform biometrics (WebAuthn/passkey + PRF wrapping the master key); password remains the fallback + new-device path. Requested by Katie 2026-07-10 after friction feedback.

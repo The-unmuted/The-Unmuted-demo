@@ -34,11 +34,11 @@ Auto-lock (D-029): while unlocked, `useAutoLock` re-locks after 10 min without i
 <LoginFlow>        — shown until account + vault are unlocked
   OR
 <main>            — scrollable content area
-  ├── SOSPage     (activeTab === "sos")
-  ├── EvidencePage (activeTab === "evidence")
-  ├── PsychPage   (activeTab === "psych")
-  └── LegalPage   (activeTab === "legal")
-<BottomNav>       — 4 tabs: Help / Evidence / Mental Health / Legal Aid
+  ├── SOSPage        (activeTab === "sos")
+  ├── EvidencePage   (activeTab === "evidence")
+  ├── AidPage        (activeTab === "aid") — segmented 心理/法律, reuses PsychPage + LegalPage
+  └── SimulationPage (activeTab === "simulation")
+<BottomNav>       — 4 tabs: 求助 / 存证 / 援助 / 模拟 (Help / Evidence / Aid / Practice)
 ```
 
 ---
@@ -130,9 +130,11 @@ src/
 │   ├── SOSButton.tsx       — physical hold button + SMS trigger
 │   ├── LoginFlow.tsx       — email OTP + password / recovery-code unlock
 │   ├── EvidencePage.tsx    — evidence hub (upload, report notes, cloud + legacy history)
+│   ├── AidPage.tsx         — merged 援助 tab: segmented 心理/法律 toggle (D-030)
 │   ├── PsychPage.tsx       — mental health resources (renders AidResourceList)
 │   ├── LegalPage.tsx       — legal aid resources (renders AidResourceList)
 │   ├── AidResourceList.tsx — shared directory renderer: city filter chips + verified-date cards
+│   ├── SimulationPage.tsx  — 模拟 tab: chat-style scripted process simulator (D-030; no AI, no persistence)
 │   ├── NGOPage.tsx         — NGO directory + post-SOS suggestion sheet
 │   ├── BottomNav.tsx       — 4-tab navigation
 │   ├── FeedbackWidget.tsx  — feedback submission (Supabase)
@@ -158,6 +160,7 @@ src/
     ├── chainmakerService.ts — ChainMaker REST + simulation fallback (legacy path)
     ├── localStorage.ts     — legacy vault record persistence (read-only)
     ├── aidDirectory.ts     — typed loader/filters for src/data/aidDirectory.json (D-026)
+    ├── simulation.ts       — 模拟 scenario types/loader/validation for src/data/simulations/*.json (D-030)
     ├── locale.tsx          — EN/ZH copyFor utility
     ├── zkpIdentity.ts      — pseudo-ZKP commitment scheme
     ├── geoAlert.ts         — geo alert record helpers (localStorage only; SOSButton imports)

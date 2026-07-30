@@ -1,5 +1,18 @@
 # Changelog — The Unmuted (非默)
 
+## 2026-07-30 — 模拟 phase 1: scripted process simulator + merged 援助 tab (D-030)
+
+### Added
+- **模拟 tab** (`SimulationPage.tsx`): chat-style scripted simulator of the real report-to-resolution process — 同类产品-style bubbles, coach hints, instant consequence feedback, ending + red/green debrief with plain-language legal basis. **No AI, no free-text input; choices are never saved or uploaded.** Persistent "我现在就需要真实帮助" exit (110 / 12338 / 12348 + aid directory) on every scene; "模拟版本 · 待法律校对" badge until lawyer review.
+- **家暴 scenario** (`src/data/simulations/domestic-violence.json`): 11 scenes, 5 endings, 14 debrief rules — 案发夜 → 报警(笔录/回执/验伤/告诫书) → 保证书 → 保护令(误区纠正, 72h, "较大可能性"); per 反家暴法 §15/16/23-32, 最高法 2022 保护令规定, 民法典 §1091. Draft pending lawyer review.
+- **Simulator framework** (`src/lib/simulation.ts`): typed bilingual scenario schema (scenes/choices/flags/auto-routes/endings/debrief), flag matcher, structural validation enforced by tests (all pointers resolve, all scenes/endings reachable, bilingual completeness, no cycles).
+
+### Changed
+- **Bottom nav is now 求助 / 存证 / 援助 / 模拟**: 心理 + 法律 merged into one 援助 tab (`AidPage.tsx`, segmented toggle; PsychPage/LegalPage reused unchanged inside).
+
+### Verified
+- tsc clean, 62/62 vitest (10 framework/scenario integrity tests + 4 SimulationPage interaction tests incl. a full play-through to the strong ending), production build OK, headless-Chrome boot smoke zero errors.
+
 ## 2026-07-30 — External-review round 1: auto-lock, wallet-dep purge, security headers (D-029)
 
 ### Added
