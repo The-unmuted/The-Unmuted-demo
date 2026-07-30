@@ -69,7 +69,6 @@ npm test        # vitest unit tests
 Create `.env.local` for local development:
 
 ```bash
-VITE_PRIVY_APP_ID=          # optional — enables real Privy email OTP
 VITE_SUPABASE_URL=https://iisjendxxmxpgwohckiq.supabase.co
 VITE_SUPABASE_ANON_KEY=     # get from Supabase dashboard
 VITE_CHAINMAKER_API_KEY=    # optional — leave blank for simulation
@@ -95,7 +94,8 @@ Without `VITE_CHAINMAKER_API_KEY`, evidence anchoring runs in deterministic simu
 | Evidence encryption | `src/lib/evidenceCrypto.ts` |
 | ChainMaker anchoring | `src/lib/chainmakerService.ts` |
 | Auth (bcrypt + ZKP identity) | `src/lib/userCredentials.ts`, `src/lib/zkpIdentity.ts` |
-| Privy OTP (optional) | `src/lib/privyAuth.tsx` |
+| Security headers / CSP (Vercel) | `vercel.json` |
+| Auto-lock timing | `src/hooks/useAutoLock.ts` |
 
 ---
 
@@ -103,7 +103,7 @@ Without `VITE_CHAINMAKER_API_KEY`, evidence anchoring runs in deterministic simu
 
 - SPA: React 18 + TypeScript + Vite
 - Styling: Tailwind CSS + shadcn/ui (Radix UI)
-- Provider tree: QueryClient → PrivyAuth → Locale → Tooltip → BrowserRouter
+- Provider tree: QueryClient → Locale → Tooltip → BrowserRouter (Privy removed 2026-07-30 with all wallet-era deps)
 - 4 main tabs: Help (SOS button) / Evidence / Mental Health / Legal Aid
 - Auth: email → local bcrypt hash → ZKP commitment stored in localStorage
 - Evidence pipeline: AES-256-GCM → Arweave demo → ChainMaker testnet (or sim)

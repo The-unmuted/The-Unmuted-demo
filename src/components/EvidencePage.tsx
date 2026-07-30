@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useEvidenceVault } from "@/hooks/useEvidenceVault";
-import { shortenHash } from "@/hooks/useWallet";
 import { formatBytes } from "@/lib/evidenceCrypto";
 import { AppLanguage, copyFor } from "@/lib/locale";
 import { hasReportNotes, saveEncryptedReportNotes, type EncryptedReportNoteRecord } from "@/lib/reportNotesVault";
@@ -31,6 +30,10 @@ import {
 } from "@/lib/captureMetadata";
 
 // ── helpers ────────────────────────────────────────────────────────────────────
+
+function shortenHash(hash: string) {
+  return hash.slice(0, 6) + "..." + hash.slice(-4);
+}
 
 function getMimeLabel(mime: string, language: AppLanguage) {
   if (mime.startsWith("image/")) return copyFor(language, "Image", "图片");

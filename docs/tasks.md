@@ -1,6 +1,6 @@
 # Tasks & Roadmap — The Unmuted (非默)
 
-_Last updated: 2026-07-10_
+_Last updated: 2026-07-30_
 
 ---
 
@@ -16,7 +16,7 @@ _Last updated: 2026-07-10_
 - [x] Legacy per-file JSON key bundles: old records listed read-only ("旧版记录，需要密钥文件")
 - [x] Offline resilience: pending upload queue + auto-retry on `online` event + per-record 已同步/待上传 badge
 - [x] ~~BLOCKER: Supabase project paused~~ — restored 2026-07-08; migration applied; OTP template `{{ .Token }}`; OTP length set to 6
-  - [ ] Built-in SMTP is rate-limited (~4 emails/hour) — custom SMTP needed before real users
+  - [ ] Built-in SMTP is rate-limited (~4 emails/hour) — custom SMTP needed before real users. Free QQ-mailbox SMTP option **shelved by Katie 2026-07-29** (personal mailbox not professional enough); proper fix = own domain + Tencent SES (post-entity)
   - [x] `portraits` bucket (public, leftover from Katie's discontinued "Chroma" project with real ID-style photos) — **files deleted by Katie 2026-07-10**; empty bucket itself still to be deleted (⋮ → Delete bucket)
   - [ ] ~~Consider moving 非默 to a dedicated Supabase project~~ — decided 2026-07-19 (Katie): Chroma is discontinued, 非默 keeps this project. Instead: **clean up Chroma leftovers** in the dashboard (delete old tables/buckets/policies incl. empty `portraits` bucket; keep only key_vaults / evidence_records / ngo_applications / feedback)
   - [x] End-to-end browser test of signup → recovery code → upload → unlock-and-decrypt — **passed 2026-07-08 on production build** (hash round-trip verified)
@@ -62,7 +62,11 @@ _Last updated: 2026-07-10_
 - [x] Argon2id KDF upgrade with verify-then-replace auto-migration + enforced password strength — done 2026-07-20, 43/43 tests, awaiting push + Katie's phone verification
 - [ ] **Make both GitHub repos private** — Katie asked 2026-07-20; blocked on `gh auth login` (her keyring token expired); fallback: manual Danger Zone steps
 - [x] **Browser-history / usage-trace exposure** — first mitigation shipped 2026-07-22 (D-028): header quick-exit button + safe-use tips sheet; full disguise mode remains a future option if warranted
-- [ ] External security audit — hackathon goal; "self-review isn't enough" acknowledged
+- [x] External security review received (Codex, 2026-07-27) — encryption architecture validated; gaps prioritized. **Round-1 remediation done 2026-07-30 (D-029)**: auto-lock (10 min idle / 3 min background), wallet-era deps purged (bundle 3.29→1.35 MB), CSP + security headers on Vercel
+- [ ] **Record tamper-evidence (review item 6)** — server could silently delete/roll back records; lightweight client-side index fingerprint as interim, full fix = TSA/transparency log (needs entity)
+- [ ] **Reproducible builds / release hashes (review item 2, rest)** — so users/auditors can verify the deployed bundle matches the source
+- [ ] **Security headers on CloudBase** — vercel.json headers don't apply to the China mirror (COS static hosting); revisit at D-016 Tencent migration
+- [ ] External security audit (human, paid) — hackathon goal; "self-review isn't enough" acknowledged
 
 ### Core UX
 - [ ] **Biometric unlock (Face ID / fingerprint)** — replace daily password entry with platform biometrics (WebAuthn/passkey + PRF wrapping the master key); password remains the fallback + new-device path. Requested by Katie 2026-07-10 after friction feedback.

@@ -1,5 +1,18 @@
 # Changelog — The Unmuted (非默)
 
+## 2026-07-30 — External-review round 1: auto-lock, wallet-dep purge, security headers (D-029)
+
+### Added
+- **Auto-lock** (`useAutoLock.ts`): unlocked vault re-locks after 10 min without interaction, or on returning from ≥3 min in the background — session master key cleared, bilingual notice on the lock screen, account session preserved (password only). SOS lock-screen entry unaffected.
+- **CSP + security headers** (`vercel.json`): Content-Security-Policy (connect-src limited to Supabase + ChainMaker BaaS), X-Frame-Options DENY, Referrer-Policy no-referrer (external hotline links never see where the user came from), Permissions-Policy, HSTS, nosniff. Vercel only — CloudBase COS can't send custom headers (revisit at D-016).
+
+### Removed
+- **All wallet-era code and dependencies**: `privyAuth.tsx` (zero consumers — login is Supabase OTP), `useWallet.ts`, `useSolanaWallet.ts`, `WalletConnect.tsx`, `magicBlock.ts`, `solanaReputation.ts`, Buffer polyfill; uninstalled `@privy-io/react-auth`, `@solana/web3.js`, `ethers`, `@magicblock-labs/ephemeral-rollups-sdk`, `buffer`. **Bundle 3.29 MB → 1.35 MB** (gzip 446 kB).
+- Stale "Web3 匿名举报" meta description in `index.html` → neutral brand line.
+
+### Verified
+- tsc clean, 48/48 vitest (5 new auto-lock fake-timer tests), eslint clean, production build OK. Headless-Chrome smoke tests: app boots with zero console errors after dep removal; with CSP headers applied, zero violations, fonts + Supabase connectivity confirmed, login screen renders (screenshot-checked).
+
 ## 2026-07-22 — Usage-trace protection: quick exit + safe-use tips (D-028)
 
 ### Added

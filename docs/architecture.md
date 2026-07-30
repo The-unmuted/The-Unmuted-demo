@@ -14,12 +14,11 @@ CI/CD: GitHub Actions auto-deploys `main` to CloudBase; Vercel deploys via GitHu
 
 ```
 QueryClientProvider (react-query)
-  └── PrivyAuthProvider (email OTP, optional)
-        └── LocaleProvider (EN/ZH toggle, persisted in localStorage)
-              └── TooltipProvider (Radix UI)
-                    └── BrowserRouter
-                          ├── Route "/"  → <Index>
-                          └── Route "*"  → <NotFound>
+  └── LocaleProvider (EN/ZH toggle, persisted in localStorage)
+        └── TooltipProvider (Radix UI)
+              └── BrowserRouter
+                    ├── Route "/"  → <Index>
+                    └── Route "*"  → <NotFound>
 ```
 
 ---
@@ -27,6 +26,8 @@ QueryClientProvider (react-query)
 ## Page Layout (`src/pages/Index.tsx`)
 
 `Index` owns all top-level state: auth/unlock, active tab, language. The master key is memory-only (D-017), so **every page load starts locked** — `LoginFlow` shows until the vault is unlocked, even when a Supabase session persists.
+
+Auto-lock (D-029): while unlocked, `useAutoLock` re-locks after 10 min without interaction, or on returning from ≥3 min in the background — the session master key is cleared and a bilingual notice explains the lock. The account session survives; only the password is re-entered.
 
 ```
 <header>          — logo, brand banner, language toggle, FeedbackWidget, SettingsWidget (incl. 修改密码)
@@ -156,7 +157,6 @@ src/
     ├── localStorage.ts     — legacy vault record persistence (read-only)
     ├── aidDirectory.ts     — typed loader/filters for src/data/aidDirectory.json (D-026)
     ├── locale.tsx          — EN/ZH copyFor utility
-    ├── privyAuth.tsx       — Privy OTP email auth (legacy, superseded by Supabase)
     ├── zkpIdentity.ts      — pseudo-ZKP commitment scheme
     ├── geoAlert.ts         — geo alert record helpers (localStorage only; SOSButton imports)
     ├── ngoService.ts       — NGO data access
@@ -172,6 +172,8 @@ src/
 GitHub push → main
   ├── GitHub Actions (dd73d70) → deploy-cloudbase.mjs → Tencent COS
   └── Vercel GitHub integration → vercel.json → Vercel Edge Network
+      (vercel.json also sets CSP + security headers, D-029 — Vercel only;
+       CloudBase COS static hosting does not apply them)
 ```
 
 `vercel.json` rewrites all paths to `index.html` for SPA routing.

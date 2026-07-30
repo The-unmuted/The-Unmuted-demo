@@ -2,7 +2,9 @@
 
 _This file captures the current project state for AI assistants. Update before ending each work session._
 
-_Last updated: 2026-07-22_
+_Last updated: 2026-07-30_
+
+**2026-07-30 (D-029):** External security review (Codex, 2026-07-27) received and answered — validates encryption core; gap map: TSA (needs entity), supply/release chain, wallet-dep bloat, ChainMaker key, no auto-lock, no record tamper-evidence. Katie approved the 3 entity-free items 2026-07-29; all done: (1) auto-lock — `useAutoLock` re-locks after 10 min idle / ≥3 min backgrounded, key cleared, bilingual notice, 5 fake-timer tests; (2) wallet-era purge — privyAuth/useWallet/useSolanaWallet/WalletConnect/magicBlock/solanaReputation deleted, @privy-io/react-auth + @solana/web3.js + ethers + magicblock + buffer uninstalled, bundle 3.29→1.35 MB, headless-Chrome smoke test zero errors (login path intact — usePrivyAuth had no consumers); (3) CSP + security headers in vercel.json (Vercel only; CloudBase can't — revisit at D-016), verified locally with headers applied: zero violations. Stale "Web3 匿名举报" meta description fixed. D-028 pushed to both remotes (Katie will phone-test the 离开 button). QQ-mailbox SMTP **shelved by Katie** (not professional enough — wait for own domain + Tencent SES post-entity). New backlog: record tamper-evidence interim (local index fingerprint), reproducible builds. **Commit not yet pushed — awaiting Katie.**
 
 **2026-07-22:** D-027 pushed & deployed (Katie's phone verification of unlock/migration still pending). D-028 quick-exit + safe-use tips implemented, committed, awaiting push. GitHub repos still public — blocked: Katie's account is org *member*, not admin; an org owner (likely the teammate who created The-unmuted org) must promote her or flip visibility themselves. WeChat mini-program evaluated: gated on entity + ICP + D-016; privacy concern (WeChat usage traces) noted — if ever done, entry-point only, core stays in the web app. Entity decision: register right after the UN hackathon, prep (name/legal-rep/budget) beforehand.
 

@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useZKPIdentity } from "@/hooks/useZKPIdentity";
 import { useSilentMode } from "@/hooks/useSilentMode";
+import { useAutoLock } from "@/hooks/useAutoLock";
+import { ShieldCheck } from "lucide-react";
 import SOSPage from "@/components/SOSPage";
 import BottomNav, { type MainTab } from "@/components/BottomNav";
 import EvidencePage from "@/components/EvidencePage";
@@ -27,14 +29,24 @@ export default function Index() {
   // Master key lives only in memory (D-017), so every page load starts locked
   // even when the account session and local identity persist.
   const [unlocked, setUnlocked] = useState(false);
+  const [autoLocked, setAutoLocked] = useState(false);
 
   const isSignedIn = unlocked && Boolean(identity.identity?.provider && identity.identity.commitment);
 
   const handleUnlocked = async (email: string) => {
     setPendingEmail(email);
     await identity.generateFromEmail(email, `password:${email}`, true);
+    setAutoLocked(false);
     setUnlocked(true);
   };
+
+  // Keep the account session (no signOut): the user only re-enters her password.
+  const handleAutoLock = useCallback(() => {
+    setSessionMasterKey(null);
+    setUnlocked(false);
+    setAutoLocked(true);
+  }, []);
+  useAutoLock(isSignedIn, handleAutoLock);
 
   const handleLogout = () => {
     identity.revoke();
@@ -79,7 +91,21 @@ export default function Index() {
       </header>
 
       {!isSignedIn ? (
-        <LoginFlow language={language} onUnlocked={handleUnlocked} />
+        <>
+          {autoLocked && (
+            <div className="mx-auto mt-3 flex w-[min(90vw,340px)] items-start gap-2 rounded-2xl border border-border bg-card px-3 py-2.5">
+              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+              <p className="text-xs leading-5 text-muted-foreground">
+                {copyFor(
+                  language,
+                  "You were away for a while, so the vault locked itself to protect your records. Enter your password to continue.",
+                  "你离开了一会儿，为保护你的资料，应用已自动上锁。输入密码即可继续。"
+                )}
+              </p>
+            </div>
+          )}
+          <LoginFlow language={language} onUnlocked={handleUnlocked} />
+        </>
       ) : (
         <>
           {/* Main content scrolls above the bottom nav, which now participates in layout. */}
