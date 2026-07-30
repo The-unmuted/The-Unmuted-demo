@@ -103,3 +103,49 @@ describe("domestic-violence debrief", () => {
     expect(resolveAuto(decision, new Set())).toBe("end:po-denied");
   });
 });
+
+describe("sexual-harassment scenario", () => {
+  const sh = SIM_SCENARIOS.find((s) => s.id === "sexual-harassment")!;
+
+  it("police outcome depends on saved records", () => {
+    const police = sh.scenes["police-auto"];
+    expect(resolveAuto(police, new Set(["saved-records"]))).toBe("police-strong");
+    expect(resolveAuto(police, new Set())).toBe("police-weak");
+  });
+
+  it("civil outcome depends on saved records", () => {
+    const civil = sh.scenes["civil-auto"];
+    expect(resolveAuto(civil, new Set(["saved-records"]))).toBe("end:civil-win");
+    expect(resolveAuto(civil, new Set())).toBe("end:civil-thin");
+  });
+
+  it("debrief flags the six-month clock when victim endured", () => {
+    const ids = evaluateDebrief(sh, new Set(["endured", "deleted-records"])).map((r) => r.id);
+    expect(ids).toContain("endured");
+    expect(ids).toContain("deleted-records");
+  });
+});
+
+describe("sexual-assault scenario", () => {
+  const sa = SIM_SCENARIOS.find((s) => s.id === "sexual-assault")!;
+
+  it("filing routes by evidence strength", () => {
+    const filing = sa.scenes["filing-auto"];
+    expect(resolveAuto(filing, new Set(["medical-exam"]))).toBe("end:prosecution");
+    expect(resolveAuto(filing, new Set(["kept-clothes"]))).toBe("end:filed-hard");
+    expect(resolveAuto(filing, new Set())).toBe("filing-weak");
+  });
+
+  it("late reporting after a private settlement hits the settlement trap", () => {
+    const late = sa.scenes["late-police"];
+    expect(resolveAuto(late, new Set(["private-settlement"]))).toBe("end:settlement-trap");
+    expect(resolveAuto(late, new Set())).toBe("end:late-hard");
+  });
+
+  it("debrief never blames delayed disclosure without support", () => {
+    const rules = evaluateDebrief(sa, new Set(["long-delay", "psych-support"]));
+    const ids = rules.map((r) => r.id);
+    expect(ids).toContain("bad-long-delay");
+    expect(ids).toContain("good-psych");
+  });
+});

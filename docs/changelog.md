@@ -1,5 +1,17 @@
 # Changelog — The Unmuted (非默)
 
+## 2026-07-30 — 模拟 phases 2+3: 性骚扰 + 性侵 scenarios (D-030 cont.)
+
+### Added
+- **性骚扰 scenario** (`src/data/simulations/sexual-harassment.json`): 12 scenes, 7 endings, 13 debrief rules — teaches the 三条并行路径 (治安报警 / 书面投诉单位 / 民事诉讼) and the 6-month 治安时效 most victims don't know about; HR "别把事情闹大" pressure, informal-complaint trap, joint-victim civil suit. Per 民法典 §1010 ¶1/¶2, 治安管理处罚法 §22/42/44, 劳动合同法 §38. Draft pending lawyer review.
+- **性侵 scenario** (`src/data/simulations/sexual-assault.json`): 12 scenes, 7 endings, 15 debrief rules — written under the strictest red line: **aftermath only, the assault itself is never rendered**. Teaches 黄金72小时, paper-bag clothing preservation, hospital exam ≠ mandatory reporting, CCTV 15–30 day retention, 受案回执, 不予立案 → 7日复议 + 检察院立案监督, 公诉/附带民事/不公开审理, the 私了谅解书 trap. Includes a non-failure "先寻求心理支持" ending; all debrief language is systematically non-blaming (delayed disclosure framed as trauma response, not fault). Per 刑法 §236/237/87, 刑事诉讼法 §101/110-113/188. Draft pending lawyer review.
+
+### Changed
+- Scenario picker now lists all three scenarios; "即将上线" placeholder cards removed.
+
+### Verified
+- tsc clean, 72/72 vitest (structural validation + cycle-free traversal auto-cover all three scenario trees; new routing/debrief spot checks for both scenarios), production build OK, headless-Chrome boot smoke zero errors.
+
 ## 2026-07-30 — 模拟 phase 1: scripted process simulator + merged 援助 tab (D-030)
 
 ### Added

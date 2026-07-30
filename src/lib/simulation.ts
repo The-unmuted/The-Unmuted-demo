@@ -7,6 +7,8 @@
  */
 import { AppLanguage, copyFor } from "@/lib/locale";
 import domesticViolence from "@/data/simulations/domestic-violence.json";
+import sexualHarassment from "@/data/simulations/sexual-harassment.json";
+import sexualAssault from "@/data/simulations/sexual-assault.json";
 
 export interface SimText {
   en: string;
@@ -71,7 +73,11 @@ export interface SimScenario {
   debrief: SimDebriefRule[];
 }
 
-export const SIM_SCENARIOS: SimScenario[] = [domesticViolence as SimScenario];
+export const SIM_SCENARIOS: SimScenario[] = [
+  domesticViolence as SimScenario,
+  sexualHarassment as SimScenario,
+  sexualAssault as SimScenario,
+];
 
 export function scenarioById(id: string): SimScenario | undefined {
   return SIM_SCENARIOS.find((s) => s.id === id);

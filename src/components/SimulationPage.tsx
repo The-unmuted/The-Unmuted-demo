@@ -364,11 +364,6 @@ function ScenarioPicker({
   language: AppLanguage;
   onStart: (scenario: SimScenario) => void;
 }) {
-  const comingSoon = [
-    { en: "Workplace sexual harassment", zh: "职场性骚扰" },
-    { en: "Sexual assault", zh: "性侵害" },
-  ];
-
   return (
     <div className="flex flex-col gap-5 px-4 py-4">
       <div className="text-center pt-2">
@@ -406,19 +401,6 @@ function ScenarioPicker({
               </div>
               <p className="mt-1.5 text-xs leading-5 text-muted-foreground">{simText(language, s.tagline)}</p>
             </button>
-          ))}
-          {comingSoon.map((c) => (
-            <div
-              key={c.zh}
-              className="rounded-2xl border border-border/50 bg-card/40 p-4 opacity-70"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-base font-bold text-foreground/60">{copyFor(language, c.en, c.zh)}</span>
-                <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
-                  {copyFor(language, "Coming soon", "即将上线")}
-                </span>
-              </div>
-            </div>
           ))}
         </div>
       </section>

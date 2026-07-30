@@ -7,8 +7,10 @@ describe("SimulationPage", () => {
     render(<SimulationPage language="zh" onGoToAid={() => {}} />);
     expect(screen.getByText("模拟练习")).toBeTruthy();
     expect(screen.getByText("他动手之后")).toBeTruthy();
+    expect(screen.getByText("他说这只是玩笑")).toBeTruthy();
+    expect(screen.getByText("那件事发生之后")).toBeTruthy();
     expect(screen.getByText(/不构成法律意见/)).toBeTruthy();
-    expect(screen.getByText(/待法律校对/)).toBeTruthy();
+    expect(screen.getAllByText(/待法律校对/).length).toBe(3);
   });
 
   it("plays a full path to an ending with a debrief", () => {

@@ -1,0 +1,565 @@
+{
+  "id": "sexual-assault",
+  "_comment": "模拟版本（草稿）— 全部文本待公益律师校对。依据：刑法第236/237条（强奸、强制猥亵为公诉案件）、刑事诉讼法第110-113条（报案、受案回执、不予立案复议、检察院立案监督）、刑事诉讼法第101条（附带民事诉讼）、第188条（不公开审理）。写作红线：全程只写事后，绝不呈现侵害过程细节；所有复盘语言不指责受害人。",
+  "title": { "en": "After It Happened", "zh": "那件事发生之后" },
+  "tagline": {
+    "en": "The first 72 hours decide what can ever be proven. Nobody teaches you this — practice it here first, safely.",
+    "zh": "黄金72小时决定了以后还能证明什么。没有人教过你这些——先在安全的地方走一遍。"
+  },
+  "intro": {
+    "en": "This scenario begins after the assault — it never describes the assault itself. You will face the real decisions survivors face, with real legal consequences. Nothing you choose here is recorded. You can leave at any time.",
+    "zh": "这个情景从事发之后开始——不会呈现任何侵害过程。你将面对幸存者真实面对的抉择，每个后果都遵循真实的法律规则。你的任何选择都不会被记录，你也随时可以退出。"
+  },
+  "entry": "opening",
+  "scenes": {
+    "opening": {
+      "narration": {
+        "en": "It happened. He just left. You are sitting where you are, your mind blank. All you want is to wash everything off.",
+        "zh": "那件事发生了。他刚离开。你坐在原地，大脑一片空白，只想把一切洗掉。"
+      },
+      "coach": {
+        "en": "Physical evidence has a window of roughly 72 hours. You do NOT have to decide now whether to report — but only now can the evidence be preserved.",
+        "zh": "物证的窗口大约只有72小时。你不需要现在就决定是否报案——但证据只有现在能留住。"
+      },
+      "choices": [
+        {
+          "text": { "en": "Call 110, or go straight to a hospital", "zh": "拨打110，或直接去医院" },
+          "feedback": {
+            "en": "You act within the window. Whatever you decide later, the option to prove it stays open.",
+            "zh": "你在窗口期内行动了。无论以后怎么决定，「还能证明」这个选项被保住了。"
+          },
+          "flags": ["immediate-action"],
+          "next": "hospital"
+        },
+        {
+          "text": { "en": "Rush to the bathroom and shower", "zh": "冲进浴室洗澡"},
+          "feedback": {
+            "en": "You shower for a long time. It is what almost everyone's body screams to do.",
+            "zh": "你洗了很久。这是几乎每个人的身体都会本能想做的事。"
+          },
+          "flags": ["washed"],
+          "next": "after-wash"
+        },
+        {
+          "text": { "en": "Call the friend you trust most", "zh": "打给最信任的朋友" },
+          "feedback": {
+            "en": "Your friend picks up immediately and says: don't move, I'm coming.",
+            "zh": "朋友立刻接了电话，说：你别动，我马上来。"
+          },
+          "flags": ["called-friend"],
+          "next": "friend-arrives"
+        }
+      ]
+    },
+    "friend-arrives": {
+      "narration": {
+        "en": "Your friend arrives, wraps you in a coat, and asks what you want to do.",
+        "zh": "朋友赶到了，把外套披在你身上，问你想怎么办。"
+      },
+      "coach": {
+        "en": "If clothing or bedding needs to be kept, put it in a PAPER bag, not plastic — plastic traps moisture and degrades biological evidence.",
+        "zh": "如果要保存衣物、床品，用纸袋装，不要用塑料袋——塑料袋会闷坏生物检材。"
+      },
+      "choices": [
+        {
+          "text": { "en": "Let your friend take you to the hospital", "zh": "让朋友陪你去医院" },
+          "feedback": {
+            "en": "You go together. You are not doing this alone.",
+            "zh": "你们一起出发。这条路不用一个人走。"
+          },
+          "flags": ["immediate-action"],
+          "next": "hospital"
+        },
+        {
+          "text": { "en": "You can't face anything tonight — sleep first", "zh": "今晚什么都面对不了，先睡一觉" },
+          "feedback": {
+            "en": "Your friend stays over. The night passes. The window is closing but not closed.",
+            "zh": "朋友留下来陪你。这一夜过去了。窗口在收窄，但还没有完全关上。"
+          },
+          "flags": ["delayed-night"],
+          "next": "next-day"
+        }
+      ]
+    },
+    "after-wash": {
+      "narration": {
+        "en": "You come out of the shower. The clothes from tonight are piled on the floor.",
+        "zh": "你从浴室出来。今晚穿的衣服堆在地上。"
+      },
+      "coach": {
+        "en": "Showering loses most surface evidence — but not everything is gone. Clothing, the scene, CCTV nearby, and chat records still exist.",
+        "zh": "洗澡会流失大部分体表物证——但不是一切都结束了。衣物、现场、附近监控、聊天记录都还在。"
+      },
+      "choices": [
+        {
+          "text": { "en": "Put the clothes in a paper bag, unwashed, and keep them", "zh": "把衣物装进纸袋保存，不清洗" },
+          "feedback": {
+            "en": "The clothes are sealed away, untouched. They may still carry what the shower could not erase.",
+            "zh": "衣物被原样封存。上面可能还留着洗澡洗不掉的东西。"
+          },
+          "flags": ["kept-clothes"],
+          "next": "next-day"
+        },
+        {
+          "text": { "en": "Wash everything, throw things out — erase the night", "zh": "全部洗掉、扔掉，把这一晚抹掉" },
+          "feedback": {
+            "en": "Everything from tonight is gone. The instinct to erase is human. The cost is invisible until later.",
+            "zh": "今晚的东西都没有了。想抹掉一切是人的本能。代价要到以后才看得见。"
+          },
+          "flags": ["destroyed-traces"],
+          "next": "next-day"
+        }
+      ]
+    },
+    "hospital": {
+      "narration": {
+        "en": "At the hospital, the doctor treats you gently and tells you: we can do a forensic examination and preserve samples, and we can notify the police — with your consent.",
+        "zh": "在医院，医生的动作很轻，告诉你：可以做检查并封存检材，也可以在你同意的情况下通知警方。"
+      },
+      "coach": {
+        "en": "A hospital examination does NOT force you to report. It keeps the question 'can I still prove it later' in YOUR hands.",
+        "zh": "医院取证不等于必须立刻报案。它是把「以后还能不能证明」这个选择权，留在你自己手里。"
+      },
+      "choices": [
+        {
+          "text": { "en": "Full examination, preserve samples, and agree to notify the police", "zh": "做检查取证，并同意通知警方" },
+          "feedback": {
+            "en": "Samples are sealed and logged; officers are on their way. The strongest possible record of tonight now exists.",
+            "zh": "检材被封存登记，警察在路上。关于今晚，现在有了最完整的记录。"
+          },
+          "flags": ["medical-exam", "reported"],
+          "next": "police-sa"
+        },
+        {
+          "text": { "en": "Examination and preserved samples only — not ready to report yet", "zh": "只检查取证，暂时不报警" },
+          "feedback": {
+            "en": "The samples are sealed and stored. Reporting stays your decision, for later.",
+            "zh": "检材被封存保存。报不报案，仍然由你以后决定。"
+          },
+          "flags": ["medical-exam"],
+          "next": "next-day-exam"
+        },
+        {
+          "text": { "en": "No examination — just treat the visible injuries", "zh": "不检查了，只处理一下外伤" },
+          "feedback": {
+            "en": "The injuries are dressed. No samples are taken.",
+            "zh": "外伤处理好了。没有留下任何检材。"
+          },
+          "flags": ["no-exam"],
+          "next": "next-day"
+        }
+      ]
+    },
+    "next-day-exam": {
+      "narration": {
+        "en": "A few days pass. With your friend's support, you feel ready to decide.",
+        "zh": "几天过去了。在朋友的支持下，你觉得可以做决定了。"
+      },
+      "choices": [
+        {
+          "text": { "en": "Report it to the police", "zh": "报案" },
+          "feedback": {
+            "en": "You walk into the station with the hospital's sealed-sample record in hand.",
+            "zh": "你走进派出所，手里有医院的封存检材记录。"
+          },
+          "flags": ["reported"],
+          "next": "police-sa"
+        },
+        {
+          "text": { "en": "You still can't face it", "zh": "还是无法面对" },
+          "feedback": {
+            "en": "That is not weakness. The samples stay sealed; the door stays open.",
+            "zh": "这不是软弱。检材还封存着，这扇门没有关上。"
+          },
+          "flags": ["long-delay"],
+          "next": "months-later"
+        }
+      ]
+    },
+    "next-day": {
+      "narration": {
+        "en": "The next day. You barely slept. What now?",
+        "zh": "第二天。你几乎没睡。现在怎么办？"
+      },
+      "choices": [
+        {
+          "text": { "en": "Decide to report it", "zh": "决定报案" },
+          "feedback": {
+            "en": "You make the call. It takes everything you have, and you do it.",
+            "zh": "你拨出了电话。这需要用尽全身力气，而你做到了。"
+          },
+          "flags": ["reported"],
+          "next": "police-sa"
+        },
+        {
+          "text": { "en": "Confront him yourself and make him apologize", "zh": "找他对质，逼他道歉" },
+          "feedback": {
+            "en": "You demand a reckoning from him directly.",
+            "zh": "你直接去找他要一个交代。"
+          },
+          "flags": ["confronted"],
+          "next": "confront-scene"
+        },
+        {
+          "text": { "en": "Tell no one", "zh": "谁也不告诉" },
+          "feedback": {
+            "en": "You carry it alone. Many survivors do, for a long time. It is never too late to change that.",
+            "zh": "你一个人扛着。很多幸存者都这样扛过很久。改变这一点，任何时候都不晚。"
+          },
+          "flags": ["long-delay"],
+          "next": "months-later"
+        }
+      ]
+    },
+    "confront-scene": {
+      "narration": {
+        "en": "At first he apologizes and begs. Then, over the following days, he deletes the chat history and sends a mutual friend to propose a 'private settlement'.",
+        "zh": "他先是道歉哀求。接下来几天，他删掉了聊天记录，还托共同的朋友来传话，想「私了」。"
+      },
+      "coach": {
+        "en": "Confronting him alone tipped him off — he is now destroying evidence and building his defense.",
+        "zh": "自行对质等于打草惊蛇——他已经开始销毁证据、准备说辞了。"
+      },
+      "choices": [
+        {
+          "text": { "en": "Cut contact and report to the police immediately", "zh": "不再接触，立即报案" },
+          "feedback": {
+            "en": "You stop responding and go to the police. His deletion of records can itself be investigated.",
+            "zh": "你不再回复，直接去了派出所。他删记录这件事本身，也可以被侦查。"
+          },
+          "flags": ["reported", "alerted-him"],
+          "next": "police-sa"
+        },
+        {
+          "text": { "en": "Accept compensation and sign a forgiveness letter", "zh": "接受补偿，签了谅解书" },
+          "feedback": {
+            "en": "You sign. It feels like closing the wound. The paper does not disappear.",
+            "zh": "你签了字。感觉像是把伤口合上了。但那张纸不会消失。"
+          },
+          "flags": ["private-settlement"],
+          "next": "months-later"
+        }
+      ]
+    },
+    "police-sa": {
+      "narration": {
+        "en": "At the station, an officer takes your statement and starts requesting CCTV footage from around the scene.",
+        "zh": "在派出所，民警为你做了询问笔录，并开始调取现场周边的监控。"
+      },
+      "coach": {
+        "en": "CCTV is usually kept only 15–30 days. Rape and forcible indecency are PUBLIC prosecution crimes — the state prosecutes, not you. Ask for the acceptance receipt (受案回执).",
+        "zh": "监控通常只保存15–30天。强奸、强制猥亵是公诉案件——由国家追诉，不是你一个人的官司。记得索要《受案回执》。"
+      },
+      "choices": [
+        {
+          "text": { "en": "Ask for the acceptance receipt and leave the hospital's sample-custody details", "zh": "索要受案回执，并留下医院封存检材的信息" },
+          "feedback": {
+            "en": "Receipt in hand, hospital records linked to the case file. Everything is now traceable.",
+            "zh": "回执拿到了，医院封存信息也进了案卷。每一步都有据可查了。"
+          },
+          "flags": ["asked-receipt-sa"],
+          "next": "filing-auto"
+        },
+        {
+          "text": { "en": "Finish the statement and leave", "zh": "做完笔录就离开" },
+          "feedback": {
+            "en": "The statement is done. You have no paper proving the case was accepted.",
+            "zh": "笔录做完了。但你手里没有任何证明警方已受案的凭证。"
+          },
+          "next": "filing-auto"
+        }
+      ]
+    },
+    "filing-auto": {
+      "auto": [
+        { "has": ["medical-exam"], "next": "end:prosecution" },
+        { "has": ["kept-clothes"], "next": "end:filed-hard" },
+        { "next": "filing-weak" }
+      ]
+    },
+    "filing-weak": {
+      "narration": {
+        "en": "Weeks later you receive a written notice: the case will not be filed — insufficient evidence.",
+        "zh": "几周后，你收到了《不予立案通知书》——证据不足。"
+      },
+      "coach": {
+        "en": "A non-filing decision is NOT the end: within 7 days you can apply for reconsideration, and you can ask the procuratorate to review the non-filing (立案监督).",
+        "zh": "不予立案不是终点：7日内可以向原公安机关申请复议，还可以向检察院申请立案监督。"
+      },
+      "choices": [
+        {
+          "text": { "en": "Apply for reconsideration and procuratorate review", "zh": "申请复议，并向检察院申请立案监督" },
+          "feedback": {
+            "en": "You file both. The decision must now be re-examined by two separate authorities.",
+            "zh": "两份申请都递上去了。这个决定现在必须被两个机关重新审视。"
+          },
+          "flags": ["sought-review"],
+          "next": "end:review"
+        },
+        {
+          "text": { "en": "Give up", "zh": "放弃" },
+          "feedback": {
+            "en": "You stop here. Anyone would be exhausted by this point.",
+            "zh": "你停在了这里。走到这一步，任何人都会精疲力尽。"
+          },
+          "flags": ["gave-up-sa"],
+          "next": "end:dropped"
+        }
+      ]
+    },
+    "months-later": {
+      "narration": {
+        "en": "Months later. You still wake up at night. One evening, after talking to a psychological support hotline, you finally say it out loud.",
+        "zh": "几个月过去了。你夜里仍会惊醒。一天晚上，在心理热线的支持下，你终于把这件事说了出来。"
+      },
+      "coach": {
+        "en": "Reporting does not 'expire' — prosecution limitation periods for these crimes are counted in years. But the evidence window has closed: CCTV is overwritten, physical traces are gone.",
+        "zh": "报案没有「过期」——这类犯罪的追诉时效以年计。但物证窗口已经关闭：监控被覆盖，体表痕迹也不在了。"
+      },
+      "choices": [
+        {
+          "text": { "en": "Report it now", "zh": "现在报案" },
+          "feedback": {
+            "en": "You report it. Late is not never.",
+            "zh": "你报了案。晚，不等于不行。"
+          },
+          "flags": ["reported-late-sa"],
+          "next": "late-police"
+        },
+        {
+          "text": { "en": "Seek psychological support first — not ready to report", "zh": "先寻求心理支持，暂不报案" },
+          "feedback": {
+            "en": "You keep the hotline number and start talking to someone regularly. This, too, is a step forward.",
+            "zh": "你存下了热线号码，开始定期和人倾诉。这同样是往前走的一步。"
+          },
+          "flags": ["psych-support"],
+          "next": "end:healing"
+        }
+      ]
+    },
+    "late-police": {
+      "auto": [
+        { "has": ["private-settlement"], "next": "end:settlement-trap" },
+        { "next": "end:late-hard" }
+      ]
+    }
+  },
+  "endings": {
+    "prosecution": {
+      "title": { "en": "The case is filed — the state prosecutes", "zh": "立案——由国家提起公诉" },
+      "summary": {
+        "en": "The hospital's sealed samples and the CCTV footage corroborate each other. The case is filed, he is arrested and prosecuted. You appoint an agent ad litem and attach a civil claim for compensation. The trial is closed to the public to protect your privacy. You did not have to prove it alone — because in the first 72 hours, the evidence was preserved.",
+        "zh": "医院封存的检材和调取到的监控相互印证。案件立案，他被批捕、公诉。你委托了诉讼代理人，并提起附带民事诉讼要求赔偿。案件不公开审理，你的隐私受到保护。你不需要一个人去证明——因为在最初的72小时里，证据被留住了。"
+      }
+    },
+    "filed-hard": {
+      "title": { "en": "Filed, but the investigation is uphill", "zh": "立案，但侦查艰难" },
+      "summary": {
+        "en": "The preserved clothing gives the police something to work with, and the case is filed — but without a timely forensic examination, the evidence is thinner and the investigation is long and uncertain.",
+        "zh": "封存的衣物让警方有了着手点，案件立了案——但因为没有及时的医学取证，证据更薄，侦查过程漫长而充满不确定。"
+      }
+    },
+    "review": {
+      "title": { "en": "The review path — back on track, but uphill", "zh": "复议与监督——案件重回轨道，但前路艰难" },
+      "summary": {
+        "en": "Your reconsideration application and the procuratorate's filing supervision force the decision to be re-examined. The case may yet be filed — but with the evidence window long closed, every step ahead is harder than it needed to be.",
+        "zh": "复议申请和检察院的立案监督让不予立案的决定被重新审视，案件仍有可能立案——但物证窗口早已关闭，接下来的每一步都比原本更难。"
+      }
+    },
+    "dropped": {
+      "title": { "en": "The path stops here — for now", "zh": "这条路暂时停在了这里" },
+      "summary": {
+        "en": "You did not pursue the review. That is not failure — you reported it, and that record exists forever. If you ever want to restart, the reconsideration and supervision channels were the doors. And your recovery matters no less than the case.",
+        "zh": "你没有再申请复议。这不是失败——你报过案，这个记录会永远存在。如果将来想重启，复议和立案监督就是那扇门。而你的康复，和案件同样重要。"
+      }
+    },
+    "healing": {
+      "title": { "en": "Choosing support first — this is not a failed ending", "zh": "先选择支持——这不是失败的结局" },
+      "summary": {
+        "en": "You chose psychological support before legal action. That is a legitimate, valid path. The legal door remains open — limitation periods are counted in years, and 12338 can accompany you if you ever decide to walk through it.",
+        "zh": "你选择了先接受心理支持。这是一条完全正当的路。法律的门依然开着——追诉时效以年计，如果有一天你决定走进去，12338可以陪你一起。"
+      }
+    },
+    "settlement-trap": {
+      "title": { "en": "The settlement paper resurfaces", "zh": "当初那张谅解书，被拿了出来" },
+      "summary": {
+        "en": "You report it, but he produces the forgiveness letter and the compensation record, claiming everything was consensual. With no physical evidence left, the letter makes the facts far harder to establish. The trap was never your fault — nobody told you what that signature could later mean.",
+        "zh": "你报了案，但他拿出了谅解书和补偿转账记录，声称一切是「自愿的」。物证早已不存，那张纸让事实认定变得难上加难。掉进这个陷阱不是你的错——从来没有人告诉过你，那个签名日后意味着什么。"
+      }
+    },
+    "late-hard": {
+      "title": { "en": "Accepted, but built on words alone", "zh": "受理了，但只剩言词证据" },
+      "summary": {
+        "en": "The police accept the report — reporting late is always allowed. But the CCTV has been overwritten and no physical evidence exists. The case now rests on your statement and indirect evidence: possible, but the hardest road. Reporting was still the right thing to do.",
+        "zh": "警方受理了报案——晚报案永远是被允许的。但监控已被覆盖，物证也不存在了。案件只能依靠你的陈述和间接证据：有可能，但这是最难走的路。即便如此，报案本身依然是对的。"
+      }
+    }
+  },
+  "debrief": [
+    {
+      "id": "good-immediate",
+      "kind": "good",
+      "has": ["immediate-action"],
+      "title": { "en": "You acted within the golden 72 hours", "zh": "你在黄金72小时内行动了" },
+      "detail": {
+        "en": "Going to a hospital or calling the police within the window is the single most decisive evidentiary act after an assault.",
+        "zh": "在窗口期内去医院或报警，是事发后对证据最关键的一步。"
+      },
+      "basis": { "en": "Forensic practice: biological evidence degrades within ~72h; CCTV retention is typically 15–30 days.", "zh": "司法实践：生物检材约72小时内降解；监控通常仅保存15–30天。" }
+    },
+    {
+      "id": "bad-washed",
+      "kind": "bad",
+      "has": ["washed"],
+      "title": { "en": "The shower — an instinct nobody warned you about", "zh": "洗澡——一个没人提醒过你的本能" },
+      "detail": {
+        "en": "Wanting to wash everything off is a completely understandable instinct. What was missing was information no one had ever given you: showering loses most surface evidence. This is knowledge, not blame.",
+        "zh": "想把一切洗掉是完全可以理解的本能。缺失的只是从来没人告诉过你的那条信息：洗澡会流失大部分体表物证。这是知识，不是指责。"
+      },
+      "basis": { "en": "Forensic practice on biological evidence collection.", "zh": "生物物证提取的司法鉴定实践。" }
+    },
+    {
+      "id": "good-friend",
+      "kind": "good",
+      "has": ["called-friend"],
+      "title": { "en": "You reached out — that changed the night", "zh": "你向人求助了——这改变了那一晚" },
+      "detail": {
+        "en": "A trusted person can help you think, accompany you, and later corroborate your state that night. You never have to do this alone.",
+        "zh": "一个信任的人能帮你思考、陪你行动，日后还能佐证你当晚的状态。这条路从来不必一个人走。"
+      },
+      "basis": { "en": "Witness testimony on the victim's contemporaneous state is admissible corroborating evidence.", "zh": "证人就受害人案发后状态的证言可作为佐证。" }
+    },
+    {
+      "id": "good-kept-clothes",
+      "kind": "good",
+      "has": ["kept-clothes"],
+      "title": { "en": "You preserved the clothing — in a paper bag", "zh": "你把衣物封存了——而且用的是纸袋" },
+      "detail": {
+        "en": "Unwashed clothing in a paper bag can retain biological evidence even after a shower. Plastic bags trap moisture and destroy it.",
+        "zh": "未清洗的衣物用纸袋封存，即使洗过澡也可能留有生物检材。塑料袋会闷坏检材。"
+      },
+      "basis": { "en": "Forensic evidence-preservation practice.", "zh": "司法鉴定的物证保全实践。" }
+    },
+    {
+      "id": "bad-destroyed",
+      "kind": "bad",
+      "has": ["destroyed-traces"],
+      "title": { "en": "Erasing the night — the cost surfaced later", "zh": "抹掉那一晚——代价在后来才显现" },
+      "detail": {
+        "en": "The urge to erase everything is a trauma response, not a mistake of character. The missing piece was information: clothing and the scene can prove what memory alone cannot.",
+        "zh": "想抹掉一切是创伤反应，不是你的性格缺陷。缺的只是那条信息：衣物和现场能证明单靠记忆证明不了的事。"
+      },
+      "basis": { "en": "Physical evidence carries more probative weight than testimony alone in these cases.", "zh": "此类案件中物证的证明力通常强于单一言词证据。" }
+    },
+    {
+      "id": "good-medical",
+      "kind": "good",
+      "has": ["medical-exam"],
+      "title": { "en": "The forensic examination kept your options open", "zh": "医学取证把选择权留在了你手里" },
+      "detail": {
+        "en": "A hospital examination does not force you to report. It preserves the ability to prove — so that whenever you decide, the evidence is waiting.",
+        "zh": "医院取证不等于必须报案。它保住的是「以后还能证明」的能力——无论你何时做决定，证据都在等你。"
+      },
+      "basis": { "en": "Sealed hospital samples remain usable when a case is later filed.", "zh": "医院封存的检材在日后立案时仍可作为证据使用。" }
+    },
+    {
+      "id": "bad-no-exam",
+      "kind": "bad",
+      "has": ["no-exam"],
+      "title": { "en": "The examination that didn't happen", "zh": "那次没有做的检查" },
+      "detail": {
+        "en": "Declining the exam closed the strongest evidentiary door. Understandable in the moment — a stranger examining you right after trauma is a hard thing to accept. But the exam serves you, and reporting stays optional either way.",
+        "zh": "拒绝检查关上了证明力最强的那扇门。这在当时完全可以理解——刚经历创伤就要接受检查，太难了。但检查是为你服务的，而且做了检查也不等于必须报案。"
+      },
+      "basis": { "en": "Forensic samples must be collected within the evidence window to exist at all.", "zh": "检材只有在窗口期内提取才可能存在。" }
+    },
+    {
+      "id": "good-reported",
+      "kind": "good",
+      "has": ["reported"],
+      "title": { "en": "You reported in time for the CCTV", "zh": "你在监控还在的时候报了案" },
+      "detail": {
+        "en": "CCTV footage is typically kept only 15–30 days. Reporting while it still exists let the police retrieve independent, objective evidence.",
+        "zh": "监控通常只保存15–30天。在监控还在时报案，让警方调取到了独立、客观的证据。"
+      },
+      "basis": { "en": "Criminal Procedure Law Art. 110: authorities must accept reports; CCTV retention practice 15–30 days.", "zh": "刑事诉讼法第110条（公安机关对报案应当接受）；监控保存期实践为15–30天。" }
+    },
+    {
+      "id": "bad-confronted",
+      "kind": "bad",
+      "has": ["confronted"],
+      "title": { "en": "Confronting him alone tipped him off", "zh": "自行对质，打草惊蛇" },
+      "detail": {
+        "en": "Wanting an apology from him is human. But confronting him alone gave him time to delete records, coordinate stories, and pressure you to settle — all before the police knew anything.",
+        "zh": "想要一个道歉是人之常情。但单独对质给了他时间去删记录、串口供、施压「私了」——而这一切都发生在警方知情之前。"
+      },
+      "basis": { "en": "Evidence destruction and witness tampering commonly follow premature confrontation.", "zh": "过早对质常导致销毁证据、干扰证人的后果。" }
+    },
+    {
+      "id": "bad-settlement",
+      "kind": "bad",
+      "has": ["private-settlement"],
+      "title": { "en": "The 'private settlement' that became his defense", "zh": "那次「私了」，成了他的辩护词" },
+      "detail": {
+        "en": "Rape and forcible indecency are public prosecution crimes — a private settlement cannot end them, but a signed forgiveness letter can later be twisted into 'proof' of consent. Nobody told you that when you signed.",
+        "zh": "强奸、强制猥亵是公诉犯罪——「私了」并不能了结它，但签下的谅解书日后却可能被歪曲成「自愿」的证据。签字的时候，没有人告诉过你这些。"
+      },
+      "basis": { "en": "Criminal Law Arts. 236/237 are publicly prosecuted; settlement does not bar prosecution but complicates fact-finding.", "zh": "刑法第236/237条为公诉罪名；私了不能阻却追诉，但会增加事实认定难度。" }
+    },
+    {
+      "id": "good-receipt",
+      "kind": "good",
+      "has": ["asked-receipt-sa"],
+      "title": { "en": "You asked for the acceptance receipt", "zh": "你索要了受案回执" },
+      "detail": {
+        "en": "The receipt is your proof that the police accepted the case — the paper that makes every later step (reconsideration, supervision) possible.",
+        "zh": "受案回执是警方已受案的凭证——日后复议、立案监督的每一步，都要靠这张纸。"
+      },
+      "basis": { "en": "Criminal Procedure Law Art. 110; Public Security case-handling rules require issuing a receipt.", "zh": "刑事诉讼法第110条；公安机关办理刑事案件程序规定要求出具受案回执。" }
+    },
+    {
+      "id": "good-review",
+      "kind": "good",
+      "has": ["sought-review"],
+      "title": { "en": "You used the review and supervision channels", "zh": "你用上了复议和立案监督" },
+      "detail": {
+        "en": "Non-filing can be challenged: reconsideration within 7 days, and the procuratorate can order the police to justify or reverse the decision. Most people never learn these channels exist.",
+        "zh": "不予立案是可以被挑战的：7日内申请复议，检察院还可以要求公安机关说明不立案理由、直至通知立案。大多数人根本不知道这些渠道存在。"
+      },
+      "basis": { "en": "Criminal Procedure Law Arts. 112–113 (reconsideration; procuratorate filing supervision).", "zh": "刑事诉讼法第112–113条（复议；检察院立案监督）。" }
+    },
+    {
+      "id": "bad-long-delay",
+      "kind": "bad",
+      "has": ["long-delay"],
+      "title": { "en": "The silence that shame imposed — not your fault", "zh": "羞耻逼出的沉默——这不是你的错" },
+      "detail": {
+        "en": "The time it took to speak was taken from you by shame and fear — that is what the assault does, not a choice you made. The legal cost was real (evidence lost), but the responsibility for it is not yours.",
+        "zh": "开口的时间被羞耻和恐惧推后了——那是侵害造成的，不是你的选择。法律上的代价确实存在（证据流失），但这份责任不在你。"
+      },
+      "basis": { "en": "Delayed disclosure is a documented, normal trauma response in sexual violence cases.", "zh": "性暴力案件中的延迟披露是被充分记录的正常创伤反应。" }
+    },
+    {
+      "id": "good-psych",
+      "kind": "good",
+      "has": ["psych-support"],
+      "title": { "en": "Seeking psychological support is always right", "zh": "寻求心理支持，永远是对的" },
+      "detail": {
+        "en": "Recovery and justice are not competitors. Support now can be what makes any later step possible — and 12338 can accompany you if that day comes.",
+        "zh": "康复和维权不是二选一。现在的心理支持，可能正是让以后任何一步成为可能的东西——如果那一天到来，12338可以陪着你。"
+      },
+      "basis": { "en": "12338 women's hotline provides psychological and legal accompaniment.", "zh": "12338妇女维权热线提供心理支持与法律陪同。" }
+    },
+    {
+      "id": "good-late-report",
+      "kind": "good",
+      "has": ["reported-late-sa"],
+      "title": { "en": "It is never too late to report", "zh": "任何时候报案都不晚" },
+      "detail": {
+        "en": "Prosecution limitation periods for these crimes are counted in years. Late reporting makes proof harder, but the door itself never closes — and walking through it late still took courage.",
+        "zh": "这类犯罪的追诉时效以年计。晚报案会让证明更难，但这扇门本身永远不会关——而晚一点走进去，同样需要巨大的勇气。"
+      },
+      "basis": { "en": "Criminal Law Art. 87 (limitation periods by statutory maximum penalty — counted in years).", "zh": "刑法第87条（追诉时效按法定最高刑计算，以年计）。" }
+    }
+  ]
+}
