@@ -136,10 +136,12 @@ src/
 │   ├── NGOPage.tsx         — NGO directory + post-SOS suggestion sheet
 │   ├── BottomNav.tsx       — 4-tab navigation
 │   ├── FeedbackWidget.tsx  — feedback submission (Supabase)
+│   ├── QuickExit.tsx       — quick-exit button + safe-use tips sheet (D-028)
 │   ├── SettingsWidget.tsx  — logout, change password, language
 │   ├── DeterrentAudioPanel.tsx — deterrent audio playback
 │   └── ui/                 — shadcn/ui components
 ├── hooks/
+│   ├── useAutoLock.ts      — idle/background auto-lock timer (D-029)
 │   ├── useEvidenceVault.ts — production evidence pipeline state (encrypt → cloud vault)
 │   ├── useZKPIdentity.ts   — identity management
 │   ├── useEmergencyContacts.ts — localStorage contacts CRUD

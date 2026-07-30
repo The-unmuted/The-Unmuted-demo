@@ -2,6 +2,8 @@
 
 External services, environment-variable-driven integrations, and key internal APIs.
 
+_Last full revision: 2026-07-30 (post-D-029 — wallet/Privy/Gun/Arweave sections removed with the code)._
+
 ---
 
 ## External Services
@@ -10,87 +12,35 @@ External services, environment-variable-driven integrations, and key internal AP
 
 **URL:** `https://iisjendxxmxpgwohckiq.supabase.co`  
 **Auth:** anon key (`VITE_SUPABASE_ANON_KEY`)  
-**Client:** `@supabase/supabase-js` v2
+**Client:** `@supabase/supabase-js` v2 (single shared client: `src/lib/supabaseClient.ts`)
+
+#### Auth
+
+Email OTP (6-digit, template `{{ .Token }}`). Accounts exist for cross-device recovery only — the server never receives passwords or plaintext evidence. Built-in SMTP is rate-limited (~4 emails/hour); custom SMTP deferred until an owned domain exists (post-entity).
 
 #### Tables
 
 | Table | Usage | Access |
 |-------|-------|--------|
-| `ngo_applications` | NGO directory listings + new applications | Read (directory) + Insert (apply) |
-| `evidence_vault` | Encrypted evidence metadata | Insert + Read by user |
-| `feedback` | User feedback submissions | Insert only |
+| `key_vaults` | Per-user encrypted key boxes (password box + recovery box, ciphertext) | Upsert + Read by owner (RLS) |
+| `evidence_records` | Encrypted evidence index (sealed metadata; plaintext columns only for `original_hash` + timestamps, by design for future TSA anchoring) | Insert + Read + Delete by owner (RLS) |
+| `ngo_applications` / `ngo_organizations` | NGO directory + new applications | Read (directory) + Insert (apply) |
+| `unmuted_feedback` | User feedback submissions | Insert only |
 
-RLS (Row Level Security) is enabled. Anon key has restricted access.
+#### Storage
 
----
-
-### Privy (Email OTP)
-
-**SDK:** `@privy-io/react-auth`  
-**Config env:** `VITE_PRIVY_APP_ID`  
-**Mode:** Email OTP only (`loginMethods: ["email"]`)  
-**Appearance:** theme `#fff7fb`, accent `#c65f9f`
-
-Without `VITE_PRIVY_APP_ID`, the `PrivyAuthProvider` renders a no-op fallback — the app uses local bcrypt auth only.
+Bucket `evidence-vault` — **private**, per-user paths `{uid}/{txId}`, RLS-gated download. All blobs are AES-256-GCM ciphertext; the bucket never sees plaintext.
 
 ---
 
-### ChainMaker (长安链)
+### ChainMaker (长安链) — legacy path
 
-**SDK:** Direct REST via `fetch`  
-**Default endpoint:** `https://baas.chainmaker.org.cn/v1/contract/invoke`  
-**Config env:** `VITE_CHAINMAKER_API_KEY`, `VITE_CHAINMAKER_ENDPOINT`  
-**Explorer:** `https://testnet.chainmaker.org.cn/explorer/tx/<txHash>`
+**Status:** retired from UI copy (Phase 4a, 2026-07-08); the code path survives only for legacy records and runs in deterministic simulation without credentials. Any productionisation must move the call server-side (`VITE_CHAINMAKER_API_KEY` is browser-visible — see CLAUDE.md rule 3).
 
-#### Anchor request
+**Endpoint:** `https://baas.chainmaker.org.cn/v1/contract/invoke` (`VITE_CHAINMAKER_ENDPOINT`, `VITE_CHAINMAKER_API_KEY`)  
+`code !== 0` or any fetch error → `simulateAnchor()` (deterministic, `isSimulated: true`).
 
-```json
-POST /v1/contract/invoke
-Authorization: Bearer <VITE_CHAINMAKER_API_KEY>
-Content-Type: application/json
-
-{
-  "chain_id":      "chain1",
-  "contract_name": "evidence_store",
-  "method":        "save_hash",
-  "kvs": [
-    { "key": "file_hash",    "value": "<encryptedHash>" },
-    { "key": "arweave_txid", "value": "<arweaveTxId>" },
-    { "key": "timestamp",    "value": "<milliseconds>" }
-  ]
-}
-```
-
-#### Response
-
-```json
-{
-  "code": 0,
-  "data": {
-    "tx_id": "<txHash>",
-    "block_timestamp": 1720000000
-  }
-}
-```
-
-`code !== 0` or any fetch error → falls back to `simulateAnchor()` (deterministic, `isSimulated: true`).
-
----
-
-### Arweave (Demo Vault)
-
-`src/lib/arweaveService.ts` — demo implementation.  
-Uploads encrypted blobs to an Arweave-compatible gateway.  
-In production, a funded Arweave wallet and real gateway URL are required.
-
----
-
-### Gun.js (P2P Chat)
-
-**Package:** `gun`  
-**Room structure:** `gun.get('the-unmuted-room-<roomCode>').get('messages')`  
-**TTL:** 2 hours (client-side, not enforced by Gun)  
-**Note:** Gun.js uses shared public relay nodes — not private. Demo only.
+The real timestamping plan is RFC 3161 TSA after entity registration; `original_hash` + dual timestamps are stored plaintext precisely so old records can be anchored retroactively.
 
 ---
 
@@ -98,9 +48,10 @@ In production, a funded Arweave wallet and real gateway URL are required.
 
 **Region:** `ap-shanghai`  
 **Bucket:** `45b6-static-theunmuted-v2-d2gyh0rux2a05de92-1434116173`  
-**SDK:** `cos-nodejs-sdk-v5`  
-**Auth:** `TENCENT_SECRET_ID` + `TENCENT_SECRET_KEY` (CI secrets)  
-**Deploy script:** `deploy-cloudbase.mjs`
+**SDK:** `cos-nodejs-sdk-v5` (multipart upload, 1MB slices)  
+**Auth:** `TENCENT_SECRET_ID` + `TENCENT_SECRET_KEY` (CI secrets, The-Unmuted-v2 repo only)  
+**Deploy script:** `deploy-cloudbase.mjs`  
+**Note:** static COS hosting cannot send custom response headers — the CSP/security headers in `vercel.json` apply to the Vercel deployment only (revisit at D-016 migration).
 
 ---
 
@@ -114,83 +65,76 @@ The i18n utility. Every visible string must go through this.
 copyFor(language, "Save contact", "保存联系人")
 ```
 
-### `encryptFile(blob, mimeType)` — `src/lib/evidenceCrypto.ts`
+### Key vault — `src/lib/keyVault.ts` + `src/lib/keyVaultService.ts` (D-017/D-027)
 
 ```ts
-interface EncryptionResult {
-  encryptedBlob: Blob;
-  ivHex: string;
-  exportedKey: JsonWebKey;
-  originalHash: string;   // SHA-256 of plaintext
-  encryptedHash: string;  // SHA-256 of encrypted blob (goes on-chain)
-  mimeType: string;
-  originalSize: number;
-}
+// keyVault.ts (pure crypto)
+setupKeyVault(password, recoveryCode)      // → { masterKey, passwordBox, recoveryBox } (Argon2id, KeyBoxV2)
+openWithPassword(password, box)            // → CryptoKey (throws on wrong secret)
+openWithRecoveryCode(code, box)
+rewrapBoxVerified(masterKey, secret)       // verify-then-replace: proves the new box opens before returning
+sealJson(obj, masterKey) / openJson(...)   // AES-GCM envelope for metadata
+
+// keyVaultService.ts (persistence + session)
+createVault(userId, password)              // → { masterKey, recoveryCode } — code shown EXACTLY ONCE
+unlockWithPassword(userId, password)       // → { ok } | { ok:false, reason: "vault-unavailable" | "wrong-secret" }
+unlockWithRecoveryCode(userId, code, newPassword)
+changePassword(userId, newPassword)
+getSessionMasterKey() / setSessionMasterKey(key | null)  // memory only; cleared on logout, reload, auto-lock
 ```
 
-### `anchorOnChain(encryptedHash, arweaveTxId)` — `src/lib/chainmakerService.ts`
+Legacy PBKDF2 (v1) boxes auto-migrate to Argon2id in the background after a successful unlock (verify-then-replace — a failed migration can never lock a user out).
 
-```ts
-interface AnchorResult {
-  txHash: string;
-  blockTimestamp: number;
-  explorerUrl: string;
-  isSimulated: boolean;   // true if ChainMaker key not set or request failed
-  network: string;
-}
-```
+### `checkPassword(password)` — `src/lib/passwordPolicy.ts` (D-027)
+
+Returns a `PasswordIssue` (`too-short` | `common` | `all-digits` | `repeated`) or `null`; `passwordIssueCopy(language, issue)` renders the bilingual error. Enforced at vault setup, recovery reset, and password change.
+
+### `useAutoLock(enabled, onLock)` — `src/hooks/useAutoLock.ts` (D-029)
+
+Re-locks the vault after 10 min without interaction or on returning from ≥3 min in the background (`visibilitychange` timestamp check — background timers are throttled on mobile). `Index.tsx` clears the session master key and shows a bilingual notice; the account session survives.
 
 ### `useEvidenceVault(language)` — `src/hooks/useEvidenceVault.ts`
 
 ```ts
 const {
-  step,        // 'idle' | 'encrypting' | 'uploading' | 'anchoring' | 'done' | 'error'
-  steps,       // per-step status: pending | running | done | error
-  error,       // string | null
-  result,      // { record: VaultRecord, encryptionResult: EncryptionResult } | null
-  history,     // VaultRecord[]
-  processFile, // (blob: Blob, mimeType: string) => Promise<void>
-  downloadKey, // () => void — triggers JSON key bundle download
-  reset,       // () => void
+  step,          // 'idle' | 'encrypting' | 'uploading' | 'done' | 'error'
+  steps,         // per-step status: pending | running | done | error
+  error,         // string | null
+  result,        // upload receipt for the just-processed file
+  history,       // cloud records (encrypted index, decrypted client-side)
+  legacyHistory, // read-only pre-D-017 records (need the user's old key file)
+  userId,
+  canUseVault,   // account + unlocked master key present
+  processFile,   // (blob, mimeType, origin) => Promise<void> — encrypt+hash at capture instant
+  openFile,      // decrypt for in-app viewing (per-action password re-verify handled by UI, D-025)
+  deleteRecord,  // 72h soft delete (D-022)
+  refreshHistory,
+  syncNow,       // retry the offline pending queue
+  reset,
 } = useEvidenceVault(language);
 ```
+
+### `buildCourtPackage(record, ...)` — `src/lib/evidenceExport.ts` (D-020)
+
+One-tap 导出举证包: plain ZIP with the decrypted original + sealed metadata + hashes + a self-contained bilingual verification HTML (certutil/shasum instructions, per-scenario legal guidance). Verifiable without this app existing.
 
 ### `useZKPIdentity()` — `src/hooks/useZKPIdentity.ts`
 
 ```ts
-const {
-  identity,            // ZKPCommitment | null
-  alias,               // human-readable alias derived from nullifier
-  shortCommit,         // short commitment string for display
-  verified,            // boolean | null
-  generating,          // boolean
-  generateFromEmail,   // (email, credential, verified) => Promise<void>
-  verify,              // () => Promise<boolean>
-  revoke,              // () => void — clears identity from localStorage
-} = useZKPIdentity();
+const { identity, alias, shortCommit, verified, generating,
+        generateFromEmail, verify, revoke } = useZKPIdentity();
 ```
 
 ### `useEmergencyContacts()` — `src/hooks/useEmergencyContacts.ts`
 
 ```ts
-const {
-  contacts,      // { id, name, phone }[]
-  addContact,    // (name, phone) => void
-  removeContact, // (id) => void
-} = useEmergencyContacts();
+const { contacts, addContact, removeContact } = useEmergencyContacts();
+// on-device only — never uploaded (CLAUDE.md rule 1)
 ```
 
-### `sendMessage / subscribeRoom` — `src/lib/p2pChat.ts`
+### Aid directory — `src/lib/aidDirectory.ts` (D-026)
 
-```ts
-sendMessage(roomCode: string, alias: string, text: string): Promise<void>
-
-subscribeRoom(
-  roomCode: string,
-  selfAlias: string,
-  onMessage: (msg: ChatMessage) => void
-): () => void  // unsubscribe function
-```
+Typed loader/filters for `src/data/aidDirectory.json` (situation tags, city filter, `verifiedAt` staleness). Weekly CI source monitoring: `scripts/verify-directory.mjs`.
 
 ---
 
@@ -199,9 +143,15 @@ subscribeRoom(
 | Key | Content |
 |-----|---------|
 | `the-unmuted-language` | `"en"` or `"zh"` |
-| `the-unmuted-identity` | `ZKPCommitment` JSON |
-| `the-unmuted-pw-{email}` | bcrypt password hash |
-| `the-unmuted-contacts` | `EmergencyContact[]` JSON |
-| `the-unmuted-sos-message` | SOS SMS template string |
-| `the-unmuted-vault` | `VaultRecord[]` JSON |
-| `the-unmuted-geo-alerts` | geo alert records |
+| `unmuted_zkp_identity` | ZKP commitment JSON |
+| `unmuted_pwd_{email}` | bcrypt password hash (legacy local accounts) |
+| `unmuted_emergency_contacts` | emergency contacts (on-device by design) |
+| `unmuted_sos_message` | SOS SMS template string |
+| `unmuted_key_boxes_{userId}` | encrypted key boxes mirror (ciphertext — safe to cache) |
+| `unmuted_key_boxes_dirty_{userId}` | flag: boxes await cloud re-sync |
+| `unmuted_evidence_index_{userId}` | encrypted evidence index mirror |
+| `unmuted_evidence_pending_{userId}` | offline pending-upload queue |
+| `the_unmuted_vault_records` | legacy (pre-D-017) vault records, read-only |
+| `the_unmuted_sos_history` | SOS trigger history |
+| `the_unmuted_encrypted_report_notes` | encrypted report notes |
+| `unmuted_zone_reports` | geo alert records (localStorage only) |
