@@ -12,6 +12,10 @@ import {
   CheckCircle2,
   XCircle,
   Phone,
+  ListOrdered,
+  ChevronDown,
+  ChevronUp,
+  BookOpen,
 } from "lucide-react";
 import { AppLanguage, copyFor } from "@/lib/locale";
 import {
@@ -19,6 +23,7 @@ import {
   SimChoice,
   SimDebriefRule,
   SimEnding,
+  SimGlossaryTerm,
   SimScenario,
   endingIdOf,
   evaluateDebrief,
@@ -303,6 +308,12 @@ function EndingView({
         </div>
       </div>
 
+      <RealFlowSection language={language} steps={scenario.realFlow} />
+
+      {scenario.glossary && scenario.glossary.length > 0 && (
+        <GlossarySection language={language} terms={scenario.glossary} />
+      )}
+
       <div className="flex flex-col gap-2">
         <button
           onClick={onRetry}
@@ -324,6 +335,63 @@ function EndingView({
           {copyFor(language, "Back to scenarios", "返回情景选择")}
         </button>
       </div>
+    </div>
+  );
+}
+
+function RealFlowSection({ language, steps }: { language: AppLanguage; steps: { en: string; zh: string }[] }) {
+  return (
+    <div className="rounded-2xl border border-border/70 bg-card p-4">
+      <div className="mb-3 flex items-center gap-2">
+        <ListOrdered className="h-4 w-4 text-primary" />
+        <h3 className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">
+          {copyFor(language, "Real process — the right steps", "真实流程——正确的做法")}
+        </h3>
+      </div>
+      <ol className="flex flex-col gap-3">
+        {steps.map((step, i) => (
+          <li key={i} className="flex gap-3">
+            <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-[11px] font-black text-primary">
+              {i + 1}
+            </span>
+            <p className="text-sm leading-6 text-foreground/85">{simText(language, step)}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
+function GlossarySection({ language, terms }: { language: AppLanguage; terms: SimGlossaryTerm[] }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="rounded-2xl border border-border/70 bg-card p-4">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between gap-2"
+      >
+        <div className="flex items-center gap-2">
+          <BookOpen className="h-4 w-4 text-muted-foreground" />
+          <span className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">
+            {copyFor(language, "Term glossary", "名词解释")}
+          </span>
+        </div>
+        {open ? (
+          <ChevronUp className="h-4 w-4 text-muted-foreground" />
+        ) : (
+          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+        )}
+      </button>
+      {open && (
+        <div className="mt-3 flex flex-col gap-3">
+          {terms.map((g, i) => (
+            <div key={i} className="rounded-xl border border-border/50 bg-secondary/30 px-3 py-2.5">
+              <p className="text-sm font-bold text-foreground">{simText(language, g.term)}</p>
+              <p className="mt-1 text-xs leading-5 text-foreground/75">{simText(language, g.note)}</p>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -384,7 +452,7 @@ function ScenarioPicker({
 
       <section>
         <h2 className="mb-3 text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">
-          {copyFor(language, "I am facing…", "我遭遇了…")}
+          {copyFor(language, "Choose a scenario", "选择情景")}
         </h2>
         <div className="flex flex-col gap-3">
           {SIM_SCENARIOS.map((s) => (

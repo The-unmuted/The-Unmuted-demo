@@ -50,6 +50,11 @@ export interface SimEnding {
   summary: SimText;
 }
 
+export interface SimGlossaryTerm {
+  term: SimText;
+  note: SimText;
+}
+
 export interface SimDebriefRule {
   id: string;
   kind: "good" | "bad";
@@ -71,6 +76,10 @@ export interface SimScenario {
   scenes: Record<string, SimScene>;
   endings: Record<string, SimEnding>;
   debrief: SimDebriefRule[];
+  /** Ideal real-world process steps, shown after the debrief. */
+  realFlow: SimText[];
+  /** Plain-language glossary of legal terms used in this scenario. */
+  glossary?: SimGlossaryTerm[];
 }
 
 export const SIM_SCENARIOS: SimScenario[] = [
@@ -197,6 +206,12 @@ export function validateScenario(s: SimScenario): string[] {
   for (const id of Object.keys(s.endings)) {
     if (!seenEndings.has(id)) errors.push(`ending "${id}" is unreachable`);
   }
+
+  s.realFlow.forEach((step, i) => checkText(step, `realFlow[${i}]`));
+  s.glossary?.forEach((g, i) => {
+    checkText(g.term, `glossary[${i}].term`);
+    checkText(g.note, `glossary[${i}].note`);
+  });
 
   // Debrief conditions must reference flags that some choice can actually set.
   const knownFlags = new Set<string>();

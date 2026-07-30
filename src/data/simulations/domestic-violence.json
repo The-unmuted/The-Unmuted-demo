@@ -1,7 +1,7 @@
 {
   "id": "domestic-violence",
   "_comment": "模拟版本（草稿）— 全部文本待公益律师校对后才可对外宣称准确。依据：反家庭暴力法(2016)、最高法2022保护令规定、民法典1091条、公安机关办理刑事案件程序规定。",
-  "title": { "en": "After He Hit You", "zh": "他动手之后" },
+  "title": { "en": "What to Do When Someone Is Being Abused", "zh": "TA被家暴了该怎么做" },
   "tagline": {
     "en": "From that night to a protection order — practice each decision safely, before it's real.",
     "zh": "从案发当晚到人身安全保护令——在安全的环境里，把每一步先走一遍。"
@@ -570,6 +570,66 @@
       "basis": {
         "en": "Anti-DV Law art. 23: relatives, the Women's Federation, and others may apply on behalf of victims unable to do so.",
         "zh": "反家暴法第23条：无法自行申请时，近亲属、妇联等可以代为申请。"
+      }
+    }
+  ],
+  "realFlow": [
+    {
+      "en": "Call 110 immediately — even if you're unsure. The police dispatch record is the most important official timestamp of the violence.",
+      "zh": "第一时间拨打110报案——哪怕还没想好要怎么处理。接警记录是暴力最重要的官方时间戳。"
+    },
+    {
+      "en": "Photograph injuries right away (with timestamp on), both close-up and full body.",
+      "zh": "立即拍摄伤照，开启时间戳，近景和全身各一组。"
+    },
+    {
+      "en": "Before police leave: request a written statement (询问笔录) and ask for the police receipt (报警回执) — you are entitled to both.",
+      "zh": "民警离开前：要求制作询问笔录，并索要报警回执——这两样都是你有权要求的。"
+    },
+    {
+      "en": "Go to a hospital or judicial appraisal center for an injury assessment (伤情鉴定) as soon as possible — bruises fade quickly.",
+      "zh": "尽快前往医院或司法鉴定机构做伤情鉴定——淤青消退后就无法鉴定了。"
+    },
+    {
+      "en": "Ask the police station to issue a Domestic Violence Warning Letter (家庭暴力告诫书). Say those exact words — police are required to issue one.",
+      "zh": "要求派出所出具《家庭暴力告诫书》，直接说这个名字——公安有义务出具。"
+    },
+    {
+      "en": "Apply to the local court for a Personal Safety Protection Order (人身安全保护令). Court must rule within 72 hours (24 hours in emergencies). No divorce required; his consent is not needed.",
+      "zh": "向居住地基层法院申请人身安全保护令。法院72小时内裁定，紧急时24小时。不需要先离婚，不需要他同意。"
+    },
+    {
+      "en": "Keep all documents (警方回执, 告诫书, 保护令, 他写的任何承认) in a place he cannot access — and photograph each one as a backup.",
+      "zh": "将所有书面材料（回执、告诫书、保护令、他写的任何承认）存放在他接触不到的地方，并逐一拍照备份。"
+    }
+  ],
+  "glossary": [
+    {
+      "term": { "en": "Personal Safety Protection Order (人身安全保护令)", "zh": "人身安全保护令" },
+      "note": {
+        "en": "A court order that legally prohibits the abuser from contacting, approaching, or harming you. Applied to the local court; ruled within 72 hours (24 in emergencies). You don't need to divorce first, and his consent is not required. Violating it can lead to detention or criminal charges.",
+        "zh": "法院出具的法律文书，正式禁止施暴者接触、靠近或伤害你。向居住地基层法院申请，72小时内裁定，紧急情况24小时。不需要先离婚，不需要他同意。违反保护令可被拘留，情节严重的追刑责。"
+      }
+    },
+    {
+      "term": { "en": "Domestic Violence Warning Letter (家庭暴力告诫书)", "zh": "家庭暴力告诫书" },
+      "note": {
+        "en": "An official document issued by the police station that formally acknowledges domestic violence occurred. Courts can use it directly as evidence of abuse — you don't need to prove the violence all over again.",
+        "zh": "派出所出具的官方文书，正式认定发生了家暴。法院可以直接凭告诫书认定家暴事实，无需你再重新举证。"
+      }
+    },
+    {
+      "term": { "en": "Injury Assessment (伤情鉴定)", "zh": "伤情鉴定" },
+      "note": {
+        "en": "A formal medical-legal evaluation of your injuries, done by a certified judicial appraisal center. The grade determines whether the case goes through administrative penalty (治安处罚) or criminal prosecution (刑事立案). Do it as soon as possible — bruising disappears.",
+        "zh": "由司法鉴定机构对伤势进行专业评级。评级结果决定案件走《治安处罚》还是《刑事立案》路径。越早做越好——淤青会消退。"
+      }
+    },
+    {
+      "term": { "en": "Police Receipt (报警回执)", "zh": "报警回执" },
+      "note": {
+        "en": "A slip given by police confirming they received your report. Keep it — every later step (injury assessment referral, protection order, divorce proceeding) may ask for it.",
+        "zh": "民警确认受理报案后给你的凭条。一定要保留——后续伤情鉴定委托、保护令申请、离婚诉讼都可能用到它。"
       }
     }
   ]

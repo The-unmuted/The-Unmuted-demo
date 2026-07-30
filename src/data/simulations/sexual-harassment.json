@@ -1,7 +1,7 @@
 {
   "id": "sexual-harassment",
   "_comment": "模拟版本（草稿）— 全部文本待公益律师校对。依据：民法典第1010条（性骚扰独立案由 + 单位防治义务）、治安管理处罚法第22条（6个月追诉时效）第42/44条、劳动合同法第38条。",
-  "title": { "en": "\"It Was Just a Joke\"", "zh": "他说这只是玩笑" },
+  "title": { "en": "What to Do When Someone Is Sexually Harassed", "zh": "TA被性骚扰了该怎么做" },
   "tagline": {
     "en": "Workplace harassment has three parallel legal paths — most people only know one, and one of them expires in six months.",
     "zh": "职场性骚扰有三条并行的维权路径——多数人只知道其中一条，而其中一条只有六个月时效。"
@@ -505,6 +505,66 @@
       "basis": {
         "en": "Legal aid covers rights-infringement claims for those who need it.",
         "zh": "法律援助制度覆盖此类权益受侵害的求助。"
+      }
+    }
+  ],
+  "realFlow": [
+    {
+      "en": "Save evidence immediately: screenshot every message, email, or incident log with timestamps. Don't delete anything — you can choose never to look at it again, but keep it.",
+      "zh": "立即保存证据：截图保存每一条消息、邮件或事件记录，并开启时间戳。不要删除——你可以选择永远不再看，但要留着。"
+    },
+    {
+      "en": "Write down the time, place, witnesses, and exactly what happened — as soon as possible while memory is fresh. Tell a trusted person (this creates a witness).",
+      "zh": "趁记忆清晰，立即写下时间、地点、目击者和经过。告诉一个信任的人——TA日后可以作为证人。"
+    },
+    {
+      "en": "Send a written complaint to HR or a manager via email. Use plain, direct language. This makes the company legally 'aware' and starts the clock on their obligation to act.",
+      "zh": "通过邮件向HR或管理者发出书面投诉，措辞直白。从这一刻起，公司在法律上「知情」，有义务采取措施。"
+    },
+    {
+      "en": "After any verbal meeting with HR, send a follow-up email summarising what was said and asking for a written response — this turns the conversation into a record.",
+      "zh": "与HR任何口头面谈之后，发跟进邮件复述谈话内容并要求书面答复——把对话变成记录。"
+    },
+    {
+      "en": "Within 6 months of the incident: file a police report for public-order offences (猥亵、侮辱). This 6-month window is almost never publicised.",
+      "zh": "事发6个月内：就猥亵、侮辱行为向派出所报警（治安处罚）。这个6个月时效几乎从未被公开告知。"
+    },
+    {
+      "en": "File a civil lawsuit (up to 3 years): sue the perpetrator under Civil Code §1010 for stopping the harm, an apology, and financial compensation. This path is independent of the police path.",
+      "zh": "提起民事诉讼（3年时效）：依据民法典§1010起诉行为人，要求停止侵害、赔礼道歉、赔偿损失。此路径独立于公安路径。"
+    },
+    {
+      "en": "Call 12338 (women's rights hotline) or 12348 (free legal aid) — both are free and handle cases like this.",
+      "zh": "拨打12338（妇女维权热线）或12348（法律援助热线）——都免费，都处理此类案件。"
+    }
+  ],
+  "glossary": [
+    {
+      "term": { "en": "6-Month Public-Order Limitation Period (治安追诉时效)", "zh": "治安追诉时效（6个月）" },
+      "note": {
+        "en": "For offences handled by police as public-order violations (like sexual harassment involving molestation or insult), the law requires a report within 6 months of the incident. After that, police can no longer issue a penalty. The civil lawsuit path (3 years) and the workplace complaint path stay open independently.",
+        "zh": "对于猥亵、侮辱等治安违法行为，法律要求在行为发生后6个月内向公安报案。超过这个期限，警方不能再作出处罚决定。但民事诉讼路径（3年）和职场投诉路径仍独立有效。"
+      }
+    },
+    {
+      "term": { "en": "Company's Legal Duty to Act (用人单位义务)", "zh": "用人单位的法定义务" },
+      "note": {
+        "en": "Under Civil Code §1010, once a company knows (or should know) that harassment is happening, it is legally required to take action. If it does nothing, it shares civil liability. A written complaint creates the 'knew' moment on record.",
+        "zh": "依据民法典第1010条，用人单位知情后有法定义务采取措施。不作为的，在民事诉讼中承担连带责任。书面投诉正是制造这个「知情」时间点的方式。"
+      }
+    },
+    {
+      "term": { "en": "Civil Lawsuit for Sexual Harassment (性骚扰民事诉讼)", "zh": "性骚扰民事诉讼" },
+      "note": {
+        "en": "Since 2021, sexual harassment is an independent civil cause of action — you can sue the perpetrator directly without first going through police. Claims can include stopping the harm, a public apology, and financial compensation. Limitation period: 3 years.",
+        "zh": "2021年起，性骚扰是独立的民事诉讼案由——无需先走公安路径，可直接起诉行为人。可主张停止侵害、赔礼道歉、赔偿损失。诉讼时效3年。"
+      }
+    },
+    {
+      "term": { "en": "Written Complaint vs. Verbal Report (书面投诉 vs 口头反映)", "zh": "书面投诉 vs 口头反映" },
+      "note": {
+        "en": "A verbal complaint to HR (in person or in a group chat) is hard to prove later. A written complaint — even a single email — creates a timestamped record that the company was officially notified. This is the difference between a complaint that can be used and one that can be ignored.",
+        "zh": "口头向HR反映（当面或群聊）事后很难证明。一封书面邮件就能制造一个有时间戳的通知记录，证明公司正式知情。这是「能用」和「被忽略」的区别。"
       }
     }
   ]

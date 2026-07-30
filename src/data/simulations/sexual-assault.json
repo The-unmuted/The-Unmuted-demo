@@ -1,7 +1,7 @@
 {
   "id": "sexual-assault",
   "_comment": "模拟版本（草稿）— 全部文本待公益律师校对。依据：刑法第236/237条（强奸、强制猥亵为公诉案件）、刑事诉讼法第110-113条（报案、受案回执、不予立案复议、检察院立案监督）、刑事诉讼法第101条（附带民事诉讼）、第188条（不公开审理）。写作红线：全程只写事后，绝不呈现侵害过程细节；所有复盘语言不指责受害人。",
-  "title": { "en": "After I Was Sexually Assaulted", "zh": "我被性侵后" },
+  "title": { "en": "What to Do When Someone Has Been Sexually Assaulted", "zh": "TA被性侵了该怎么做" },
   "tagline": {
     "en": "The first 72 hours decide what can ever be proven. Nobody teaches you this — practice it here first, safely.",
     "zh": "黄金72小时决定了以后还能证明什么。没有人教过你这些——先在安全的地方走一遍。"
@@ -560,6 +560,80 @@
         "zh": "这类犯罪的追诉时效以年计。晚报案会让证明更难，但这扇门本身永远不会关——而晚一点走进去，同样需要巨大的勇气。"
       },
       "basis": { "en": "Criminal Law Art. 87 (limitation periods by statutory maximum penalty — counted in years).", "zh": "刑法第87条（追诉时效按法定最高刑计算，以年计）。" }
+    }
+  ],
+  "realFlow": [
+    {
+      "en": "Do not shower, change clothes, or clean the scene — even if that's the only thing you want to do. Put clothes in a paper bag (not plastic, which damages evidence).",
+      "zh": "不要洗澡、不要换衣服、不要清理现场——哪怕这是唯一想做的事。把衣物装入纸袋（不用塑料袋，塑料会损坏检材）。"
+    },
+    {
+      "en": "Contact a trusted person immediately — to be with you, to help you think, and to witness your state that night (they can testify later).",
+      "zh": "立即联系一个信任的人陪同——帮你思考，陪你行动，见证你当晚的状态（日后可以出庭作证）。"
+    },
+    {
+      "en": "Go to a hospital for a forensic medical examination within 72 hours. This does NOT mean you must report to police — it just preserves evidence for any decision you make later.",
+      "zh": "72小时内去医院做取证检查。这不等于必须报案——只是把证据保留下来，让你以后任何时候做决定时还有依据。"
+    },
+    {
+      "en": "If reporting to police: note any nearby CCTV cameras — surveillance footage is typically only kept for 15–30 days. Ask police to retrieve it before it's gone.",
+      "zh": "如果报案：留意附近的监控摄像头位置——监控录像通常只保存15–30天。及时要求警方提取。"
+    },
+    {
+      "en": "After filing a report, ask for the Case Receipt (受案回执) — this is your proof that police accepted the report. Keep it. Every next step depends on it.",
+      "zh": "报案后，索要受案回执——这是警方受理你报案的凭证。一定要保留，后续每一步都要用到它。"
+    },
+    {
+      "en": "If police say they will not open a case (不予立案): within 7 days you can request a review (复议). You can also ask the Procuratorate (检察院) to supervise the case (立案监督) — they can require police to explain and reconsider.",
+      "zh": "如果警方说不予立案：7日内可申请复议。还可以向检察院申请立案监督——检察院可要求公安说明理由并通知立案。"
+    },
+    {
+      "en": "If psychological support feels more urgent than legal steps right now — that is completely valid. Call 12338 anytime; they can walk alongside both healing and any legal steps, whenever you're ready.",
+      "zh": "如果现在心理支持比法律步骤更紧迫——这完全合理。随时拨打12338；她们可以陪你走康复，也可以在你准备好时陪你走法律路径。"
+    }
+  ],
+  "glossary": [
+    {
+      "term": { "en": "Case Receipt (受案回执)", "zh": "受案回执" },
+      "note": {
+        "en": "A slip issued by police after they officially accept your report. It proves they received it. You need it for every subsequent step — review applications, prosecutorial supervision, civil claims. Always ask for it and never lose it.",
+        "zh": "警方正式受理报案后出具的凭条，证明警方已受理。后续一切步骤——复议、立案监督、附带民事——都需要它。必须索要，妥善保管。"
+      }
+    },
+    {
+      "term": { "en": "Not Opening a Case (不予立案)", "zh": "不予立案" },
+      "note": {
+        "en": "When police decide not to treat the report as a criminal case. This is not the final word — you have the right to challenge it. Within 7 days, apply for a review (复议) at the same police station, or ask the Procuratorate to supervise (立案监督).",
+        "zh": "警方决定不以刑事案件处理你的报案。这不是终点——你有权挑战。7日内向同一派出所申请复议，或向检察院申请立案监督。"
+      }
+    },
+    {
+      "term": { "en": "Review Application (复议)", "zh": "复议" },
+      "note": {
+        "en": "A formal request, filed within 7 days of receiving a 'not opening a case' decision, asking the public-security organ to reconsider. You need the Case Receipt to file this.",
+        "zh": "收到不予立案决定后7日内提出的正式申请，要求公安机关重新审查。需要凭受案回执提出。"
+      }
+    },
+    {
+      "term": { "en": "Prosecutorial Case-Opening Supervision (立案监督)", "zh": "立案监督" },
+      "note": {
+        "en": "The Procuratorate (检察院, China's prosecution office) has the power to require police to explain why they didn't open a case, and ultimately to order them to open one. This is the main remedy after a 'not opening a case' decision and after review fails.",
+        "zh": "检察院有权要求公安机关说明不立案理由，并最终通知其立案。是不予立案+复议失败后最主要的救济渠道。"
+      }
+    },
+    {
+      "term": { "en": "Supplementary Civil Action (附带民事诉讼)", "zh": "附带民事诉讼" },
+      "note": {
+        "en": "When a criminal case is already being prosecuted, you can file a civil compensation claim within the same trial — the court handles both at once. You don't need a separate civil lawsuit.",
+        "zh": "刑事案件已进入公诉阶段后，可以在同一审判中提出赔偿请求，法院一并审理，无需单独提起民事诉讼。"
+      }
+    },
+    {
+      "term": { "en": "Private Settlement Agreement (私了谅解书)", "zh": "私了谅解书" },
+      "note": {
+        "en": "A written agreement reached outside the legal system, often under pressure. For rape and forced indecency (公诉案件), a private settlement does NOT end the criminal case — but the wording of the agreement can later be misused as 'evidence of consent'. Never sign one without a lawyer.",
+        "zh": "法律程序外、往往在压力下达成的和解协议。强奸、强制猥亵是公诉犯罪——私了不能终结刑事追诉，但协议的措辞日后可能被歪曲成「自愿」的证据。没有律师在场切勿签字。"
+      }
     }
   ]
 }
