@@ -74,6 +74,7 @@ _Last updated: 2026-07-30_
 - [x] **Phase 1 build — done 2026-07-30**: 援助 tab merge (`AidPage`), simulator framework (`simulation.ts` + integrity tests), chat player UI, 家暴 scenario (11 scenes / 5 endings / 14 debrief rules); 62/62 tests, headless smoke clean
 - [ ] **Katie/team: find legal reviewer** (公益律师 / 法学院志愿者 / 妇联渠道) — scenario text carries "模拟版本 · 待法律校对" badge until reviewed; revise with lawyers per Katie 2026-07-30
 - [x] **Phase 2+3 build — done 2026-07-30**: 性骚扰 scenario (12 scenes / 7 endings / 13 debrief rules; 三路径 + 6个月治安时效) and 性侵 scenario (12 scenes / 7 endings / 15 debrief rules; 黄金72小时, aftermath-only writing, non-blaming debrief, 复议/立案监督, 私了陷阱); picker placeholders removed; 72/72 tests, headless smoke clean. All three scenarios await lawyer review before badge removal.
+- [x] **D-032 UX improvements — done 2026-07-31**: titles → "TA被X了该怎么做"; 真实流程 (7 steps) + 名词解释 (4–6 glossary terms) sections added after every debrief; `SimScenario` type extended with `realFlow` + `glossary`; 72/72 tests clean.
 
 ### Core UX
 - [ ] **Biometric unlock (Face ID / fingerprint)** — replace daily password entry with platform biometrics (WebAuthn/passkey + PRF wrapping the master key); password remains the fallback + new-device path. Requested by Katie 2026-07-10 after friction feedback.

@@ -1,5 +1,19 @@
 # Changelog — The Unmuted (非默)
 
+## 2026-07-31 — 模拟 UX: real-flow steps, glossary, direct titles (D-032)
+
+### Added
+- **真实流程** section (7 numbered steps, plain language) shown after every simulation debrief — tells users the correct process regardless of which path they took.
+- **名词解释** collapsible glossary after every debrief — plain-language notes for all legal jargon: 人身安全保护令, 家庭暴力告诫书, 伤情鉴定, 报警回执, 受案回执, 不予立案, 复议, 立案监督, 附带民事诉讼, 私了谅解书, 治安追诉时效（6个月）, 用人单位的法定义务.
+
+### Changed
+- All three scenario titles renamed to direct "TA被X了该怎么做" framing (家暴/性骚扰/性侵).
+- Scenario picker section header: "我遭遇了…" → "选择情景".
+- README updated: login-path table, Feature 5 (simulator), aid-tab merge, tech stack.
+
+### Verified
+- 72/72 vitest, tsc clean, production build OK.
+
 ## 2026-07-30 — Git history purge of competitor name (both repos)
 
 ### Changed

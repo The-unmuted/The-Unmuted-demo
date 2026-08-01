@@ -5,11 +5,11 @@
 
 **The Unmuted** is a bilingual mobile personal safety tool designed for scenarios involving sexual harassment, stalking, sexual assault, coercion, domestic violence, and other gender-based harm.
 
-Core features: trusted-contact SOS, end-to-end encrypted evidence storage with one-tap court-ready export, guided post-incident documentation, and verified mental-health and legal-aid directories.
+Core features: trusted-contact SOS, end-to-end encrypted evidence storage with one-tap court-ready export, guided post-incident documentation, verified aid directories, and a scripted process simulator that walks users through the real legal steps — safely, before it's real.
 
 **非默** 是一款面向性骚扰、跟踪、性侵、胁迫、家暴及其他性别伤害场景的双语移动端个人安全工具。
 
-核心功能：可信联系人 SOS、端到端加密存证与一键导出举证包、事后记录指引，以及经过核实的心理援助和法律援助目录。
+核心功能：可信联系人 SOS、端到端加密存证与一键导出举证包、事后记录指引、经过核实的援助目录，以及让用户在安全环境中提前演练真实法律流程的脚本式模拟器。
 
 ---
 
@@ -41,6 +41,28 @@ Core features: trusted-contact SOS, end-to-end encrypted evidence storage with o
 - 删除证据有 **72 小时冷静期**，并有隐藏的密码保护恢复通道（防胁迫设计）。
 - 每个页面都有**快速离开按钮**，一键变成天气搜索页；并配有无痕浏览、清除历史的白话安全指南。
 - 紧急联系人等个人信息永远只保存在用户设备本地（刻意设计，不上传服务器）。
+
+---
+
+## Login | 登录方式
+
+Two entry paths, each designed for a different moment:
+
+| Path | What opens | Vault |
+|------|-----------|-------|
+| **Password** | Full app including evidence | Unlocked — you can upload, view, export |
+| **Email OTP** | SOS, Aid directory, Simulator | Sealed — evidence tab asks for password once when you open it |
+
+The server only ever stores ciphertext. The password never leaves your device — an OTP code alone cannot decrypt evidence (by design).
+
+两种登录入口，分别为不同使用场景设计：
+
+| 入口 | 打开内容 | 存证保险柜 |
+|------|---------|-----------|
+| **密码** | 完整 app，含存证 | 已解锁——可上传、查看、导出 |
+| **邮箱验证码** | SOS、援助目录、模拟 | 已封存——打开存证页时一次性输入密码 |
+
+服务器只存乱码。密码永远不离开你的设备——仅凭验证码无法解密证据（刻意设计）。
 
 ---
 
@@ -82,19 +104,49 @@ Core features: trusted-contact SOS, end-to-end encrypted evidence storage with o
 - 针对记忆空白、性侵害、跟踪、约会风险等不同情况提供记录提示。
 - 填写内容加密保存在本机，帮助用户在紧张状态下尽早留住关键细节。
 
-### 4. Mental Health & Legal Aid Directory | 心理与法律援助目录
+### 4. Aid Directory | 援助目录
 
-- Structured, city-filterable directory of verified hotlines and legal-aid resources (家暴/性侵/骚扰/婚姻家事/心理/综合维权).
+- Single merged tab with a 心理援助 / 法律援助 segment toggle — mental health and legal aid in one place.
+- Structured, city-filterable directory of verified hotlines and resources (家暴/性侵/骚扰/婚姻家事/心理/综合维权).
 - Every entry is human-verified before listing; the verification date is shown on each card.
 - A weekly CI job re-checks each entry's official source page and flags dead numbers — a survivor in crisis must never dial a dead line.
 - No GPS: city selection is manual by design — browsing aid resources must not request location.
 
+- 心理援助 / 法律援助 合并为一个援助页，顶部分段切换。
 - 结构化、可按城市筛选的援助目录，覆盖家暴/性侵/骚扰/婚姻家事/心理/综合维权。
 - 每条资源在收录前均经人工核实，卡片上展示核实日期。
 - 每周自动巡检各条目的官方来源页，发现失效号码即告警——绝不能让求助者拨到空号。
 - 不使用 GPS：城市选择为手动设计——查看援助资源不应请求定位权限。
 
-### 5. Bilingual Mobile UI | 双语移动端界面
+### 5. Process Simulator | 报案流程模拟器
+
+A scripted, chat-style simulator that walks users through the real legal process for three scenarios — before it's real.
+
+- **TA被家暴了该怎么做** — from the night of the incident to a Personal Safety Protection Order (人身安全保护令); teaches the warning letter, injury assessment, and protection-order path.
+- **TA被性骚扰了该怎么做** — three parallel tracks (police report / written workplace complaint / civil lawsuit) and the 6-month public-order limitation period almost no one knows about.
+- **TA被性侵了该怎么做** — aftermath-only writing (the assault is never rendered); teaches the 72-hour window, paper-bag evidence preservation, hospital exam ≠ mandatory reporting, the Case Receipt (受案回执), and how to challenge a 不予立案 decision.
+
+After every run, the simulator shows:
+- **Debrief** — which choices helped or hurt, with non-blaming language (delayed disclosure = trauma response, not fault).
+- **Real process** — the 7-step correct sequence, in plain language.
+- **Term glossary** — collapsible plain-language notes for every legal term (人身安全保护令, 伤情鉴定, 受案回执, 立案监督, 私了谅解书, etc.).
+
+No AI, no free-text input, no choices are saved or uploaded. All scenario content is static JSON pending lawyer review (badge shown until cleared).
+
+一个脚本式、聊天气泡界面的模拟器，带着用户在三个情景里把真实法律流程先走一遍。
+
+- **TA被家暴了该怎么做** — 从案发当晚到人身安全保护令；学习告诫书、伤情鉴定和保护令申请路径。
+- **TA被性骚扰了该怎么做** — 三条并行路径（治安报警 / 书面投诉单位 / 民事诉讼）与大多数人不知道的6个月治安时效。
+- **TA被性侵了该怎么做** — 只写事后（侵害过程绝不呈现）；学习黄金72小时、纸袋封存衣物、医院取证≠必须报案、受案回执，以及如何对抗不予立案。
+
+每次模拟结束后显示：
+- **复盘** — 哪些选择起了作用，全程不指责受害人。
+- **真实流程** — 7步正确顺序，平实语言。
+- **名词解释** — 可折叠，对每个法律术语用一两句白话说清楚。
+
+无 AI，无自由文本输入，所有选择不被保存或上传。场景内容均为静态 JSON，待律师校对（校对完成前显示提示标签）。
+
+### 6. Bilingual Mobile UI | 双语移动端界面
 
 - English and Chinese switched by a compact toggle; one language at a time.
 - Soft, calm, privacy-oriented visual direction; designed for one-handed use under stress.
@@ -138,12 +190,13 @@ Our goal is to keep core safety access affordable.
 | --- | --- |
 | Frontend | React 18, TypeScript, Vite |
 | Styling | Tailwind CSS, shadcn/ui, lucide-react |
-| Accounts | Supabase Auth (email OTP) — enables cross-device recovery |
-| Key hierarchy | Argon2id (libsodium) → KEK → master key → per-file AES-256-GCM keys; paper recovery code |
+| Accounts | Supabase Auth (email OTP) — enables cross-device recovery; password OR OTP entry paths |
+| Key hierarchy | Argon2id (libsodium) → KEK → master key → per-file AES-256-GCM keys; 12-char paper recovery code |
 | Evidence encryption | Web Crypto API, AES-256-GCM, client-side only |
 | Evidence storage | Supabase private bucket (per-user paths + RLS); ciphertext only |
 | Personal data | Device localStorage only (contacts, settings) — never uploaded |
-| Web hardening | CSP + security headers, auto-lock, quick exit |
+| Simulator | Static JSON scenario trees (`src/data/simulations/`) — no AI, no network, no persistence |
+| Web hardening | CSP + security headers (Vercel), auto-lock (10 min idle / 3 min background), quick-exit button |
 | Deployment | Vercel + Tencent CloudBase static hosting (China mirror), GitHub Actions CI |
 
 ---
