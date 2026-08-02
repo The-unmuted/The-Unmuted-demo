@@ -1,7 +1,10 @@
 {
   "id": "sexual-harassment",
   "_comment": "模拟版本（草稿）— 全部文本待公益律师校对。依据：民法典第1010条（性骚扰独立案由 + 单位防治义务）、治安管理处罚法第22条（6个月追诉时效）第42/44条、劳动合同法第38条。",
-  "title": { "en": "What to Do When Someone Is Sexually Harassed", "zh": "TA被性骚扰了该怎么做" },
+  "title": {
+    "en": "What to Do When Someone Is Sexually Harassed",
+    "zh": "TA被性骚扰了该怎么做"
+  },
   "tagline": {
     "en": "Workplace harassment has three parallel legal paths — most people only know one, and one of them expires in six months.",
     "zh": "职场性骚扰有三条并行的维权路径——多数人只知道其中一条，而其中一条只有六个月时效。"
@@ -23,25 +26,38 @@
       },
       "choices": [
         {
-          "text": { "en": "Screenshot everything and back the records up", "zh": "把信息全部截图，另外备份" },
+          "text": {
+            "en": "Screenshot everything and back the records up",
+            "zh": "把信息全部截图，另外备份"
+          },
           "feedback": {
             "en": "The messages are preserved with timestamps, in a place he cannot reach.",
             "zh": "这些信息连同时间戳被保存在了他碰不到的地方。"
           },
-          "flags": ["saved-records"],
+          "flags": [
+            "saved-records"
+          ],
           "next": "escalate"
         },
         {
-          "text": { "en": "Delete the whole chat — you can't stand seeing it", "zh": "把聊天记录全删了，看着就恶心" },
+          "text": {
+            "en": "Delete the whole chat — you can't stand seeing it",
+            "zh": "把聊天记录全删了，看着就恶心"
+          },
           "feedback": {
             "en": "The chat is gone. So is the most direct proof that it happened.",
             "zh": "记录没有了。最直接的证据也随之消失了。"
           },
-          "flags": ["deleted-records"],
+          "flags": [
+            "deleted-records"
+          ],
           "next": "escalate"
         },
         {
-          "text": { "en": "Pretend nothing happened and watch for now", "zh": "先装作没事，观察一下" },
+          "text": {
+            "en": "Pretend nothing happened and watch for now",
+            "zh": "先装作没事，观察一下"
+          },
           "feedback": {
             "en": "You wait. The messages sit in the chat, unsaved elsewhere.",
             "zh": "你先按兵不动。信息还留在聊天框里，没有另外备份。"
@@ -61,30 +77,45 @@
       },
       "choices": [
         {
-          "text": { "en": "Refuse clearly, then write down the time, place, and what happened", "zh": "明确拒绝，事后立刻记下时间、地点、经过" },
+          "text": {
+            "en": "Refuse clearly, then write down the time, place, and what happened",
+            "zh": "明确拒绝，事后立刻记下时间、地点、经过"
+          },
           "feedback": {
             "en": "Your clear refusal matters legally — \"against one's will\" is an element of harassment. Your contemporaneous notes fix the details.",
             "zh": "明确拒绝在法律上很重要——“违背他人意愿”正是性骚扰的构成要件。当时记下的细节把事实固定了下来。"
           },
-          "flags": ["refused-recorded"],
+          "flags": [
+            "refused-recorded"
+          ],
           "next": "paths-choice"
         },
         {
-          "text": { "en": "You freeze in the moment — afterwards you cry to your best friend", "zh": "当场僵住了，事后找最好的朋友哭了一场" },
+          "text": {
+            "en": "You freeze in the moment — afterwards you cry to your best friend",
+            "zh": "当场僵住了，事后找最好的朋友哭了一场"
+          },
           "feedback": {
             "en": "Freezing is a normal response. And your friend now knows — a witness to your state and your account, close in time.",
             "zh": "僵住是正常的应激反应。而朋友现在知道了——她成了离事发时间最近的证人。"
           },
-          "flags": ["told-friend"],
+          "flags": [
+            "told-friend"
+          ],
           "next": "paths-choice"
         },
         {
-          "text": { "en": "Endure it — you can't afford to lose this job", "zh": "忍着，这份工作不能丢" },
+          "text": {
+            "en": "Endure it — you can't afford to lose this job",
+            "zh": "忍着，这份工作不能丢"
+          },
           "feedback": {
             "en": "You keep your head down. He reads the silence as safety.",
             "zh": "你低头忍了下来。他把沉默当成了安全信号。"
           },
-          "flags": ["endured"],
+          "flags": [
+            "endured"
+          ],
           "next": "time-pass"
         }
       ]
@@ -100,34 +131,56 @@
       },
       "choices": [
         {
-          "text": { "en": "Report to the police", "zh": "报警" },
-          "flags": ["reported"],
+          "text": {
+            "en": "Report to the police",
+            "zh": "报警"
+          },
+          "flags": [
+            "reported"
+          ],
           "next": "police-auto"
         },
         {
-          "text": { "en": "File a written complaint to the company — by email, so it leaves a trace", "zh": "书面向公司投诉——用邮件，留下痕迹" },
+          "text": {
+            "en": "File a written complaint to the company — by email, so it leaves a trace",
+            "zh": "书面向公司投诉——用邮件，留下痕迹"
+          },
           "feedback": {
             "en": "The email is sent and archived. From now on, the company cannot claim it didn't know.",
             "zh": "邮件发出并存档。从这一刻起，公司再也不能说“不知情”。"
           },
-          "flags": ["written-complaint"],
+          "flags": [
+            "written-complaint"
+          ],
           "next": "company-response"
         },
         {
-          "text": { "en": "Drop hints in the team group chat, but file nothing formal", "zh": "只在部门群里暗示了几句，没有正式投诉" },
+          "text": {
+            "en": "Drop hints in the team group chat, but file nothing formal",
+            "zh": "只在部门群里暗示了几句，没有正式投诉"
+          },
           "feedback": {
             "en": "Hints evaporate. Formally, no complaint exists.",
             "zh": "暗示会蒸发。在正式记录里，投诉从未发生。"
           },
-          "flags": ["informal-only"],
+          "flags": [
+            "informal-only"
+          ],
           "next": "company-nothing"
         }
       ]
     },
     "police-auto": {
       "auto": [
-        { "has": ["saved-records"], "next": "police-strong" },
-        { "next": "police-weak" }
+        {
+          "has": [
+            "saved-records"
+          ],
+          "next": "police-strong"
+        },
+        {
+          "next": "police-weak"
+        }
       ]
     },
     "police-strong": {
@@ -141,12 +194,21 @@
       },
       "choices": [
         {
-          "text": { "en": "Also file a written complaint to the company, attaching the punishment decision", "zh": "同时书面向公司投诉，附上处罚决定书" },
-          "flags": ["written-complaint", "pressed-company"],
+          "text": {
+            "en": "Also file a written complaint to the company, attaching the punishment decision",
+            "zh": "同时书面向公司投诉，附上处罚决定书"
+          },
+          "flags": [
+            "written-complaint",
+            "pressed-company"
+          ],
           "next": "outcome-auto"
         },
         {
-          "text": { "en": "The detention is enough — leave it here", "zh": "他被拘留了，到此为止吧" },
+          "text": {
+            "en": "The detention is enough — leave it here",
+            "zh": "他被拘留了，到此为止吧"
+          },
           "next": "end:police-only"
         }
       ]
@@ -158,24 +220,40 @@
       },
       "choices": [
         {
-          "text": { "en": "Gather what still exists — colleagues' accounts — and file a written complaint to the company", "zh": "收集还存在的证据——同事的证言——并书面向公司投诉" },
+          "text": {
+            "en": "Gather what still exists — colleagues' accounts — and file a written complaint to the company",
+            "zh": "收集还存在的证据——同事的证言——并书面向公司投诉"
+          },
           "feedback": {
             "en": "Two colleagues quietly admit he did the same to them.",
             "zh": "两位同事悄悄告诉你：他对她们也做过一样的事。"
           },
-          "flags": ["written-complaint"],
+          "flags": [
+            "written-complaint"
+          ],
           "next": "company-response"
         },
         {
-          "text": { "en": "Give up — maybe it really is unprovable", "zh": "算了，也许真的证明不了" },
-          "flags": ["gave-up"],
+          "text": {
+            "en": "Give up — maybe it really is unprovable",
+            "zh": "算了，也许真的证明不了"
+          },
+          "flags": [
+            "gave-up"
+          ],
           "next": "end:gave-up"
         }
       ]
     },
     "company-response": {
-      "narration": { "en": "HR invites you to a meeting.", "zh": "HR 约你面谈。" },
-      "speaker": { "en": "HR", "zh": "HR" },
+      "narration": {
+        "en": "HR invites you to a meeting.",
+        "zh": "HR 约你面谈。"
+      },
+      "speaker": {
+        "en": "HR",
+        "zh": "HR"
+      },
       "line": {
         "en": "\"Colleagues, you know... could it be a misunderstanding? He's a senior employee. Let's not blow this up.\"",
         "zh": "“都是同事……会不会是误会？他也是老员工了，别把事情闹大。”"
@@ -186,17 +264,27 @@
       },
       "choices": [
         {
-          "text": { "en": "Insist on a written reply and concrete action, and keep every email", "zh": "坚持要求书面答复和具体处理，保留全部邮件" },
-          "flags": ["pressed-company"],
+          "text": {
+            "en": "Insist on a written reply and concrete action, and keep every email",
+            "zh": "坚持要求书面答复和具体处理，保留全部邮件"
+          },
+          "flags": [
+            "pressed-company"
+          ],
           "next": "outcome-auto"
         },
         {
-          "text": { "en": "Let HR talk you into \"settling it quietly\" — nothing in writing", "zh": "被HR劝住，“私下解决”——什么书面结果都没留" },
+          "text": {
+            "en": "Let HR talk you into \"settling it quietly\" — nothing in writing",
+            "zh": "被HR劝住，“私下解决”——什么书面结果都没留"
+          },
           "feedback": {
             "en": "The meeting ends with warm words and no record. On paper, nothing was ever wrong.",
             "zh": "面谈在客气话中结束，没有留下任何记录。在纸面上，一切从未出过问题。"
           },
-          "flags": ["hr-appeased"],
+          "flags": [
+            "hr-appeased"
+          ],
           "next": "time-pass"
         }
       ]
@@ -208,13 +296,23 @@
       },
       "choices": [
         {
-          "text": { "en": "Send a formal written complaint now", "zh": "现在就补一封正式的书面投诉" },
-          "flags": ["written-complaint"],
+          "text": {
+            "en": "Send a formal written complaint now",
+            "zh": "现在就补一封正式的书面投诉"
+          },
+          "flags": [
+            "written-complaint"
+          ],
           "next": "company-response"
         },
         {
-          "text": { "en": "Keep enduring", "zh": "继续忍" },
-          "flags": ["endured"],
+          "text": {
+            "en": "Keep enduring",
+            "zh": "继续忍"
+          },
+          "flags": [
+            "endured"
+          ],
           "next": "time-pass"
         }
       ]
@@ -230,14 +328,39 @@
       },
       "choices": [
         {
-          "text": { "en": "Go to the police now", "zh": "现在去报警" },
-          "flags": ["reported-late"],
+          "text": {
+            "en": "Go to the police now",
+            "zh": "现在去报警"
+          },
+          "flags": [
+            "reported-late"
+          ],
           "next": "police-late"
         },
         {
-          "text": { "en": "File a civil lawsuit — together with the other women", "zh": "直接提起民事诉讼——和其他受害的同事一起" },
-          "flags": ["civil-suit", "joined-victims"],
+          "text": {
+            "en": "File a civil lawsuit — together with the other women",
+            "zh": "直接提起民事诉讼——和其他受害的同事一起"
+          },
+          "flags": [
+            "civil-suit",
+            "joined-victims"
+          ],
           "next": "civil-auto"
+        },
+        {
+          "text": {
+            "en": "You were forced to resign because of the harassment — file for labour arbitration to claim severance",
+            "zh": "骚扰持续，你被迫辞职了——申请劳动仲裁主张经济补偿"
+          },
+          "flags": [
+            "forced-resign"
+          ],
+          "feedback": {
+            "en": "Resigning under these conditions is a legally recognised 'constructive dismissal' — you may be entitled to severance pay.",
+            "zh": "在这种情况下辞职，法律上属于被迫解除劳动合同，你可能有权要求经济补偿金。"
+          },
+          "next": "labor-arb-scene"
         }
       ]
     },
@@ -248,79 +371,209 @@
       },
       "choices": [
         {
-          "text": { "en": "File the civil lawsuit", "zh": "提起民事诉讼" },
-          "flags": ["civil-suit"],
+          "text": {
+            "en": "File the civil lawsuit",
+            "zh": "提起民事诉讼"
+          },
+          "flags": [
+            "civil-suit"
+          ],
           "next": "civil-auto"
         },
         {
-          "text": { "en": "Give up — it has dragged too long", "zh": "算了，拖太久了" },
-          "flags": ["gave-up"],
+          "text": {
+            "en": "Give up — it has dragged too long",
+            "zh": "算了，拖太久了"
+          },
+          "flags": [
+            "gave-up"
+          ],
           "next": "end:gave-up"
         }
       ]
     },
     "outcome-auto": {
       "auto": [
-        { "has": ["reported"], "next": "end:dual-track" },
-        { "has": ["saved-records"], "next": "end:company-win" },
-        { "next": "end:company-partial" }
+        {
+          "has": [
+            "reported"
+          ],
+          "next": "end:dual-track"
+        },
+        {
+          "has": [
+            "saved-records"
+          ],
+          "next": "end:company-win"
+        },
+        {
+          "next": "end:company-partial"
+        }
       ]
     },
     "civil-auto": {
       "auto": [
-        { "has": ["saved-records"], "next": "end:civil-win" },
-        { "next": "end:civil-thin" }
+        {
+          "has": [
+            "saved-records"
+          ],
+          "next": "civil-win-cont"
+        },
+        {
+          "next": "end:civil-thin"
+        }
+      ]
+    },
+    "civil-win-cont": {
+      "narration": {
+        "en": "The court found sexual harassment established under Civil Code §1010 and ordered him to apologise and pay compensation. Other colleagues' testimony and your saved records made the difference.",
+        "zh": "法院依据民法典第1010条认定性骚扰成立，判令他赔礼道歉并赔偿损失。其他同事的证言和你保存的记录起了关键作用。"
+      },
+      "coach": {
+        "en": "A judgment in your favour is only the first step — if he does not comply, the court can enforce it. You have the right to apply for compulsory enforcement.",
+        "zh": "胜诉判决只是第一步——如果他不主动履行，法院可以强制执行。你有权申请强制执行。"
+      },
+      "choices": [
+        {
+          "text": {
+            "en": "He refuses to pay — apply to court for compulsory enforcement",
+            "zh": "他拒绝履行——向法院申请强制执行"
+          },
+          "flags": [
+            "enforcement-applied"
+          ],
+          "next": "end:civil-enforced"
+        },
+        {
+          "text": {
+            "en": "He complies with the judgment",
+            "zh": "他主动履行了判决"
+          },
+          "next": "end:civil-win-final"
+        }
+      ]
+    },
+    "labor-arb-scene": {
+      "narration": {
+        "en": "You submit a labour arbitration application, stating that you were constructively dismissed due to the company's failure to prevent sexual harassment.",
+        "zh": "你向劳动争议仲裁委员会申请仲裁，主张因公司未能防止性骚扰、你被迫解除劳动合同，要求经济补偿金。"
+      },
+      "coach": {
+        "en": "Labour Contract Law §38: if the employer fails to provide a safe working environment, the employee may terminate the contract and claim severance. §46 sets the calculation: one month's average wage per year of service. Labour arbitration must come before any court action — and the time limit is 1 year from resignation.",
+        "zh": "劳动合同法第38条：用人单位未依法保障劳动权益的，劳动者可以解除合同并主张经济补偿。第46条：每满一年支付一个月工资。劳动仲裁是诉讼的前置程序——申请时效为离职之日起1年内。"
+      },
+      "auto": [
+        {
+          "has": [
+            "written-complaint"
+          ],
+          "next": "end:labor-win"
+        },
+        {
+          "next": "end:labor-weak"
+        }
       ]
     }
   },
   "endings": {
     "police-only": {
-      "title": { "en": "Punished — but he keeps his position", "zh": "他被处罚了——但职位还在" },
+      "title": {
+        "en": "Punished — but he keeps his position",
+        "zh": "他被处罚了——但职位还在"
+      },
       "summary": {
         "en": "The administrative detention is real accountability. But back at work he is still your supervisor, and the company was never formally put on notice. The written complaint track remains open whenever you choose — the punishment decision would make it very hard for the company to look away.",
         "zh": "行政拘留是真实的追责。但回到公司，他仍是你的上级，而公司从未被正式告知。书面投诉这条路随时还可以走——有处罚决定书在手，公司很难再装看不见。"
       }
     },
     "dual-track": {
-      "title": { "en": "Both tracks, full result", "zh": "双管齐下——最完整的结果" },
+      "title": {
+        "en": "Both tracks, full result",
+        "zh": "双管齐下——最完整的结果"
+      },
       "summary": {
         "en": "Administrative detention on record, and the company — facing your written complaint with the punishment decision attached — transfers him out and issues formal discipline. Your evidence chain also supports civil damages (Civil Code art. 1010) if you choose to pursue them. This is what the process looks like when every window was used.",
         "zh": "治安处罚在案，而收到附有处罚决定书的书面投诉后，公司将他调离并给予处分。你手里的证据链也足以支撑民事索赔（民法典1010条），起不起诉由你决定。当每个窗口都被用上时，流程就是这个样子。"
       }
     },
     "company-win": {
-      "title": { "en": "The company is forced to act", "zh": "公司被迫处理了" },
+      "title": {
+        "en": "The company is forced to act",
+        "zh": "公司被迫处理了"
+      },
       "summary": {
         "en": "Faced with screenshots and your insistence on a written reply, the company disciplines and transfers him. Your complaint record also preserves your right to claim compensation if you resign over this (Labor Contract Law art. 38), and the civil track stays open for 3 years.",
         "zh": "面对截图和你对书面答复的坚持，公司对他作出处分并调离。你的投诉记录同时保住了两个权利：因此被迫离职可主张经济补偿（劳动合同法第38条），民事起诉的3年时效也还在。"
       }
     },
     "company-partial": {
-      "title": { "en": "\"Handled internally\" — but the record now exists", "zh": "“内部处理”了——但记录已经留下" },
+      "title": {
+        "en": "\"Handled internally\" — but the record now exists",
+        "zh": "“内部处理”了——但记录已经留下"
+      },
       "summary": {
         "en": "Without the chat records, the company downplays it: a vague \"internal criticism\". Not the outcome you deserved — but your written complaint permanently fixed the company's knowledge. If it happens again, to you or anyone, that record becomes the foundation of a much stronger case.",
         "zh": "没有聊天记录，公司轻描淡写：一句含糊的“内部批评”。这不是你应得的结果——但你的书面投诉永久固定了“公司知情”这一事实。将来无论发生在你还是别人身上，这份记录都是更有力追责的地基。"
       }
     },
-    "civil-win": {
-      "title": { "en": "The court rules in your favor", "zh": "法院支持了你" },
-      "summary": {
-        "en": "With the saved records, your notes, and the other women's testimony, the court finds harassment under Civil Code art. 1010: he must apologize and compensate. The judgment also exposes the company's inaction. The administrative window was lost — the debrief shows where — but the civil path delivered.",
-        "zh": "凭保存的记录、你的书面记录和其他同事的证言，法院依民法典1010条认定性骚扰成立：判他赔礼道歉并赔偿。判决同时暴露了公司的不作为。治安路径的窗口错过了——复盘会告诉你在哪一步——但民事这条路走通了。"
-      }
-    },
     "civil-thin": {
-      "title": { "en": "The lawsuit struggles without the records", "zh": "没有记录，诉讼举步维艰" },
+      "title": {
+        "en": "The lawsuit struggles without the records",
+        "zh": "没有记录，诉讼举步维艰"
+      },
       "summary": {
         "en": "The deleted chat was the most direct evidence. The other women's testimony keeps the case alive and pushes the company into building a real anti-harassment policy, but personal liability against him fails for lack of proof. Nothing here says you were wrong to feel what you felt — the missing piece was information nobody gave you in time.",
         "zh": "删掉的聊天记录本是最直接的证据。其他同事的证言让案件没有归零，也逼着公司建立了真正的反骚扰制度，但对他个人的追责因证据不足没能成立。这不说明你的感受有错——缺的只是当时没人告诉你的那条信息。"
       }
     },
     "gave-up": {
-      "title": { "en": "The fight stopped here — for now", "zh": "维权停在了这里——暂时" },
+      "title": {
+        "en": "The fight stopped here — for now",
+        "zh": "维权停在了这里——暂时"
+      },
       "summary": {
         "en": "This attempt ends without a result. But nothing that happened erases your rights: the civil limitation period runs three years, the workplace duty never expires, and records you still hold keep their value. 12338 and 12348 can walk the next attempt with you.",
         "zh": "这一次的尝试没有结果。但你的权利并没有消失：民事时效有三年，单位的防治义务永远存在，你手里还留着的记录也仍然有效。下一次，12338 和 12348 可以陪你一起走。"
+      }
+    },
+    "civil-win-final": {
+      "title": {
+        "en": "Judgment fulfilled",
+        "zh": "判决已履行"
+      },
+      "summary": {
+        "en": "He complied. The court record and the judgment exist — this case is documented in a way that cannot be erased. The judgment also exposed the company's failure to act, which may prompt systemic change. Civil Code §1010 ¶2 places prevention duties on employers; this verdict reinforces that.",
+        "zh": "他履行了判决。法院记录和判决书存在于此——这起案件以一种无法抹去的方式被记录下来。判决同时暴露了公司的不作为，可能推动制度层面的改变。民法典第1010条第2款明确了用人单位的防治义务；这份判决书让这条义务更有约束力。"
+      }
+    },
+    "civil-enforced": {
+      "title": {
+        "en": "Judgment enforced — the court collected on your behalf",
+        "zh": "强制执行——法院替你追回来了"
+      },
+      "summary": {
+        "en": "You applied to the court for compulsory enforcement. The court had the authority to freeze bank accounts, seize assets, and restrict high-value spending (限制消费令) — the judgment was ultimately satisfied. Choosing enforcement is choosing not to let him ignore a ruling.",
+        "zh": "你申请了强制执行。法院有权冻结银行账户、查封财产、发出限制消费令——判决最终得到了实现。申请强制执行，是不让他把判决书当废纸的选择。"
+      }
+    },
+    "labor-win": {
+      "title": {
+        "en": "Arbitration upheld — severance awarded",
+        "zh": "仲裁胜诉——经济补偿金到手"
+      },
+      "summary": {
+        "en": "Your written complaint to the company established a clear record that it 'knew' about the harassment — the arbitration committee found the company failed its prevention duty, making your resignation a legally recognised constructive dismissal. You were awarded severance pay calculated at one month's wage per year of service (Labour Contract Law §46). The written record was what made the difference.",
+        "zh": "你的书面投诉记录证明了公司「知情」——仲裁委认定公司未尽防治义务，你的辞职构成被迫解除劳动合同。经济补偿金按每满一年一个月工资的标准发放（劳动合同法第46条）。书面投诉记录是这个结果的关键。"
+      }
+    },
+    "labor-weak": {
+      "title": {
+        "en": "Arbitration made difficult — no written record that the company knew",
+        "zh": "仲裁举步维艰——没有书面记录证明公司知情"
+      },
+      "summary": {
+        "en": "Without a written complaint, it is hard to show the company was officially notified. The arbitration committee could not establish that the company 'knew' and failed to act — the constructive-dismissal claim is difficult to sustain. The civil lawsuit path (3-year limitation) is still available. And for the next case: one email to HR is all it takes to create that record.",
+        "zh": "没有书面投诉，难以证明公司正式知情。仲裁委无法认定公司「知情后不作为」——被迫解除的主张难以成立。民事诉讼路径（3年时效）仍然可以走。下一次记住：一封发给HR的邮件，就是那份记录。"
       }
     }
   },
@@ -328,8 +581,13 @@
     {
       "id": "saved-records",
       "kind": "good",
-      "has": ["saved-records"],
-      "title": { "en": "You preserved the chat records", "zh": "第一时间保存了聊天记录" },
+      "has": [
+        "saved-records"
+      ],
+      "title": {
+        "en": "You preserved the chat records",
+        "zh": "第一时间保存了聊天记录"
+      },
       "detail": {
         "en": "Screenshots with timestamps, backed up beyond his reach — the single most direct evidence in harassment cases.",
         "zh": "带时间戳的截图、另行备份——这是性骚扰案件里最直接的证据。"
@@ -342,8 +600,13 @@
     {
       "id": "deleted-records",
       "kind": "bad",
-      "has": ["deleted-records"],
-      "title": { "en": "The chat records were deleted", "zh": "聊天记录被删掉了" },
+      "has": [
+        "deleted-records"
+      ],
+      "title": {
+        "en": "The chat records were deleted",
+        "zh": "聊天记录被删掉了"
+      },
       "detail": {
         "en": "Wanting it out of sight is completely understandable. The method nobody taught: screenshot and back up first — you never have to look at it again, but don't delete it.",
         "zh": "不想再看到它们，完全可以理解。缺失的只是没人教过的方法：先截图备份——之后可以永远不看，但不要删。"
@@ -356,8 +619,13 @@
     {
       "id": "refused-recorded",
       "kind": "good",
-      "has": ["refused-recorded"],
-      "title": { "en": "You refused clearly and wrote it down", "zh": "明确拒绝，并当时记了下来" },
+      "has": [
+        "refused-recorded"
+      ],
+      "title": {
+        "en": "You refused clearly and wrote it down",
+        "zh": "明确拒绝，并当时记了下来"
+      },
       "detail": {
         "en": "The refusal establishes \"against your will\"; the contemporaneous notes fix time, place, and details before memory blurs.",
         "zh": "拒绝确立了“违背意愿”；当时的记录在记忆模糊前固定了时间、地点和细节。"
@@ -370,8 +638,13 @@
     {
       "id": "told-friend",
       "kind": "good",
-      "has": ["told-friend"],
-      "title": { "en": "You told someone close in time", "zh": "第一时间告诉了信任的人" },
+      "has": [
+        "told-friend"
+      ],
+      "title": {
+        "en": "You told someone close in time",
+        "zh": "第一时间告诉了信任的人"
+      },
       "detail": {
         "en": "A near-contemporaneous account to a friend is witness evidence — and support you deserved anyway.",
         "zh": "事发后不久向朋友的陈述可以成为证人证言——同时，这本来就是你应得的支持。"
@@ -384,8 +657,13 @@
     {
       "id": "endured",
       "kind": "bad",
-      "has": ["endured"],
-      "title": { "en": "The silence was read as safety — and a clock was running", "zh": "沉默被他当成了安全——而时钟在走" },
+      "has": [
+        "endured"
+      ],
+      "title": {
+        "en": "The silence was read as safety — and a clock was running",
+        "zh": "沉默被他当成了安全——而时钟在走"
+      },
       "detail": {
         "en": "Fear for a job is rational; the missing information was the 6-month administrative limitation. The correct method: even while deciding, keep saving evidence — the records work whenever you are ready.",
         "zh": "怕丢工作是理性的；缺失的信息是治安追诉时效只有6个月。正确方法：哪怕还没决定要不要维权，也先持续存证——等你准备好时，记录随时可用。"
@@ -398,8 +676,13 @@
     {
       "id": "written-complaint",
       "kind": "good",
-      "has": ["written-complaint"],
-      "title": { "en": "You complained to the employer in writing", "zh": "书面向单位投诉了" },
+      "has": [
+        "written-complaint"
+      ],
+      "title": {
+        "en": "You complained to the employer in writing",
+        "zh": "书面向单位投诉了"
+      },
       "detail": {
         "en": "Email leaves a trace. From that moment the company legally \"knows\" — its inaction becomes actionable, and forced resignation can carry compensation.",
         "zh": "邮件留痕。从那一刻起，公司在法律上“知情”——它的不作为从此可以被追究，因骚扰被迫离职也可主张经济补偿。"
@@ -412,8 +695,13 @@
     {
       "id": "informal-only",
       "kind": "bad",
-      "has": ["informal-only"],
-      "title": { "en": "The complaint was never made formal", "zh": "投诉一直停留在暗示" },
+      "has": [
+        "informal-only"
+      ],
+      "title": {
+        "en": "The complaint was never made formal",
+        "zh": "投诉一直停留在暗示"
+      },
       "detail": {
         "en": "Hints in a group chat cannot later prove the company knew. The correct method: one email, plain words, to HR and a manager — that is all \"written\" takes.",
         "zh": "群里的暗示日后无法证明公司知情。正确方法：一封邮件、直白的措辞、发给HR和管理者——“书面”只需要这么多。"
@@ -426,8 +714,13 @@
     {
       "id": "hr-appeased",
       "kind": "bad",
-      "has": ["hr-appeased"],
-      "title": { "en": "The meeting ended with nothing in writing", "zh": "面谈结束时，什么书面结果都没留下" },
+      "has": [
+        "hr-appeased"
+      ],
+      "title": {
+        "en": "The meeting ended with nothing in writing",
+        "zh": "面谈结束时，什么书面结果都没留下"
+      },
       "detail": {
         "en": "\"Settling quietly\" protected the company, not you. The correct method: after any meeting, send a follow-up email summarizing what was said and demanding a written reply — turning the conversation itself into a record.",
         "zh": "“私下解决”保护的是公司，不是你。正确方法：任何面谈之后，发一封跟进邮件复述谈话内容并要求书面答复——把谈话本身变成记录。"
@@ -440,8 +733,13 @@
     {
       "id": "reported",
       "kind": "good",
-      "has": ["reported"],
-      "title": { "en": "You reported within the administrative window", "zh": "在治安时效内报了警" },
+      "has": [
+        "reported"
+      ],
+      "title": {
+        "en": "You reported within the administrative window",
+        "zh": "在治安时效内报了警"
+      },
       "detail": {
         "en": "Molestation and sending obscene material are punishable by detention — and the punishment decision then powers every other track.",
         "zh": "猥亵、发送淫秽信息侮辱他人可处拘留——处罚决定书还能反过来支撑其他所有路径。"
@@ -454,8 +752,13 @@
     {
       "id": "reported-late",
       "kind": "bad",
-      "has": ["reported-late"],
-      "title": { "en": "The 6-month administrative window had closed", "zh": "六个月的治安时效已经关上" },
+      "has": [
+        "reported-late"
+      ],
+      "title": {
+        "en": "The 6-month administrative window had closed",
+        "zh": "六个月的治安时效已经关上"
+      },
       "detail": {
         "en": "The system failure here: almost nobody is told this clock exists. What remains true: the civil track (3 years) and the workplace track were still open — and you used them.",
         "zh": "这一环节的系统性问题在于：几乎没有人被告知这个时钟的存在。仍然成立的是：民事路径（3年）和职场路径都还开着——而你用上了它们。"
@@ -468,8 +771,13 @@
     {
       "id": "civil-suit",
       "kind": "good",
-      "has": ["civil-suit"],
-      "title": { "en": "You brought the civil claim", "zh": "提起了民事诉讼" },
+      "has": [
+        "civil-suit"
+      ],
+      "title": {
+        "en": "You brought the civil claim",
+        "zh": "提起了民事诉讼"
+      },
       "detail": {
         "en": "Since 2021 harassment is an independent cause of action — you can sue the harasser directly for apology, cessation, and damages.",
         "zh": "2021年起，性骚扰是独立案由——可以直接起诉行为人，要求赔礼道歉、停止侵害、赔偿损失。"
@@ -482,8 +790,13 @@
     {
       "id": "joined-victims",
       "kind": "good",
-      "has": ["joined-victims"],
-      "title": { "en": "You stood together with the other women", "zh": "和其他受害者站在了一起" },
+      "has": [
+        "joined-victims"
+      ],
+      "title": {
+        "en": "You stood together with the other women",
+        "zh": "和其他受害者站在了一起"
+      },
       "detail": {
         "en": "Multiple consistent accounts corroborate each other and dismantle the \"misunderstanding\" defense.",
         "zh": "多名受害者相互印证的陈述，让“误会”的辩解无处立足。"
@@ -496,8 +809,13 @@
     {
       "id": "gave-up",
       "kind": "bad",
-      "has": ["gave-up"],
-      "title": { "en": "The attempt stopped without support", "zh": "这次尝试在孤立无援中停下了" },
+      "has": [
+        "gave-up"
+      ],
+      "title": {
+        "en": "The attempt stopped without support",
+        "zh": "这次尝试在孤立无援中停下了"
+      },
       "detail": {
         "en": "The missing piece was not courage — it was backup. 12338 (women's rights hotline) and 12348 (legal aid) exist to carry cases exactly like this one, for free.",
         "zh": "缺的不是勇气，是支援。12338（妇女维权热线）和 12348（法律援助）正是为这样的案件存在的，而且免费。"
@@ -540,28 +858,40 @@
   ],
   "glossary": [
     {
-      "term": { "en": "6-Month Public-Order Limitation Period (治安追诉时效)", "zh": "治安追诉时效（6个月）" },
+      "term": {
+        "en": "6-Month Public-Order Limitation Period (治安追诉时效)",
+        "zh": "治安追诉时效（6个月）"
+      },
       "note": {
         "en": "For offences handled by police as public-order violations (like sexual harassment involving molestation or insult), the law requires a report within 6 months of the incident. After that, police can no longer issue a penalty. The civil lawsuit path (3 years) and the workplace complaint path stay open independently.",
         "zh": "对于猥亵、侮辱等治安违法行为，法律要求在行为发生后6个月内向公安报案。超过这个期限，警方不能再作出处罚决定。但民事诉讼路径（3年）和职场投诉路径仍独立有效。"
       }
     },
     {
-      "term": { "en": "Company's Legal Duty to Act (用人单位义务)", "zh": "用人单位的法定义务" },
+      "term": {
+        "en": "Company's Legal Duty to Act (用人单位义务)",
+        "zh": "用人单位的法定义务"
+      },
       "note": {
         "en": "Under Civil Code §1010, once a company knows (or should know) that harassment is happening, it is legally required to take action. If it does nothing, it shares civil liability. A written complaint creates the 'knew' moment on record.",
         "zh": "依据民法典第1010条，用人单位知情后有法定义务采取措施。不作为的，在民事诉讼中承担连带责任。书面投诉正是制造这个「知情」时间点的方式。"
       }
     },
     {
-      "term": { "en": "Civil Lawsuit for Sexual Harassment (性骚扰民事诉讼)", "zh": "性骚扰民事诉讼" },
+      "term": {
+        "en": "Civil Lawsuit for Sexual Harassment (性骚扰民事诉讼)",
+        "zh": "性骚扰民事诉讼"
+      },
       "note": {
         "en": "Since 2021, sexual harassment is an independent civil cause of action — you can sue the perpetrator directly without first going through police. Claims can include stopping the harm, a public apology, and financial compensation. Limitation period: 3 years.",
         "zh": "2021年起，性骚扰是独立的民事诉讼案由——无需先走公安路径，可直接起诉行为人。可主张停止侵害、赔礼道歉、赔偿损失。诉讼时效3年。"
       }
     },
     {
-      "term": { "en": "Written Complaint vs. Verbal Report (书面投诉 vs 口头反映)", "zh": "书面投诉 vs 口头反映" },
+      "term": {
+        "en": "Written Complaint vs. Verbal Report (书面投诉 vs 口头反映)",
+        "zh": "书面投诉 vs 口头反映"
+      },
       "note": {
         "en": "A verbal complaint to HR (in person or in a group chat) is hard to prove later. A written complaint — even a single email — creates a timestamped record that the company was officially notified. This is the difference between a complaint that can be used and one that can be ignored.",
         "zh": "口头向HR反映（当面或群聊）事后很难证明。一封书面邮件就能制造一个有时间戳的通知记录，证明公司正式知情。这是「能用」和「被忽略」的区别。"

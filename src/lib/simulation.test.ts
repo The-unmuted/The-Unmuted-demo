@@ -97,9 +97,9 @@ describe("domestic-violence debrief", () => {
 
   it("po-decision routes by evidence strength", () => {
     const decision = dv.scenes["po-decision"];
-    expect(resolveAuto(decision, new Set(["warning-letter"]))).toBe("end:po-strong");
-    expect(resolveAuto(decision, new Set(["asked-receipt"]))).toBe("end:po-granted");
-    expect(resolveAuto(decision, new Set(["photo"]))).toBe("end:po-thin");
+    expect(resolveAuto(decision, new Set(["warning-letter"]))).toBe("po-strong-cont");
+    expect(resolveAuto(decision, new Set(["asked-receipt"]))).toBe("po-granted-cont");
+    expect(resolveAuto(decision, new Set(["photo"]))).toBe("po-thin-cont");
     expect(resolveAuto(decision, new Set())).toBe("end:po-denied");
   });
 });
@@ -115,7 +115,7 @@ describe("sexual-harassment scenario", () => {
 
   it("civil outcome depends on saved records", () => {
     const civil = sh.scenes["civil-auto"];
-    expect(resolveAuto(civil, new Set(["saved-records"]))).toBe("end:civil-win");
+    expect(resolveAuto(civil, new Set(["saved-records"]))).toBe("civil-win-cont");
     expect(resolveAuto(civil, new Set())).toBe("end:civil-thin");
   });
 
@@ -131,8 +131,8 @@ describe("sexual-assault scenario", () => {
 
   it("filing routes by evidence strength", () => {
     const filing = sa.scenes["filing-auto"];
-    expect(resolveAuto(filing, new Set(["medical-exam"]))).toBe("end:prosecution");
-    expect(resolveAuto(filing, new Set(["kept-clothes"]))).toBe("end:filed-hard");
+    expect(resolveAuto(filing, new Set(["medical-exam"]))).toBe("trial-scene");
+    expect(resolveAuto(filing, new Set(["kept-clothes"]))).toBe("filed-hard-cont");
     expect(resolveAuto(filing, new Set())).toBe("filing-weak");
   });
 

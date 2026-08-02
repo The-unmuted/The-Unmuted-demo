@@ -29,8 +29,12 @@ describe("SimulationPage", () => {
     fireEvent.click(screen.getByText("向法院申请人身安全保护令"));
     fireEvent.click(screen.getByText("把手上所有材料都交上去"));
 
-    // Strong ending via warning-letter flag
-    expect(screen.getByText("保护令签发——证据扎实")).toBeTruthy();
+    // po-strong-cont scene: now continues to next choices (divorce / criminal / stable)
+    expect(screen.getByText(/告诫书和出警记录/)).toBeTruthy();
+    fireEvent.click(screen.getByText("先有保护令就够了，其他之后再决定"));
+
+    // Ending: po-stable
+    expect(screen.getByText("保护令在手——你有时间")).toBeTruthy();
     expect(screen.getByText(/复盘/)).toBeTruthy();
     expect(screen.getByText("主动要到了《家庭暴力告诫书》")).toBeTruthy();
     // Real flow section appears after debrief
