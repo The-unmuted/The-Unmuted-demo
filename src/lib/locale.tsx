@@ -10,9 +10,16 @@ interface LocaleContextValue {
 
 const STORAGE_KEY = "the-unmuted-language";
 
-// VITE_DEFAULT_LANG=zh for China/CloudBase build; =en for international/Vercel build.
+// CloudBase CI injects VITE_DEFAULT_LANG=zh to force Chinese.
+// Otherwise auto-detect from the browser locale so the Vercel international
+// build shows English to non-Chinese users without needing a dashboard env var.
 const BUILD_DEFAULT: AppLanguage =
-  import.meta.env.VITE_DEFAULT_LANG === "en" ? "en" : "zh";
+  import.meta.env.VITE_DEFAULT_LANG === "zh" ? "zh" :
+  import.meta.env.VITE_DEFAULT_LANG === "en" ? "en" :
+  (navigator.language.startsWith("zh") ? "zh" : "en");
+
+/** True only for the CloudBase China build (VITE_DEFAULT_LANG=zh injected by CI). */
+export const IS_CHINA_BUILD = import.meta.env.VITE_DEFAULT_LANG === "zh";
 
 const LocaleContext = createContext<LocaleContextValue | null>(null);
 

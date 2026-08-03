@@ -15,7 +15,7 @@
  */
 
 import { useEffect, useState } from "react";
-import { copyFor, type AppLanguage } from "@/lib/locale";
+import { copyFor, IS_CHINA_BUILD, type AppLanguage } from "@/lib/locale";
 import { Eye, EyeOff, KeyRound, Loader2, Mail, PencilLine, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -459,7 +459,7 @@ function EmailStep({
               "我们会发送一个6位验证码到你的邮箱，确认是你本人。"
             )}
           </p>
-          {language === "zh" && (
+          {IS_CHINA_BUILD && (
             <p className="mt-1 text-xs leading-5 text-amber-600 dark:text-amber-400">
               请使用国内邮箱（QQ、163、Outlook 等）——Gmail在中国大陆无法访问
             </p>
