@@ -36,6 +36,7 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_PRIVY_APP_ID: ${{ secrets.VITE_PRIVY_APP_ID }}
           VITE_DEFAULT_LANG: zh
+          VITE_BETA_CODE: ${{ secrets.VITE_BETA_CODE }}
         run: npm run build
 
       - name: Deploy to CloudBase
