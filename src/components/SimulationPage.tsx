@@ -11,6 +11,7 @@ import {
   ArrowLeft,
   CheckCircle2,
   XCircle,
+  AlertTriangle,
   Phone,
   ListOrdered,
   ChevronDown,
@@ -278,9 +279,12 @@ function EndingView({
   onExit: () => void;
   onGoToAid: () => void;
 }) {
-  const rules = evaluateDebrief(scenario, flags);
-  const good = rules.filter((r) => r.kind === "good");
-  const bad = rules.filter((r) => r.kind === "bad");
+  const triggered = evaluateDebrief(scenario, flags);
+  const good = triggered.filter((r) => r.kind === "good");
+  const triggeredBadIds = new Set(triggered.filter((r) => r.kind === "bad").map((r) => r.id));
+  const allBad = scenario.debrief.filter((r) => r.kind === "bad");
+  const triggeredBad = allBad.filter((r) => triggeredBadIds.has(r.id));
+  const avoidedBad = allBad.filter((r) => !triggeredBadIds.has(r.id));
 
   return (
     <div className="mt-2 flex flex-col gap-3">
@@ -289,24 +293,49 @@ function EndingView({
         <p className="mt-2 text-sm leading-6 text-foreground/85">{simText(language, ending.summary)}</p>
       </div>
 
-      <div className="rounded-2xl border border-border/70 bg-card p-4">
-        <h3 className="mb-3 text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">
-          {copyFor(language, "Debrief — what mattered", "复盘——哪些环节起了作用")}
-        </h3>
-        <div className="flex flex-col gap-3">
-          {good.map((r) => (
-            <DebriefCard key={r.id} rule={r} language={language} />
-          ))}
-          {bad.map((r) => (
-            <DebriefCard key={r.id} rule={r} language={language} />
-          ))}
-          {rules.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              {copyFor(language, "No debrief entries for this run.", "这条路线没有产生复盘条目。")}
-            </p>
-          )}
+      {/* Good items — triggered */}
+      {good.length > 0 && (
+        <div className="rounded-2xl border border-border/70 bg-card p-4">
+          <h3 className="mb-3 text-xs font-bold uppercase tracking-[0.12em] text-emerald-600">
+            {copyFor(language, "✅ What you did right", "✅ 你做对了")}
+          </h3>
+          <div className="flex flex-col gap-3">
+            {good.map((r) => <DebriefCard key={r.id} rule={r} language={language} />)}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Bad items — triggered (user made these mistakes) */}
+      {triggeredBad.length > 0 && (
+        <div className="rounded-2xl border border-border/70 bg-card p-4">
+          <h3 className="mb-3 text-xs font-bold uppercase tracking-[0.12em] text-destructive">
+            {copyFor(language, "❌ What went wrong this run", "❌ 这次出了问题的环节")}
+          </h3>
+          <div className="flex flex-col gap-3">
+            {triggeredBad.map((r) => <DebriefCard key={r.id} rule={r} language={language} />)}
+          </div>
+        </div>
+      )}
+
+      {/* Bad items — avoided (user didn't trigger, but should know about) */}
+      {avoidedBad.length > 0 && (
+        <div className="rounded-2xl border border-border/70 bg-card p-4">
+          <h3 className="mb-3 text-xs font-bold uppercase tracking-[0.12em] text-amber-600">
+            {copyFor(language, "⚠️ Risks to know — you avoided these this time", "⚠️ 需要了解的风险——这次你避开了")}
+          </h3>
+          <div className="flex flex-col gap-3">
+            {avoidedBad.map((r) => <DebriefCard key={r.id} rule={r} language={language} avoided />)}
+          </div>
+        </div>
+      )}
+
+      {triggered.length === 0 && allBad.length === 0 && (
+        <div className="rounded-2xl border border-border/70 bg-card p-4">
+          <p className="text-sm text-muted-foreground">
+            {copyFor(language, "No debrief entries for this run.", "这条路线没有产生复盘条目。")}
+          </p>
+        </div>
+      )}
 
       <RealFlowSection language={language} steps={scenario.realFlow} />
 
@@ -396,20 +425,32 @@ function GlossarySection({ language, terms }: { language: AppLanguage; terms: Si
   );
 }
 
-function DebriefCard({ rule, language }: { rule: SimDebriefRule; language: AppLanguage }) {
+function DebriefCard({
+  rule,
+  language,
+  avoided = false,
+}: {
+  rule: SimDebriefRule;
+  language: AppLanguage;
+  avoided?: boolean;
+}) {
   const isGood = rule.kind === "good";
+  const cardClass = isGood
+    ? "border-emerald-500/30 bg-emerald-500/5"
+    : avoided
+    ? "border-amber-400/30 bg-amber-50/60 opacity-80"
+    : "border-destructive/30 bg-destructive/5";
+  const icon = isGood ? (
+    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+  ) : avoided ? (
+    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+  ) : (
+    <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+  );
   return (
-    <div
-      className={`rounded-xl border p-3 ${
-        isGood ? "border-emerald-500/30 bg-emerald-500/5" : "border-destructive/30 bg-destructive/5"
-      }`}
-    >
+    <div className={`rounded-xl border p-3 ${cardClass}`}>
       <div className="flex items-start gap-2">
-        {isGood ? (
-          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-        ) : (
-          <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
-        )}
+        {icon}
         <div>
           <p className="text-sm font-bold text-foreground">{simText(language, rule.title)}</p>
           <p className="mt-1 text-xs leading-5 text-foreground/80">{simText(language, rule.detail)}</p>
