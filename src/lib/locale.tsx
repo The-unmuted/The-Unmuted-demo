@@ -10,12 +10,16 @@ interface LocaleContextValue {
 
 const STORAGE_KEY = "the-unmuted-language";
 
+// VITE_DEFAULT_LANG=zh for China/CloudBase build; =en for international/Vercel build.
+const BUILD_DEFAULT: AppLanguage =
+  import.meta.env.VITE_DEFAULT_LANG === "en" ? "en" : "zh";
+
 const LocaleContext = createContext<LocaleContextValue | null>(null);
 
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState<AppLanguage>(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
-    return saved === "zh" || saved === "en" ? saved : "zh";
+    return saved === "zh" || saved === "en" ? saved : BUILD_DEFAULT;
   });
 
   useEffect(() => {

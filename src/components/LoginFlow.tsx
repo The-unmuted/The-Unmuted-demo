@@ -459,6 +459,11 @@ function EmailStep({
               "我们会发送一个6位验证码到你的邮箱，确认是你本人。"
             )}
           </p>
+          {language === "zh" && (
+            <p className="mt-1 text-xs leading-5 text-amber-600 dark:text-amber-400">
+              请使用国内邮箱（QQ、163、Outlook 等）——Gmail在中国大陆无法访问
+            </p>
+          )}
         </div>
       </div>
       <div className="mt-4 space-y-3">
@@ -499,6 +504,19 @@ function CodeStep({
   onBack: () => void;
 }) {
   const [code, setCode] = useState("");
+  const [cooldown, setCooldown] = useState(60);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [cooldown]);
+
+  const handleResend = () => {
+    onResend();
+    setCooldown(60);
+  };
+
   return (
     <div className="rounded-[1.75rem] border border-border bg-card/80 p-4 text-left">
       <p className="text-sm font-bold text-foreground">
@@ -525,8 +543,14 @@ function CodeStep({
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
           {copyFor(language, "Confirm", "确认")}
         </button>
-        <button onClick={onResend} className="w-full text-xs text-muted-foreground underline">
-          {copyFor(language, "Resend code", "重新发送验证码")}
+        <button
+          onClick={handleResend}
+          disabled={cooldown > 0}
+          className="w-full text-xs text-muted-foreground underline disabled:no-underline disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {cooldown > 0
+            ? copyFor(language, `Resend in ${cooldown}s`, `${cooldown} 秒后可重新发送`)
+            : copyFor(language, "Resend code", "重新发送验证码")}
         </button>
         <button onClick={onBack} className="w-full text-xs text-muted-foreground underline">
           {copyFor(language, "Use a different email", "使用其他邮箱")}
