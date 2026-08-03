@@ -28,10 +28,8 @@ import {
 import {
   createVault,
   hasVault,
-  unlockWithPassword,
-  unlockWithRecoveryCode,
 } from "@/lib/keyVaultService";
-import { normalizeRecoveryCode, isValidRecoveryCodeFormat } from "@/lib/keyVault";
+import { normalizeRecoveryCode } from "@/lib/keyVault";
 import { checkPassword, passwordIssueCopy } from "@/lib/passwordPolicy";
 import { hasPassword, verifyPassword, savePassword } from "@/lib/userCredentials";
 import UnlockSOSEntry from "./UnlockSOSEntry";
@@ -46,8 +44,6 @@ type Stage =
   | "set-password"
   | "show-recovery"
   | "confirm-recovery"
-  | "unlock"
-  | "recovery-unlock"
   // legacy local-only fallback (no cloud):
   | "local-login"
   | "local-set-password";
@@ -66,10 +62,6 @@ export default function LoginFlow({
   const [busy, setBusy] = useState(false);
   const [recoveryCode, setRecoveryCode] = useState("");
   const [unlockError, setUnlockError] = useState<string | null>(null);
-  // D-031: user picked "sign in with code instead" from the unlock screen
-  const [otpLogin, setOtpLogin] = useState(false);
-  // OTP was completed this session, so the unlock screen may offer "enter now, unlock evidence later"
-  const [cameViaOtp, setCameViaOtp] = useState(false);
 
   const goTo = (next: Stage) => {
     setUnlockError(null);
@@ -88,7 +80,11 @@ export default function LoginFlow({
       if (session?.user?.email) {
         setEmail(session.user.email);
         setUserId(session.user.id);
-        setStage((await hasVault(session.user.id)) ? "unlock" : "set-password");
+        if (await hasVault(session.user.id)) {
+          onUnlocked(session.user.email, { vaultLocked: true });
+        } else {
+          setStage("set-password");
+        }
       } else {
         setStage("email");
       }
@@ -131,19 +127,12 @@ export default function LoginFlow({
     setUserId(user.id);
     const exists = await hasVault(user.id);
     setBusy(false);
-    if (exists && otpLogin) {
-      // User chose the code path on purpose — enter now, evidence stays sealed.
+    if (exists) {
       toast.success(copyFor(language, "Welcome back!", "欢迎回来！"));
       onUnlocked(email, { vaultLocked: true });
       return;
     }
-    setCameViaOtp(true);
-    setStage(exists ? "unlock" : "set-password");
-  };
-
-  const handleOtpLoginInstead = async () => {
-    setOtpLogin(true);
-    await handleEmail(email);
+    setStage("set-password");
   };
 
   const handleSetPassword = async (rawPassword: string) => {
@@ -179,70 +168,6 @@ export default function LoginFlow({
     }
     setRecoveryCode("");
     toast.success(copyFor(language, "All set. Welcome!", "设置完成，欢迎使用！"));
-    onUnlocked(email);
-  };
-
-  const handleUnlock = async (password: string) => {
-    setBusy(true);
-    setUnlockError(null);
-    const res = await unlockWithPassword(userId, password);
-    setBusy(false);
-    if (!res.ok) {
-      setUnlockError(
-        res.reason === "vault-unavailable"
-          ? copyFor(
-              language,
-              "Couldn't open your vault right now. Check your connection and try again, or sign in again.",
-              "暂时打不开你的保险柜。请检查网络后再试，或重新登录。"
-            )
-          : copyFor(language, "Incorrect password. Please try again.", "密码错误，请再试一次。")
-      );
-      return;
-    }
-    toast.success(copyFor(language, "Welcome back!", "欢迎回来！"));
-    onUnlocked(email);
-  };
-
-  const handleRecoveryUnlock = async (code: string, rawNewPassword: string) => {
-    const newPassword = rawNewPassword.trim();
-    if (!isValidRecoveryCodeFormat(code)) {
-      toast.error(
-        copyFor(language, "That doesn't look like a recovery key.", "恢复钥匙格式不对，请检查。")
-      );
-      return;
-    }
-    const newPasswordIssue = checkPassword(newPassword);
-    if (newPasswordIssue) {
-      toast.error(passwordIssueCopy(language, newPasswordIssue));
-      return;
-    }
-    setBusy(true);
-    setUnlockError(null);
-    const res = await unlockWithRecoveryCode(userId, code, newPassword);
-    setBusy(false);
-    if (!res.ok) {
-      setUnlockError(
-        res.reason === "vault-unavailable"
-          ? copyFor(
-              language,
-              "Couldn't open your vault right now. Check your connection and try again, or sign in again.",
-              "暂时打不开你的保险柜。请检查网络后再试，或重新登录。"
-            )
-          : copyFor(
-              language,
-              "Recovery key doesn't match. Check your paper copy character by character.",
-              "恢复钥匙不正确，请逐个字符对照纸上的内容。"
-            )
-      );
-      return;
-    }
-    toast.success(
-      copyFor(
-        language,
-        "Evidence unlocked. Your new password is saved.",
-        "证据已解锁，新密码已生效。"
-      )
-    );
     onUnlocked(email);
   };
 
@@ -328,73 +253,6 @@ export default function LoginFlow({
             language={language}
             onBack={() => setStage("show-recovery")}
             onSubmit={handleConfirmRecovery}
-          />
-        )}
-
-        {stage === "unlock" && (
-          <PasswordStep
-            language={language}
-            busy={busy}
-            title={copyFor(language, `Welcome back`, "欢迎回来")}
-            hint={email}
-            cta={copyFor(language, "Unlock", "解锁")}
-            minLength={1}
-            error={unlockError}
-            onSubmit={handleUnlock}
-            footer={
-              <div className="space-y-2">
-                {cameViaOtp ? (
-                  <button
-                    onClick={() => onUnlocked(email, { vaultLocked: true })}
-                    className="w-full rounded-2xl border border-border bg-card py-3 text-sm font-bold text-foreground active:scale-[0.98]"
-                  >
-                    {copyFor(
-                      language,
-                      "Enter without password (evidence unlocks later)",
-                      "先直接进入（打开存证时再输密码）"
-                    )}
-                  </button>
-                ) : (
-                  <button
-                    onClick={handleOtpLoginInstead}
-                    disabled={busy}
-                    className="w-full rounded-2xl border border-border bg-card py-3 text-sm font-bold text-foreground active:scale-[0.98] disabled:opacity-60"
-                  >
-                    {copyFor(
-                      language,
-                      "Sign in with email code instead",
-                      "改用邮箱验证码登录"
-                    )}
-                  </button>
-                )}
-                <p className="text-[11px] leading-4 text-muted-foreground">
-                  {copyFor(
-                    language,
-                    "The code signs you in; only your password can decrypt your evidence — the server never sees it.",
-                    "验证码用于登录；证据只有密码才能解密——服务器看不到你的密码和证据内容。"
-                  )}
-                </p>
-                <button
-                  onClick={() => goTo("recovery-unlock")}
-                  className="w-full text-xs text-muted-foreground underline"
-                >
-                  {copyFor(language, "Forgot password? Use recovery key", "忘记密码？用纸上的恢复钥匙")}
-                </button>
-                <button onClick={switchAccount} className="w-full text-xs text-muted-foreground underline">
-                  {copyFor(language, "Use a different email", "使用其他邮箱")}
-                </button>
-              </div>
-            }
-          />
-        )}
-
-        {stage === "recovery-unlock" && (
-          <RecoveryUnlockStep
-            language={language}
-            busy={busy}
-            error={unlockError}
-            onBack={() => goTo("unlock")}
-            onSubmit={handleRecoveryUnlock}
           />
         )}
 
@@ -748,71 +606,3 @@ function ConfirmRecoveryStep({
   );
 }
 
-function RecoveryUnlockStep({
-  language,
-  busy,
-  error,
-  onBack,
-  onSubmit,
-}: {
-  language: AppLanguage;
-  busy: boolean;
-  error?: string | null;
-  onBack: () => void;
-  onSubmit: (code: string, newPassword: string) => void;
-}) {
-  const [code, setCode] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [showPwd, setShowPwd] = useState(false);
-  return (
-    <div className="rounded-[1.75rem] border border-border bg-card/80 p-4 text-left">
-      <p className="text-sm font-bold text-foreground">
-        {copyFor(language, "Unlock with your recovery key", "用纸上的恢复钥匙解锁")}
-      </p>
-      <p className="mt-1 text-xs leading-5 text-muted-foreground">
-        {copyFor(
-          language,
-          "Type the key you wrote on paper, then choose a new password.",
-          "输入你抄在纸上的恢复钥匙，然后设置一个新密码。"
-        )}
-      </p>
-      <div className="mt-4 space-y-3">
-        <input
-          value={code}
-          onChange={(e) => setCode(e.target.value.toUpperCase())}
-          placeholder="XXXX-XXXX-XXXX"
-          autoCapitalize="characters"
-          autoCorrect="off"
-          spellCheck={false}
-          className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-center font-mono text-base tracking-widest text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
-        />
-        <div className="relative">
-          <input
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            placeholder={copyFor(language, "New password (min. 8 chars)", "新密码（至少8位）")}
-            type={showPwd ? "text" : "password"}
-            className="w-full rounded-2xl border border-border bg-background px-4 py-3 pr-11 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
-          />
-          <button
-            onClick={() => setShowPwd(!showPwd)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-          >
-            {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </button>
-        </div>
-        {error && <p className="text-xs leading-5 text-destructive">{error}</p>}
-        <button
-          onClick={() => onSubmit(code, newPassword)}
-          disabled={busy || normalizeRecoveryCode(code).length !== 12 || newPassword.trim().length < 8}
-          className="w-full rounded-2xl bg-primary py-3 text-sm font-bold text-primary-foreground disabled:opacity-60"
-        >
-          {busy ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : copyFor(language, "Unlock evidence", "解锁证据")}
-        </button>
-        <button onClick={onBack} className="w-full text-xs text-muted-foreground underline">
-          {copyFor(language, "Back", "返回")}
-        </button>
-      </div>
-    </div>
-  );
-}

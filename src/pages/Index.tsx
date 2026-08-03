@@ -98,8 +98,8 @@ export default function Index() {
               <p className="text-xs leading-5 text-muted-foreground">
                 {copyFor(
                   language,
-                  "You were away for a while, so the vault locked itself to protect your records. Enter your password to continue.",
-                  "你离开了一会儿，为保护你的资料，应用已自动上锁。输入密码即可继续。"
+                  "You were away for a while, so the app locked itself to protect your records.",
+                  "你离开了一会儿，为保护你的资料，应用已自动上锁。"
                 )}
               </p>
             </div>
