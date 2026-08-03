@@ -161,7 +161,7 @@ export default function SettingsWidget({ language, onLogout }: SettingsWidgetPro
           <p className="mt-2 text-center text-[11px] text-muted-foreground">
             {copyFor(
               language,
-              "Sign out to switch email or wallet.",
+              "Sign out to switch email.",
               "退出后可重新选择登录方式或更换邮箱。"
             )}
           </p>

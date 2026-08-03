@@ -12,8 +12,8 @@
  * Production upgrade path: swap sha256 commitments for snarkjs + Semaphore circuits.
  */
 
-export type IdentityCategory = "female" | "local" | "wallet" | "email";
-export type IdentityProvider = "local" | "phantom" | "email";
+export type IdentityCategory = "female" | "local" | "email";
+export type IdentityProvider = "local" | "email";
 export type TrustLevel = "limited" | "standard" | "high";
 
 export interface IdentityTrust {
@@ -29,7 +29,6 @@ export interface ZKPCommitment {
   nullifier: string;        // public hex
   category: IdentityCategory;
   provider?: IdentityProvider;
-  walletAddress?: string;
   emailHash?: string;
   trust?: IdentityTrust;
   region?: string;          // city/area for 'local' category
@@ -55,7 +54,6 @@ function bytesToHex(bytes: Uint8Array): string {
 }
 
 function categoryString(category: IdentityCategory, region?: string): string {
-  if (category === "wallet") return "wallet";
   if (category === "email") return "email";
   return category === "local" ? `local:${region ?? "unknown"}` : "female";
 }
@@ -77,36 +75,6 @@ export async function generateCommitment(
 
   localStorage.setItem(IDENTITY_KEY, JSON.stringify(identity));
   localStorage.setItem(SECRET_KEY, secret);
-
-  return identity;
-}
-
-/** Generate a stable anonymous identity from a Phantom wallet signature. */
-export async function generateWalletCommitment(
-  walletAddress: string,
-  signature: Uint8Array,
-  trust?: IdentityTrust
-): Promise<ZKPCommitment> {
-  const normalizedAddress = walletAddress.trim();
-  const signatureHex = bytesToHex(signature);
-
-  const [commitment, nullifier] = await Promise.all([
-    sha256hex(`phantom:commitment:v1:${normalizedAddress}:${signatureHex}`),
-    sha256hex(`phantom:nullifier:v1:${normalizedAddress}`),
-  ]);
-
-  const identity: ZKPCommitment = {
-    commitment,
-    nullifier,
-    category: "wallet",
-    provider: "phantom",
-    walletAddress: normalizedAddress,
-    trust,
-    createdAt: Date.now(),
-  };
-
-  localStorage.setItem(IDENTITY_KEY, JSON.stringify(identity));
-  localStorage.setItem(SECRET_KEY, signatureHex);
 
   return identity;
 }
@@ -161,11 +129,6 @@ export async function selfVerify(): Promise<boolean> {
   const identity = loadIdentity();
   const secret   = localStorage.getItem(SECRET_KEY);
   if (!identity || !secret) return false;
-
-  if (identity.provider === "phantom" && identity.walletAddress) {
-    const expected = await sha256hex(`phantom:commitment:v1:${identity.walletAddress}:${secret}`);
-    return expected === identity.commitment;
-  }
 
   if (identity.provider === "email" && identity.emailHash) {
     const expected = await sha256hex(`email:commitment:v1:${identity.emailHash}:${secret}`);
