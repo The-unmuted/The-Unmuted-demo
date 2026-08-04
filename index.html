@@ -26,6 +26,11 @@
     <meta name="format-detection" content="telephone=no" />
   </head>
   <body>
+    <script>
+      if (location.hostname === 'the-unmuted.vercel.app') {
+        location.replace('https://the-unmuted-app.vercel.app' + location.pathname + location.search + location.hash);
+      }
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
