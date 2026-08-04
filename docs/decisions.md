@@ -404,3 +404,33 @@ Per-file keys (random per evidence file) ──encrypt──▶ evidence blobs
 4. 不做"设备记住密钥/免密解锁"——那等于把证据解密能力落盘，手机被夺走即失守，与 D-029 自动上锁的威胁模型冲突。生物识别解锁（passkey/PRF）仍是未来的正路。
 
 **实现:** `LoginFlow.tsx`（`onUnlocked(email, { vaultLocked })` + otpLogin/cameViaOtp 状态），`EvidencePage.tsx`（`vaultGateLocked` 全区门 + `unlockWithPassword` 后重渲染），`Index.tsx` 无需改动（`canUseVault` 已按会话密钥实时计算）。自动上锁（D-029）行为不变。
+
+## D-033 — 登录流程简化：验证码后直接进入，密码仅在打开存证时要求 (2026-08-03)
+
+**Context:** D-031 已引入"验证码通道"作为可选路径（用户需从解锁页手动选择"改用邮箱验证码登录"）。Katie 反馈：日常使用仍然要先输验证码、再输密码，摩擦太大；密码应该只在下载上传数据时才需要。
+
+**Decision:** 验证码成功后**直接进入 app**，不再要求输入密码。具体路径：
+1. **首次注册**：邮箱 → 验证码 → 设置密码（保护存证）→ 展示恢复钥匙 → 确认 → 进入（不变）。
+2. **已有账号**：邮箱 → 验证码 → 直接进入（vault 处于 locked 状态，session master key 为 null）。
+3. **自动锁屏后**：检测到已有 Supabase session → 直接进入（同上，无需任何输入）。
+4. **存证操作**：上传 / 解锁查看 / 导出时，EvidencePage 提示输入密码解锁 vault。
+
+**什么没变：** 第一次注册的密码设置流程不变（密码仍是保护存证的唯一本地密钥）；EvidencePage 内的 vault gate 不变；paper recovery code 流程不变；自动上锁（D-029）的行为不变。
+
+**为什么可以这样做：** 密码的作用是解密存证，不是"确认用户身份"——身份已经由 Supabase OTP 确认。日常使用（SOS、援助、模拟）根本不需要解密任何东西，强制密码是无谓摩擦。只有在真正需要解密时才提示，是最小摩擦 + 最合理的安全边界。
+
+**实现：** `LoginFlow.tsx`（`handleCode` 中 vault 存在时直接 `onUnlocked(email, {vaultLocked: true})`；`useEffect` session check 同样直接进入；删除 `unlock`/`recovery-unlock` stage、`handleUnlock`、`handleRecoveryUnlock`、`handleOtpLoginInstead`、`otpLogin`、`cameViaOtp`；移除 `unlockWithPassword`/`unlockWithRecoveryCode`/`isValidRecoveryCodeFormat` 导入；删除 `RecoveryUnlockStep` 组件，共减少 ~220 行）。`Index.tsx` auto-lock banner 文案更新（不再提"输入密码"）。
+
+## D-034 — 内部访问门控 + Vercel 部署迁移到 Katie 账号 (2026-08-03)
+
+**Context:** 外部安全分析指出：CloudBase 域名在没有 ICP 备案的情况下对中国大陆用户公开服务，构成合规风险（已经踩线）；Supabase/AWS 境外存储用户邮箱地址也存在数据出境合规问题。公司实体注册完成前，需要把两条链接限制为仅内部团队可用。同时发现 Vercel 项目在 Wendy 账号下，每次需要 Wendy 操作，Katie 希望迁移到自己账号。
+
+**Decision 1 — 内部访问码（BetaGate）：**
+在 `Index.tsx` 顶层加一个全屏访问门：`VITE_BETA_CODE` 环境变量设置后，打开链接先看到输入框，输入正确的码才进入 app；码存入 localStorage，每个浏览器只需输一次。本地开发不设 `VITE_BETA_CODE` 时门控完全透明。`VITE_` 前缀意味着码会打包进 JS bundle（有一定技术可见性），但足以阻止普通访问者和爬虫；正式上线前需配合 ICP 备案和实体注册，届时移除门控。团队访问码：`V3IOG0G7`（已通过 GitHub Secret 注入到 CloudBase CI；已在 Vercel 项目环境变量中设置）。
+
+**Decision 2 — Vercel 迁移到 Katie 账号 (`katielin0207-devs-projects`)：**
+旧 Vercel 项目在 Wendy（DancinWendy）账号下，Katie 无法独立管理。新建项目直接连接 `The-Unmuted-v2` GitHub repo，设置所有必要环境变量，push 到 `main` 自动部署。旧链接 (`the-unmuted.vercel.app`) 通过 `index.html` 内嵌的 hostname 检测脚本自动跳转到新链接，在 Wendy 那边下次自动部署后生效（源码推送已触发）。
+
+**新链接：** `https://the-unmuted-app.vercel.app`（Katie 账号，有访问码保护）。
+
+**CloudBase：** CI workflow 注入 `VITE_BETA_CODE`；`VITE_BETA_CODE` GitHub Secret 已添加到 `The-Unmuted-v2`。访问码生效需等 CloudBase CI 完成下一次部署。ICP 备案完成前，建议同时在腾讯云控制台暂停 CloudBase 静态网站托管（彻底消除合规风险）。

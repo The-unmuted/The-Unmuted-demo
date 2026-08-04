@@ -2,7 +2,9 @@
 
 _This file captures the current project state for AI assistants. Update before ending each work session._
 
-_Last updated: 2026-07-30_
+_Last updated: 2026-08-03_
+
+**2026-08-03 (D-033/D-034 + dead code):** Four changes this session. (1) **Login simplified (D-033)**: after OTP, returning users go directly into the app — no password step. Password only required when opening evidence vault. Removed `unlock`/`recovery-unlock` stages, `handleUnlock`, `handleRecoveryUnlock`, `RecoveryUnlockStep`, `otpLogin`/`cameViaOtp` states, `unlockWithPassword`/`unlockWithRecoveryCode` imports from LoginFlow (~220 lines deleted). First-time registration still sets a password. (2) **Internal beta gate (D-034)**: `VITE_BETA_CODE=V3IOG0G7` env var enables a fullscreen access-code screen in `Index.tsx` (BetaGate component). Set in Vercel env vars and CloudBase CI / GitHub Secret. (3) **Vercel migrated to Katie's account**: new project `the-unmuted-app.vercel.app` under `katielin0207-devs-projects`, connected to `The-Unmuted-v2`, auto-deploys on push. Old `the-unmuted.vercel.app` redirects via inline script in `index.html`. (4) **Phantom wallet dead code removed**: `generateWalletCommitment`, wallet/phantom type variants, `walletAddress?`, `generateFromWallet` hook, SettingsWidget "or wallet" text (~55 lines). **Simulation debrief now shows all bad rules** split into triggered (❌) and avoided (⚠️). `aidDirectory.json` curly-quote JSON parse bug fixed.
 
 **2026-07-31 (D-032 模拟 UX improvements):** Three Katie requests: (1) Scenario titles changed to direct "TA被X了该怎么做" framing (家暴/性骚扰/性侵) — picker section header updated to "选择情景". (2) After every debrief, two new sections added: **真实流程** (7 numbered steps per scenario in plain language) and **名词解释** (collapsible glossary of 4–6 legal terms per scenario with plain-language notes — 人身安全保护令, 家庭暴力告诫书, 伤情鉴定, 受案回执, 不予立案, 复议, 立案监督, 附带民事诉讼, 私了谅解书, 治安追诉时效, 用人单位义务). (3) SimScenario interface extended with `realFlow: SimText[]` + `glossary?: SimGlossaryTerm[]`; `validateScenario` covers new fields. README updated: login table, 模拟 as Feature 5, aid-tab merge note, tech-stack row for simulator. 72/72 tests, tsc/build clean, pushed both remotes.
 
@@ -30,7 +32,8 @@ A bilingual (EN/ZH) mobile-first safety app for survivors of gender-based harm �
 
 Core mission (all evidence work is judged against this): 帮助用户加密存储私密信息，并在未来有需要的时候能够作为有效证据进行举证。
 
-Live: https://the-unmuted.vercel.app/
+Live: https://the-unmuted-app.vercel.app/ (access code: V3IOG0G7 — internal only until ICP filing)
+Old Vercel URL (the-unmuted.vercel.app) redirects to the above.
 
 ---
 
@@ -39,9 +42,10 @@ Live: https://the-unmuted.vercel.app/
 **Active branch:** `main` (Phase 1-4 all committed & deployed; 2026-07-10 UX batch deployed and verified live on both platforms: real-2s SOS hold, in-app 修改密码, DonationWidget + display-name removed; 2026-07-11: ‼️ SOS entry on the unlock screen, D-024; 2026-07-17: per-action password re-verification in the Cloud Vault, D-025 — 解锁查看/导出举证包/删除 each ask for the password again, **awaiting Katie's phone verification**; 2026-07-19: aid directory skeleton, D-026 — city-filterable psych/legal directory in `aidDirectory.json`, weekly source-monitoring CI, **awaiting Katie's phone verification**. Next: fill 8 missing sourceUrls, China seed data, global country hotlines before UN hackathon — see tasks.md)
 **Status:** **Phase 4 is complete** (4a/4b: honest copy + chat removal; 4c: D-022 delete cooling-off; 4d 2026-07-10: persistent inline unlock errors at all five password gates, vault-unavailable vs wrong-secret distinction in `UnlockResult`, whitespace-trim retry on unlock + trim at password creation — fixes the 2026-07-09 pasted-space lockout; FeedbackWidget reviewed and deliberately unchanged). Phases 1–3 browser-verified on a clean production build: OTP login (6-digit) → cloud key-vault password unlock → capture → encrypt → private-bucket save (现场取证 badge) → password re-verify → decrypt/export with exact SHA-256 match; 导出举证包 (D-020) verified end to end. Test suite: 23/23 vitest, tsc + eslint clean.
 
-**Deployments (both live, verified 2026-07-10 serving the UX-batch build):**
-- Vercel (overseas): https://the-unmuted.vercel.app/
-- Tencent CloudBase (mainland China): https://theunmuted-v2-d2gyh0rux2a05de92-1434116173.tcloudbaseapp.com
+**Deployments (both access-code protected — internal only until ICP filing):**
+- Vercel (overseas, Katie's account): https://the-unmuted-app.vercel.app/ — auto-deploys from The-Unmuted-v2 on push to main. Access code `V3IOG0G7` via `VITE_BETA_CODE` env var.
+- Tencent CloudBase (mainland China): https://theunmuted-v2-d2gyh0rux2a05de92-1434116173.tcloudbaseapp.com — access code injected via CI `VITE_BETA_CODE` GitHub Secret.
+- Old Vercel URL (the-unmuted.vercel.app, Wendy's account) — redirects to the-unmuted-app.vercel.app via inline script; pending Wendy's next auto-deploy.
 
 **Repo topology:** two GitHub repos, unified 2026-07-02 onto one `main` lineage.
 - `origin` = The-unmuted/The-Unmuted-demo (no CI secrets)
@@ -121,6 +125,7 @@ Key files: `src/lib/keyVault.ts` (pure crypto), `src/lib/keyVaultService.ts` (Su
 | `VITE_PRIVY_APP_ID` | No | Legacy optional Privy OTP. Superseded by Supabase auth. |
 | `VITE_CHAINMAKER_API_KEY` | No | Legacy path only. Without it, deterministic simulation runs. |
 | `VITE_CHAINMAKER_ENDPOINT` | No | Custom ChainMaker BaaS endpoint. |
+| `VITE_BETA_CODE` | No (local dev) | Internal access gate. Set to `V3IOG0G7` on Vercel + CloudBase until ICP filing. Unset locally — no gate in dev. |
 | `TENCENT_SECRET_ID` / `KEY` | CI only | CloudBase deployment (v2 repo GitHub Secrets only). |
 
 ---

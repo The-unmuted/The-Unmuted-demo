@@ -15,7 +15,10 @@ Core features: trusted-contact SOS, end-to-end encrypted evidence storage with o
 
 ## Live | 在线访问
 
-- Vercel (global): https://the-unmuted.vercel.app/
+> **Internal beta — access code required** while ICP filing is in progress. Contact a team member for the code.
+> **内部测试阶段**，两条链接均需输入访问码。ICP 备案完成前不对外公开。
+
+- Vercel (global): https://the-unmuted-app.vercel.app/
 - Tencent CloudBase (mainland China mirror): https://theunmuted-v2-d2gyh0rux2a05de92-1434116173.tcloudbaseapp.com
 
 ---
@@ -48,19 +51,23 @@ Core features: trusted-contact SOS, end-to-end encrypted evidence storage with o
 
 Two entry paths, each designed for a different moment:
 
-| Path | What opens | Vault |
-|------|-----------|-------|
-| **Password** | Full app including evidence | Unlocked — you can upload, view, export |
-| **Email OTP** | SOS, Aid directory, Simulator | Sealed — evidence tab asks for password once when you open it |
+Email OTP is the only login step — after verifying the code you enter the app directly. Password is only asked when you actually open the evidence vault to upload, view, or export.
+
+| Moment | What you enter |
+|--------|---------------|
+| **Every login** | Email OTP (6-digit code) |
+| **First registration** | Email OTP → set a password (protects evidence) → write down recovery key |
+| **Opening evidence vault** | Password (derives the decryption key — never sent to any server) |
 
 The server only ever stores ciphertext. The password never leaves your device — an OTP code alone cannot decrypt evidence (by design).
 
-两种登录入口，分别为不同使用场景设计：
+登录只需验证码，验证后直接进入 app。密码只在打开存证保险柜（上传 / 查看 / 导出）时才需要输入。
 
-| 入口 | 打开内容 | 存证保险柜 |
-|------|---------|-----------|
-| **密码** | 完整 app，含存证 | 已解锁——可上传、查看、导出 |
-| **邮箱验证码** | SOS、援助目录、模拟 | 已封存——打开存证页时一次性输入密码 |
+| 时机 | 需要输入 |
+|------|---------|
+| **每次登录** | 邮箱验证码（6位数字） |
+| **首次注册** | 验证码 → 设置密码（保护存证）→ 抄写恢复钥匙 |
+| **打开存证保险柜** | 密码（在本机派生解密密钥，不发送给服务器） |
 
 服务器只存乱码。密码永远不离开你的设备——仅凭验证码无法解密证据（刻意设计）。
 
@@ -190,7 +197,7 @@ Our goal is to keep core safety access affordable.
 | --- | --- |
 | Frontend | React 18, TypeScript, Vite |
 | Styling | Tailwind CSS, shadcn/ui, lucide-react |
-| Accounts | Supabase Auth (email OTP) — enables cross-device recovery; password OR OTP entry paths |
+| Accounts | Supabase Auth (email OTP) — OTP is the only login step; password only required to decrypt the evidence vault |
 | Key hierarchy | Argon2id (libsodium) → KEK → master key → per-file AES-256-GCM keys; 12-char paper recovery code |
 | Evidence encryption | Web Crypto API, AES-256-GCM, client-side only |
 | Evidence storage | Supabase private bucket (per-user paths + RLS); ciphertext only |

@@ -1,6 +1,6 @@
 # Tasks & Roadmap — The Unmuted (非默)
 
-_Last updated: 2026-07-30_
+_Last updated: 2026-08-03_
 
 ---
 
@@ -45,6 +45,12 @@ _Last updated: 2026-07-30_
 ---
 
 ## Backlog — High Priority
+
+### Security / Compliance (2026-08-03 additions)
+- [x] **Internal access gate** — `VITE_BETA_CODE=V3IOG0G7` BetaGate in `Index.tsx` blocks both Vercel + CloudBase links until ICP filing; team access code distributed to all 4 members. Done 2026-08-03.
+- [ ] **CloudBase hosting: pause in Tencent console** — even with access code, serving Chinese users without ICP is a legal risk. Katie should pause static hosting in CloudBase console until company entity + ICP are complete. (Access code is mitigation, not a legal fix.)
+- [ ] **ICP 备案 + company entity** — prerequisite for re-opening both links to general public. See D-016 decision chain.
+- [ ] **Rotate Resend API key** — the key was pasted in a chat session (chat logs are not private). Go to resend.com → API Keys → delete the old key and generate a new one. Update the Supabase Edge Function secret if you re-enable the Hook later.
 
 ### Security / Production Hardiness
 - [ ] **ChainMaker API proxy** — Move ChainMaker REST call to Vercel Serverless Function to fix CORS and protect API key (currently `VITE_` prefix exposes it to browser)
