@@ -47,6 +47,7 @@ export function useEvidenceVault(language: AppLanguage = 'en') {
   const [userId, setUserId] = useState<string | null>(null);
   const [history, setHistory] = useState<EvidenceRecord[]>([]);
   const [legacyHistory] = useState<VaultRecord[]>(() => loadVaultRecords());
+  const [batchProgress, setBatchProgress] = useState<{ current: number; total: number } | null>(null);
 
   const canUseVault = Boolean(userId && getSessionMasterKey());
 
@@ -74,7 +75,7 @@ export function useEvidenceVault(language: AppLanguage = 'en') {
   }, [userId, refreshHistory]);
 
   const processFile = useCallback(
-    async (blob: Blob, mimeType: string, opts: SaveEvidenceOptions = {}) => {
+    async (blob: Blob, mimeType: string, opts: SaveEvidenceOptions = {}): Promise<boolean> => {
       setStep('encrypting');
       setError(null);
       setResult(null);
@@ -84,7 +85,7 @@ export function useEvidenceVault(language: AppLanguage = 'en') {
         setSteps({ encrypting: 'error', saving: 'pending' });
         setError(copyFor(language, 'Please sign in first.', '请先登录。'));
         setStep('error');
-        return;
+        return false;
       }
       if (!getSessionMasterKey()) {
         setSteps({ encrypting: 'error', saving: 'pending' });
@@ -96,7 +97,7 @@ export function useEvidenceVault(language: AppLanguage = 'en') {
           )
         );
         setStep('error');
-        return;
+        return false;
       }
 
       let enc: EncryptionResult;
@@ -108,7 +109,7 @@ export function useEvidenceVault(language: AppLanguage = 'en') {
         setSteps({ encrypting: 'error', saving: 'pending' });
         setError(copyFor(language, 'Encryption failed: ', '加密失败：') + (e instanceof Error ? e.message : String(e)));
         setStep('error');
-        return;
+        return false;
       }
 
       try {
@@ -117,13 +118,37 @@ export function useEvidenceVault(language: AppLanguage = 'en') {
         setResult({ record, encryptionResult: enc });
         setHistory((prev) => [record, ...prev]);
         setStep('done');
+        return true;
       } catch (e) {
         setSteps({ encrypting: 'done', saving: 'error' });
         setError(copyFor(language, 'Could not save: ', '保存失败：') + (e instanceof Error ? e.message : String(e)));
         setStep('error');
+        return false;
       }
     },
     [language, userId]
+  );
+
+  const processBatch = useCallback(
+    async (
+      items: Array<{ blob: Blob; mimeType: string; opts?: SaveEvidenceOptions }>
+    ): Promise<{ success: number; failed: number }> => {
+      let success = 0;
+      let failed = 0;
+      for (let i = 0; i < items.length; i++) {
+        setBatchProgress({ current: i + 1, total: items.length });
+        const { blob, mimeType, opts = {} } = items[i];
+        const ok = await processFile(blob, mimeType, opts);
+        if (ok) success++;
+        else failed++;
+      }
+      setBatchProgress(null);
+      setStep('idle');
+      setSteps({ encrypting: 'pending', saving: 'pending' });
+      setError(null);
+      return { success, failed };
+    },
+    [processFile]
   );
 
   /** Decrypt one record back to the original file (cache or cloud) */
@@ -177,7 +202,9 @@ export function useEvidenceVault(language: AppLanguage = 'en') {
     legacyHistory,
     userId,
     canUseVault,
+    batchProgress,
     processFile,
+    processBatch,
     openFile,
     deleteRecord,
     refreshHistory,

@@ -5,7 +5,7 @@ import {
   ArrowLeft, Clock, Download, ExternalLink, ShieldCheck, Copy, ChevronDown,
   ClipboardList, HeartPulse, MapPin, ShieldAlert,
   Lock, ChevronRight, Eye, EyeOff, Archive, Share2, AlertTriangle, Scale,
-  Trash2, RotateCcw,
+  Trash2, RotateCcw, X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useEvidenceVault } from "@/hooks/useEvidenceVault";
@@ -19,6 +19,7 @@ import {
   DELETE_RETENTION_MS,
   type EvidenceRecord,
   type DeletedEvidenceRecord,
+  type SaveEvidenceOptions,
 } from "@/lib/evidenceVaultService";
 import { buildCourtPackage, courtPackageName } from "@/lib/evidenceExport";
 import {
@@ -621,6 +622,14 @@ function useAudioRecorder(onBlob: (blob: Blob) => void, language: AppLanguage) {
 
 type EvidenceView = "hub" | "capture" | "notes" | "records";
 
+type QueuedCapture = {
+  id: string;
+  file: Blob;
+  mimeType: string;
+  opts: SaveEvidenceOptions;
+  previewUrl: string;
+};
+
 export default function EvidencePage({
   language,
   userEmail,
@@ -649,6 +658,7 @@ export default function EvidencePage({
   const [reportNotes, setReportNotes] = useState<ReportNotes>(() => emptyReportNotes());
 
   const [showRecovery, setShowRecovery] = useState(false);
+  const [captureQueue, setCaptureQueue] = useState<QueuedCapture[]>([]);
 
   // Load history (with full metadata if vault is unlocked, partial if not)
   useEffect(() => {
@@ -660,6 +670,10 @@ export default function EvidencePage({
 
   const goHub = useCallback(() => {
     if (vault.step !== "idle") vault.reset();
+    setCaptureQueue((prev) => {
+      prev.forEach((q) => URL.revokeObjectURL(q.previewUrl));
+      return [];
+    });
     setView("hub");
   }, [vault]);
 
@@ -706,23 +720,33 @@ export default function EvidencePage({
     language
   );
 
-  // Camera inputs (`capture="environment"`): trust the file's own timestamp —
-  // a just-taken photo is grade 1, a gallery pick shows its age honestly.
+  // Camera inputs (`capture="environment"`): add to queue; each item's
+  // timestamp is fixed at the capture moment, not at upload time.
   const handleCameraInput = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
       const grade = gradeForFile(file);
-      vault.processFile(file, file.type, {
-        fileName: file.name,
-        captureGrade: grade,
-        capturedAt: grade === 1 ? new Date(file.lastModified).toISOString() : undefined,
-        location: grade === 1 ? captureLocationRef.current ?? undefined : undefined,
-        deviceInfo: getDeviceInfo(),
-      });
+      const previewUrl = URL.createObjectURL(file);
+      setCaptureQueue((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          file,
+          mimeType: file.type,
+          opts: {
+            fileName: file.name,
+            captureGrade: grade,
+            capturedAt: grade === 1 ? new Date().toISOString() : undefined,
+            location: grade === 1 ? captureLocationRef.current ?? undefined : undefined,
+            deviceInfo: getDeviceInfo(),
+          },
+          previewUrl,
+        },
+      ]);
       e.target.value = "";
     },
-    [vault]
+    [captureLocationRef]
   );
 
   // Explicit import path: always grade 2 (事后导入), no location attached —
@@ -740,6 +764,27 @@ export default function EvidencePage({
     },
     [vault]
   );
+
+  const removeFromQueue = useCallback((id: string) => {
+    setCaptureQueue((prev) => {
+      const item = prev.find((q) => q.id === id);
+      if (item) URL.revokeObjectURL(item.previewUrl);
+      return prev.filter((q) => q.id !== id);
+    });
+  }, []);
+
+  const handleUploadAll = useCallback(async () => {
+    if (captureQueue.length === 0) return;
+    const items = captureQueue.map(({ file, mimeType, opts }) => ({ blob: file, mimeType, opts }));
+    captureQueue.forEach((q) => URL.revokeObjectURL(q.previewUrl));
+    setCaptureQueue([]);
+    const { success, failed } = await vault.processBatch(items);
+    if (failed === 0) {
+      toast.success(copyFor(language, `All ${success} file(s) saved.`, `全部 ${success} 张已加密保存。`));
+    } else {
+      toast.error(copyFor(language, `${success} saved, ${failed} failed.`, `成功 ${success} 张，失败 ${failed} 张。`));
+    }
+  }, [captureQueue, vault, language]);
 
   const isProcessing = vault.step === "encrypting" || vault.step === "saving";
 
@@ -946,13 +991,46 @@ export default function EvidencePage({
               </button>
               <input ref={importInputRef} type="file" accept="image/*,video/*,audio/*,.pdf,.txt" className="hidden" onChange={handleImportInput} />
 
-              <p className="col-span-3 text-center text-[11px] leading-4 text-muted-foreground">
-                {copyFor(
-                  language,
-                  "Capture time and location are saved with the file and locked together. Only you can see them.",
-                  "拍摄时间和所在位置会和文件一起加密保存，只有你自己能看到。"
-                )}
-              </p>
+              {captureQueue.length > 0 ? (
+                <div className="col-span-3 space-y-3">
+                  <p className="text-xs font-semibold text-foreground">
+                    {copyFor(language, "Ready to upload", "待上传")}（{captureQueue.length}{copyFor(language, " item(s)", " 张")}）
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {captureQueue.map((item) => (
+                      <div key={item.id} className="relative aspect-square overflow-hidden rounded-xl border border-border bg-muted">
+                        {item.mimeType.startsWith("image/") ? (
+                          <img src={item.previewUrl} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="flex h-full items-center justify-center text-2xl">
+                            {getMimeIcon(item.mimeType)}
+                          </div>
+                        )}
+                        <button
+                          onClick={() => removeFromQueue(item.id)}
+                          className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    onClick={handleUploadAll}
+                    className="w-full rounded-2xl bg-primary py-3 text-sm font-bold text-primary-foreground transition-transform active:scale-[0.98]"
+                  >
+                    {copyFor(language, `Encrypt & upload all (${captureQueue.length})`, `加密上传全部（${captureQueue.length} 张）`)}
+                  </button>
+                </div>
+              ) : (
+                <p className="col-span-3 text-center text-[11px] leading-4 text-muted-foreground">
+                  {copyFor(
+                    language,
+                    "Capture time and location are saved with the file and locked together. Only you can see them.",
+                    "拍摄时间和所在位置会和文件一起加密保存，只有你自己能看到。"
+                  )}
+                </p>
+              )}
             </motion.div>
           )}
 
@@ -960,6 +1038,15 @@ export default function EvidencePage({
             <motion.div key="processing" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
               className="rounded-2xl border border-border bg-card p-5 space-y-4"
             >
+              {vault.batchProgress && (
+                <p className="text-center text-xs text-muted-foreground">
+                  {copyFor(
+                    language,
+                    `File ${vault.batchProgress.current} of ${vault.batchProgress.total}`,
+                    `第 ${vault.batchProgress.current} / ${vault.batchProgress.total} 张`
+                  )}
+                </p>
+              )}
               <p className="text-sm font-bold text-foreground text-center">
                 {copyFor(language, "Processing...", "正在处理...")}
               </p>
