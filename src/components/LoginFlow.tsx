@@ -101,7 +101,7 @@ export default function LoginFlow({
 
   // ── Email step ───────────────────────────────────────────────────────────────
 
-  const handleEmail = async (value: string, mode: "login" | "register") => {
+  const handleEmail = async (value: string, mode: "login" | "register" | "otp") => {
     const normalized = value.trim().toLowerCase();
     if (!normalized.includes("@")) {
       toast.error(copyFor(language, "Enter a valid email address.", "请输入有效邮箱地址。"));
@@ -110,6 +110,19 @@ export default function LoginFlow({
     setEmail(normalized);
     if (!cloud) {
       setStage((await hasPassword(normalized)) ? "local-login" : "local-set-password");
+      return;
+    }
+    if (mode === "otp") {
+      setBusy(true);
+      const { error } = await requestLoginCode(normalized);
+      setBusy(false);
+      if (error) {
+        toast.error(copyFor(language, "Could not send the code. Try again.", "验证码发送失败，请稍后再试。"));
+        return;
+      }
+      toast.success(copyFor(language, "Check your email for a 6-digit code.", "请查看邮箱，收取6位验证码。"));
+      setCodeFlow("forgot-pwd");
+      goTo("code");
       return;
     }
     goTo(mode === "register" ? "set-acct-pwd" : "login-pwd");
@@ -401,7 +414,7 @@ function EmailStep({
 }: {
   language: AppLanguage;
   busy: boolean;
-  onSubmit: (email: string, mode: "login" | "register") => void;
+  onSubmit: (email: string, mode: "login" | "register" | "otp") => void;
 }) {
   const [email, setEmail] = useState("");
   const valid = email.includes("@");
@@ -448,6 +461,13 @@ function EmailStep({
             {copyFor(language, "Register", "注册")}
           </button>
         </div>
+        <button
+          onClick={() => onSubmit(email, "otp")}
+          disabled={busy || !valid}
+          className="w-full text-xs text-muted-foreground underline disabled:opacity-50"
+        >
+          {copyFor(language, "Sign in with a one-time email code instead", "改用邮箱验证码登录")}
+        </button>
       </div>
     </div>
   );
