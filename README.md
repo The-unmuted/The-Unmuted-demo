@@ -97,7 +97,7 @@ The server only ever stores ciphertext. The vault password never leaves your dev
 
 ### 2. Evidence Vault | 加密存证
 
-- In-app camera / video / audio capture, plus import of existing files.
+- In-app camera / video / audio capture, plus import of existing files. Photos and videos are **queued locally** after capture — take multiple shots first, then encrypt and upload them all at once with a single tap.
 - SHA-256 hash computed at the instant of capture; device time, server time, GCJ-02 location, and device info are sealed client-side into encrypted metadata.
 - Records are graded 一级现场取证 (captured in-app, fresh) vs 二级事后导入 (imported later) — honest about evidentiary weight.
 - **One-tap court export (导出举证包)**: a plain ZIP with the decrypted original, metadata, hashes, and a self-contained bilingual verification page — verifiable with standard OS tools (certutil / shasum), no dependency on this app existing.
@@ -105,7 +105,7 @@ The server only ever stores ciphertext. The vault password never leaves your dev
 - Offline resilience: pending-upload queue with auto-retry; per-record sync status badges.
 - Hash + dual-timestamp schema is designed for retroactive trusted-timestamp (RFC 3161 TSA) anchoring once our legal entity is registered.
 
-- 应用内拍照 / 录像 / 录音取证，也支持导入已有文件。
+- 应用内拍照 / 录像 / 录音取证，也支持导入已有文件。照片和视频拍完先进**本地队列**，想拍多张就连续拍，最后一次点击"加密上传全部"批量处理。
 - 取证瞬间即计算 SHA-256 哈希；设备时间、服务器时间、GCJ-02 位置、设备信息在本机封入加密元数据。
 - 记录分级：一级现场取证（应用内即时采集）与二级事后导入——对证据效力保持诚实。
 - **一键导出举证包**：标准 ZIP，含解密原件、元数据、哈希值和自包含的双语核验说明页——用系统自带工具（certutil / shasum）即可核验，不依赖本应用存续。
@@ -207,7 +207,7 @@ Our goal is to keep core safety access affordable.
 | --- | --- |
 | Frontend | React 18, TypeScript, Vite |
 | Styling | Tailwind CSS, shadcn/ui, lucide-react |
-| Accounts | Supabase Auth (email OTP) — OTP is the only login step; password only required to decrypt the evidence vault |
+| Accounts | Supabase Auth — email + account password (set at registration); OTP fallback for forgot-password flow only |
 | Key hierarchy | Argon2id (libsodium) → KEK → master key → per-file AES-256-GCM keys; 12-char paper recovery code |
 | Evidence encryption | Web Crypto API, AES-256-GCM, client-side only |
 | Evidence storage | Supabase private bucket (per-user paths + RLS); ciphertext only |
