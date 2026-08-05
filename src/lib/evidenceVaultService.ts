@@ -53,6 +53,8 @@ interface StoredRecord {
 export interface EvidenceRecord extends StoredRecord {
   meta: EvidenceMeta;
   syncStatus: SyncStatus;
+  /** false = vault was locked when the list loaded; meta contains placeholders */
+  metaDecrypted?: boolean;
 }
 
 // ── IndexedDB blob cache (same DB as the legacy demo path) ────────────────────
@@ -299,6 +301,45 @@ export async function listEvidence(userId: string): Promise<EvidenceRecord[]> {
     ...synced.map((r) => decrypt(r, "synced")),
   ]);
   return all.filter((r): r is EvidenceRecord => r !== null);
+}
+
+/**
+ * List evidence records without decrypting the metadata — usable when the
+ * vault has not yet been unlocked this session. `meta` contains placeholder
+ * values; `metaDecrypted` is false. Enables the records list to render before
+ * the user has entered their password.
+ */
+export async function listEvidencePartial(userId: string): Promise<EvidenceRecord[]> {
+  const PLACEHOLDER: EvidenceMeta = { mimeType: "application/octet-stream", originalSize: 0 };
+
+  let synced = readList(indexKey(userId));
+  if (supabase) {
+    const { data, error } = await supabase
+      .from("evidence_records")
+      .select(
+        "tx_id, wrapped_file_key, encrypted_meta, original_hash, encrypted_hash, capture_grade, client_time, created_at"
+      )
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false });
+    if (!error && data) {
+      synced = data.map((r) => ({
+        txId: r.tx_id as string,
+        wrappedFileKey: r.wrapped_file_key as string,
+        encryptedMeta: r.encrypted_meta as string,
+        originalHash: r.original_hash as string,
+        encryptedHash: r.encrypted_hash as string,
+        captureGrade: (r.capture_grade as 1 | 2) ?? 2,
+        clientTime: r.client_time as string,
+        serverTime: r.created_at as string,
+      }));
+      writeList(indexKey(userId), synced);
+    }
+  }
+  const pending = readList(pendingKey(userId));
+  return [
+    ...pending.map((r): EvidenceRecord => ({ ...r, meta: PLACEHOLDER, syncStatus: "pending", metaDecrypted: false })),
+    ...synced.map((r): EvidenceRecord => ({ ...r, meta: PLACEHOLDER, syncStatus: "synced", metaDecrypted: false })),
+  ];
 }
 
 /**

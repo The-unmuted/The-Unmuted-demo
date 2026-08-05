@@ -434,3 +434,45 @@ Per-file keys (random per evidence file) ──encrypt──▶ evidence blobs
 **新链接：** `https://the-unmuted-app.vercel.app`（Katie 账号，有访问码保护）。
 
 **CloudBase：** CI workflow 注入 `VITE_BETA_CODE`；`VITE_BETA_CODE` GitHub Secret 已添加到 `The-Unmuted-v2`。访问码生效需等 CloudBase CI 完成下一次部署。ICP 备案完成前，建议同时在腾讯云控制台暂停 CloudBase 静态网站托管（彻底消除合规风险）。
+
+---
+
+## D-035 — 存证记录列表免密可见，操作（查看/导出/删除）分级鉴权 (2026-08-04)
+
+**Context:** 此前保险柜密码作为整个存证页面的入口门控，用户每次打开 App 都必须先输密码才能看到任何记录，导致体验割裂（D-033 简化登录后更加突出）。
+
+**Decision:** 记录列表对已登录用户始终可见，无需密码。密码仅在保险柜当前处于锁定状态且用户触发操作（解锁查看 / 导出举证包 / 删除）时弹出。本次会话内已通过密码解锁：查看/导出直接执行，删除仅需简单确认（无需重输）。Auto-lock 仍按原规则生效（10分钟无操作 / 后台3分钟后重锁）。
+
+**实现：**
+- `evidenceVaultService.ts` 新增 `listEvidencePartial()` — 不解密 `encryptedMeta`，返回 `metaDecrypted: false` + 占位元数据，确保云端只有密文时列表仍能渲染。
+- `EvidenceRecord` 增加 `metaDecrypted?: boolean` 字段；卡片显示 🔒 占位时不暴露任何明文内容。
+- `useEvidenceVault.refreshHistory()` 判断：有 master key → `listEvidence`（完整解密）；无 → `listEvidencePartial`（占位）。
+- `CloudVaultHistory.onUnlocked` 回调：第一次解锁后立即刷新历史至完整元数据。
+
+**Trade-off:** 记录数量和创建时间对已登录用户可见，但文件内容、位置、备注等元数据仍加密。对威胁模型（施暴者拿到已登录手机）影响极小——已登录态下记录数量本来也无法完全隐藏。
+
+---
+
+## D-036 — 邮箱+密码登录（账号密码 vs 保险柜密码双层架构）(2026-08-04)
+
+**Context:** 原先每次登录都需要邮箱 OTP 验证码，用户体验差，且与"注册时设置保险柜密码"的设计造成认知混淆（"我到底有几个密码？"）。用户明确要求改为"注册时设账号密码，之后直接用邮箱+密码登录"。
+
+**Decision:** 三个凭证明确区分：
+
+| 凭证 | 作用 | 存储位置 |
+|------|------|----------|
+| 账号密码 | 登录身份验证 | Supabase（HTTPS 传输） |
+| 保险柜密码 | 派生 Argon2id KEK，解锁证据操作 | 只在设备本地（从不离开设备） |
+| 纸质恢复码 | 保险柜密码重置的唯一备份 | 用户自写纸上，系统不保存 |
+
+**注册流程：** 输入邮箱 → 设置账号密码+确认 → Supabase `signUp({email, password})` → 邮箱 OTP 验证（仅注册时一次）→ 设置保险柜密码 → 抄写恢复码 → 进入 App
+
+**登录流程：** 邮箱 + 账号密码 → `signInWithPassword` → 进入 App（保险柜仍锁定，存证操作再验保险柜密码）
+
+**忘记账号密码：** OTP 邮件（magic link）→ 验证 → 进入 App（原路回退，保留现有 OTP 基础设施）
+
+**安全评估：** 账号密码通过 HTTPS 发到 Supabase，与主流应用相同。保险柜密码在设备本地 Argon2id 派生 KEK，绝不传输——两层分离确保即使账号密码泄漏，证据内容仍无法解密。
+
+**实现文件：**
+- `src/lib/authService.ts` — 新增 `signUpWithPassword`, `verifySignupCode`, `resendSignupCode`, `signInWithPassword`；`requestLoginCode` 改为 `shouldCreateUser: false`（仅忘记密码路径，不再创建新账号）
+- `src/components/LoginFlow.tsx` — 全新 Stage 类型，新增 `EmailStep`（两个按钮）、`SetAccountPasswordStep`（账号密码+确认）、`LoginPasswordStep`（登录+忘记密码链接）、`CredentialGuide`（三密码说明底部弹窗）

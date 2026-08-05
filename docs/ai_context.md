@@ -2,7 +2,9 @@
 
 _This file captures the current project state for AI assistants. Update before ending each work session._
 
-_Last updated: 2026-08-03_
+_Last updated: 2026-08-04_
+
+**2026-08-04 (D-035/D-036 + hash fix + SimulationPage test fix):** Four changes this session. (1) **Evidence vault password gates (D-035):** Records list now visible to any logged-in user without a password. Password required only when vault is locked and user triggers view/export/delete. Once unlocked, view+export proceed directly; delete shows a simple confirm. `listEvidencePartial()` added to `evidenceVaultService.ts`; `EvidenceRecord` gets `metaDecrypted?: boolean`; `useEvidenceVault.refreshHistory()` picks partial vs full based on session master key; `CloudVaultHistory` calls `onUnlocked` callback to refresh after first unlock. (2) **Email+password login (D-036):** Registration now: email → set account password+confirm → Supabase `signUp` → email OTP (one-time) → vault password → recovery code → app. Login: email + account password → `signInWithPassword` → app. "Forgot password" falls back to OTP magic link. New functions in `authService.ts`: `signUpWithPassword`, `verifySignupCode`, `resendSignupCode`, `signInWithPassword`. `LoginFlow.tsx` fully redesigned with new stages + `CredentialGuide` (三个密码说明 modal linked from login page). (3) **Court package SHA-256 verification fix:** `buildPackageHtml` now includes drag-to-terminal tip + `cd` navigation steps (macOS) and "type cmd in address bar" (Windows), fixing "file not found" errors on first run. (4) **SimulationPage test fix:** Added visible `<h2>复盘</h2>` heading before debrief cards — fixes `/复盘/` test assertion + improves UX. All auth + simulation + evidenceExport tests pass (72/72 excluding 2 pre-existing Argon2id timeout tests).
 
 **2026-08-03 (D-033/D-034 + dead code):** Four changes this session. (1) **Login simplified (D-033)**: after OTP, returning users go directly into the app — no password step. Password only required when opening evidence vault. Removed `unlock`/`recovery-unlock` stages, `handleUnlock`, `handleRecoveryUnlock`, `RecoveryUnlockStep`, `otpLogin`/`cameViaOtp` states, `unlockWithPassword`/`unlockWithRecoveryCode` imports from LoginFlow (~220 lines deleted). First-time registration still sets a password. (2) **Internal beta gate (D-034)**: `VITE_BETA_CODE=V3IOG0G7` env var enables a fullscreen access-code screen in `Index.tsx` (BetaGate component). Set in Vercel env vars and CloudBase CI / GitHub Secret. (3) **Vercel migrated to Katie's account**: new project `the-unmuted-app.vercel.app` under `katielin0207-devs-projects`, connected to `The-Unmuted-v2`, auto-deploys on push. Old `the-unmuted.vercel.app` redirects via inline script in `index.html`. (4) **Phantom wallet dead code removed**: `generateWalletCommitment`, wallet/phantom type variants, `walletAddress?`, `generateFromWallet` hook, SettingsWidget "or wallet" text (~55 lines). **Simulation debrief now shows all bad rules** split into triggered (❌) and avoided (⚠️). `aidDirectory.json` curly-quote JSON parse bug fixed.
 
@@ -76,15 +78,19 @@ Remaining before real users:
 
 ---
 
-## Auth & Evidence Architecture (D-017 / D-018 — read docs/decisions.md before changing)
+## Auth & Evidence Architecture (D-017 / D-018 / D-035 / D-036 — read docs/decisions.md before changing)
 
-Two layers:
-- **Account layer** = Supabase email OTP. Server-enforced, resettable. Persistent session per device.
-- **Data layer** = login password + 12-char paper recovery code. Each wraps the same master key (PBKDF2-SHA256 310k → KEK → AES-GCM). Password is **never sent to any server** — it only derives the KEK client-side. Losing both password and recovery code = permanent data loss (by design; server cannot decrypt).
-- Master key lives **only in memory** → every page load starts locked; records view re-verifies the password even when unlocked.
-- Per-file AES-256-GCM keys are wrapped by the master key (`sealJson`) and stored in `evidence_records.wrapped_file_key`. All metadata is sealed too — cloud sees only ciphertext + hashes + timestamps.
+Three credentials:
+- **Account password** = email+password, sent to Supabase over HTTPS. Server-enforced. Registration flow: email → set password+confirm → Supabase `signUp` → email OTP verification (one-time only) → vault setup. Login: email + account password → `signInWithPassword`. Forgot: OTP magic-link fallback.
+- **Vault password** = user-chosen, Argon2id KEK derivation, **never sent to any server**. Required for view/export/delete when vault is locked; session-skipped once unlocked. Losing password + recovery code = permanent data loss (by design).
+- **Paper recovery code** = 12-char system-generated, shown once at first vault setup, user writes on paper.
 
-Key files: `src/lib/keyVault.ts` (pure crypto), `src/lib/keyVaultService.ts` (Supabase-backed vault ops + session master key), `src/lib/authService.ts` (OTP), `src/lib/evidenceVaultService.ts` (storage + index + pending queue), `src/hooks/useEvidenceVault.ts` (UI pipeline), `src/components/LoginFlow.tsx`, `src/components/EvidencePage.tsx`.
+Evidence visibility:
+- Records list visible to any logged-in user without password (partial metadata; full metadata decrypted on first vault unlock per session).
+- View / export / delete each require vault password if vault is currently locked.
+- Auto-lock: 10 min idle or 3 min background → master key cleared.
+
+Key files: `src/lib/keyVault.ts` (pure crypto), `src/lib/keyVaultService.ts` (Supabase-backed vault ops + session master key), `src/lib/authService.ts` (email+password auth + OTP fallback), `src/lib/evidenceVaultService.ts` (storage + index + `listEvidencePartial`), `src/hooks/useEvidenceVault.ts` (UI pipeline), `src/components/LoginFlow.tsx`, `src/components/EvidencePage.tsx`.
 
 ---
 

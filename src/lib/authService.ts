@@ -1,13 +1,13 @@
 /**
- * Account-layer auth (D-018): email OTP via Supabase.
+ * Account-layer auth (D-018/D-036).
  *
- * The login password is NEVER sent to any server — it is only used on-device
- * to derive the KEK that opens the key vault (see keyVault.ts / D-017).
- * Account access therefore requires the email inbox; data decryption requires
- * the password or the paper recovery code. Two independent layers.
+ * Two credential layers:
+ *   Account password  → email+password via Supabase, sent over HTTPS
+ *   Vault password    → Argon2id KEK, on-device only, never sent anywhere
  *
- * Offline fallback: without Supabase (or without network) the app can still
- * unlock locally cached key boxes — see keyVaultService.ts.
+ * OTP path remains available as a fallback for "forgot account password".
+ * Offline fallback: without Supabase the app can still unlock locally cached
+ * key boxes — see keyVaultService.ts.
  */
 
 import { supabase } from "./supabaseClient";
@@ -17,17 +17,71 @@ export function isCloudAuthAvailable(): boolean {
   return supabase !== null;
 }
 
-/** Send a 6-digit login code to the email (creates the account on first use) */
-export async function requestLoginCode(email: string): Promise<{ error?: string }> {
+/** Register with email+password. Returns session if email confirmation is disabled (immediate login),
+ *  or null session if Supabase requires OTP confirmation first. */
+export async function signUpWithPassword(
+  email: string,
+  password: string
+): Promise<{ session?: Session | null; error?: string }> {
   if (!supabase) return { error: "cloud-unavailable" };
-  const { error } = await supabase.auth.signInWithOtp({
+  const { data, error } = await supabase.auth.signUp({
     email: email.trim().toLowerCase(),
-    options: { shouldCreateUser: true },
+    password,
+  });
+  if (error) return { error: error.message };
+  return { session: data.session };
+}
+
+/** Verify the signup confirmation OTP sent after signUpWithPassword. */
+export async function verifySignupCode(
+  email: string,
+  code: string
+): Promise<{ user?: User; error?: string }> {
+  if (!supabase) return { error: "cloud-unavailable" };
+  const { data, error } = await supabase.auth.verifyOtp({
+    email: email.trim().toLowerCase(),
+    token: code.trim(),
+    type: "signup",
+  });
+  if (error || !data.user) return { error: error?.message ?? "invalid-code" };
+  return { user: data.user };
+}
+
+/** Resend the signup confirmation OTP. */
+export async function resendSignupCode(email: string): Promise<{ error?: string }> {
+  if (!supabase) return { error: "cloud-unavailable" };
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email: email.trim().toLowerCase(),
   });
   return error ? { error: error.message } : {};
 }
 
-/** Verify the emailed code → device gets a persistent session */
+/** Sign in with email+password. */
+export async function signInWithPassword(
+  email: string,
+  password: string
+): Promise<{ user?: User; error?: string }> {
+  if (!supabase) return { error: "cloud-unavailable" };
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: email.trim().toLowerCase(),
+    password,
+  });
+  if (error || !data.user) return { error: error?.message ?? "invalid-credentials" };
+  return { user: data.user };
+}
+
+/** Send a 6-digit magic-link OTP (used for "forgot password" fallback sign-in) */
+export async function requestLoginCode(email: string): Promise<{ error?: string }> {
+  if (!supabase) return { error: "cloud-unavailable" };
+  const { error } = await supabase.auth.signInWithOtp({
+    email: email.trim().toLowerCase(),
+    options: { shouldCreateUser: false },
+  });
+  return error ? { error: error.message } : {};
+}
+
+/** Verify a magic-link OTP (forgot-password fallback). */
 export async function verifyLoginCode(
   email: string,
   code: string

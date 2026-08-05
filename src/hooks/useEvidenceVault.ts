@@ -14,6 +14,7 @@ import { encryptFile, type EncryptionResult } from '@/lib/evidenceCrypto';
 import {
   saveEvidence,
   listEvidence,
+  listEvidencePartial,
   openEvidenceFile,
   syncPendingEvidence,
   deleteEvidence,
@@ -54,12 +55,13 @@ export function useEvidenceVault(language: AppLanguage = 'en') {
   }, []);
 
   const refreshHistory = useCallback(async () => {
-    if (!userId || !getSessionMasterKey()) return;
-    void purgeExpiredEvidence(userId);
+    if (!userId) return;
+    const masterKey = getSessionMasterKey();
+    if (masterKey) void purgeExpiredEvidence(userId);
     try {
-      setHistory(await listEvidence(userId));
+      setHistory(masterKey ? await listEvidence(userId) : await listEvidencePartial(userId));
     } catch {
-      // vault locked or offline with no mirror — leave the list as-is
+      // offline with no mirror — leave the list as-is
     }
   }, [userId]);
 
@@ -78,13 +80,19 @@ export function useEvidenceVault(language: AppLanguage = 'en') {
       setResult(null);
       setSteps({ encrypting: 'running', saving: 'pending' });
 
-      if (!userId || !getSessionMasterKey()) {
+      if (!userId) {
+        setSteps({ encrypting: 'error', saving: 'pending' });
+        setError(copyFor(language, 'Please sign in first.', '请先登录。'));
+        setStep('error');
+        return;
+      }
+      if (!getSessionMasterKey()) {
         setSteps({ encrypting: 'error', saving: 'pending' });
         setError(
           copyFor(
             language,
-            'Please sign in with your cloud account first — evidence is stored in your encrypted cloud vault.',
-            '请先登录云端账号——证据会存入你的加密云端保险柜。'
+            'Please unlock your vault first — go to Evidence Records and tap "Unlock & save" on any record.',
+            '请先解锁保险柜——在「存证记录」中点击任意记录的「解锁查看」输入密码即可。'
           )
         );
         setStep('error');

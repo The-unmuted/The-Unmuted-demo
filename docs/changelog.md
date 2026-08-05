@@ -1,5 +1,17 @@
 # Changelog — The Unmuted (非默)
 
+## 2026-08-04 — Email+password login, evidence vault password-gate redesign, hash verification fix
+
+### Changed
+- **Login flow (D-036):** Replaced OTP-every-time with email+password auth. Registration: email → set account password + confirm → Supabase `signUp` → email OTP verification (one-time) → vault password → paper recovery code → app. Login: email + account password → `signInWithPassword` → app. "Forgot password?" falls back to one-time email OTP. Added `signUpWithPassword`, `verifySignupCode`, `resendSignupCode`, `signInWithPassword` to `authService.ts`. `LoginFlow.tsx` redesigned: new `EmailStep` (two buttons — Sign in / Register), `SetAccountPasswordStep`, `LoginPasswordStep`, `CodeStep` (dual-purpose: signup OTP or forgot-pwd OTP). `requestLoginCode` now uses `shouldCreateUser: false` (magic-link path only, not new-user creation).
+- **Evidence vault password gates (D-035):** Records list is visible to all logged-in users without a password. Password required only when the vault is locked and user tries to view/export/delete a record. Once unlocked in a session, view and export proceed directly; delete shows a simple confirm (no re-entry). Vault stays locked on fresh login; first action of each session triggers the password prompt. `listEvidencePartial()` added to `evidenceVaultService.ts` — loads records with placeholder metadata and `metaDecrypted: false` flag; `useEvidenceVault` uses this when vault is locked and refreshes to full metadata after first unlock.
+- **Vault password hint text:** now explicitly says "separate from your account password, never leaves your device" to avoid confusion with the new account password.
+- **Three-credential explainer:** Added "三个密码各有什么用？" link on the login page (below SafetyTips) that opens a modal explaining account password, vault password, and paper recovery code.
+
+### Fixed
+- **Court package SHA-256 verification:** `buildPackageHtml` HTML now includes step-by-step `cd` navigation + drag-to-terminal tip (macOS) and "type cmd in address bar" (Windows), fixing "file not found" errors when running `shasum` without first navigating to the extracted directory.
+- **SimulationPage debrief heading:** Added visible "复盘" `<h2>` heading before the good/bad card grid — fixes the `SimulationPage.test.tsx` `/复盘/` assertion and improves UX.
+
 ## 2026-08-03 — Login simplification, beta gate, Vercel migration, dead code removal
 
 ### Changed

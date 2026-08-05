@@ -1,34 +1,39 @@
 /**
- * Login + key vault flow (D-017/D-018).
+ * Login + key vault flow (D-017/D-018/D-036).
  *
- * Two independent layers:
- *   Account (can you log in?)  → email OTP code, enforced by Supabase.
- *   Data (can you decrypt?)    → password / paper recovery code, on-device only.
+ * Three credentials:
+ *   Account password  → email+password, verified by Supabase (sent over HTTPS)
+ *   Vault password    → Argon2id KEK, on-device only, never leaves the device
+ *   Paper recovery    → 12-char system code, for vault-password reset
  *
- * Stages:
- *   checking → email → code → unlock (returning)           — daily path
- *                    ↘ set-password → show-recovery → confirm-recovery (first time)
- *   unlock → recovery-unlock (forgot password)
+ * Registration stages:
+ *   email → set-acct-pwd → code (signup OTP) → set-password → show-recovery → confirm-recovery
  *
- * When Supabase is unavailable (offline dev / no env) the legacy local
- * bcrypt path is used so the app still works — same pattern as D-013.
+ * Login stages:
+ *   email → login-pwd → (app, vault locked)
+ *
+ * Forgot-account-password:
+ *   login-pwd → [forgot] → code (magic-link OTP) → (app, vault locked)
+ *
+ * Offline fallback (no Supabase): local-login / local-set-password (legacy)
  */
 
 import { useEffect, useState } from "react";
 import { copyFor, IS_CHINA_BUILD, type AppLanguage } from "@/lib/locale";
-import { Eye, EyeOff, KeyRound, Loader2, Mail, PencilLine, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, KeyRound, Loader2, Mail, PencilLine, ShieldCheck, X } from "lucide-react";
 import { toast } from "sonner";
 import {
   isCloudAuthAvailable,
   requestLoginCode,
   verifyLoginCode,
+  signUpWithPassword,
+  verifySignupCode,
+  resendSignupCode,
+  signInWithPassword,
   getSession,
   signOut,
 } from "@/lib/authService";
-import {
-  createVault,
-  hasVault,
-} from "@/lib/keyVaultService";
+import { createVault, hasVault } from "@/lib/keyVaultService";
 import { normalizeRecoveryCode } from "@/lib/keyVault";
 import { checkPassword, passwordIssueCopy } from "@/lib/passwordPolicy";
 import { hasPassword, verifyPassword, savePassword } from "@/lib/userCredentials";
@@ -39,13 +44,14 @@ const LOGO_SRC = "/the-unmuted-mark.png";
 
 type Stage =
   | "checking"
-  | "email"
-  | "code"
-  | "set-password"
+  | "email"            // email + sign-in / register buttons
+  | "set-acct-pwd"     // registration: set + confirm account password
+  | "code"             // OTP input (signup confirmation or forgot-pwd magic link)
+  | "set-password"     // vault password setup
   | "show-recovery"
   | "confirm-recovery"
-  // legacy local-only fallback (no cloud):
-  | "local-login"
+  | "login-pwd"        // returning user: enter account password
+  | "local-login"      // legacy offline fallback
   | "local-set-password";
 
 export default function LoginFlow({
@@ -53,7 +59,6 @@ export default function LoginFlow({
   onUnlocked,
 }: {
   language: AppLanguage;
-  /** vaultLocked = signed in via OTP without the password; evidence stays sealed until unlocked in the vault. */
   onUnlocked: (email: string, opts?: { vaultLocked?: boolean }) => void;
 }) {
   const [stage, setStage] = useState<Stage>("checking");
@@ -62,6 +67,8 @@ export default function LoginFlow({
   const [busy, setBusy] = useState(false);
   const [recoveryCode, setRecoveryCode] = useState("");
   const [unlockError, setUnlockError] = useState<string | null>(null);
+  // "signup" = OTP from signUp confirmation; "forgot-pwd" = magic-link OTP
+  const [codeFlow, setCodeFlow] = useState<"signup" | "forgot-pwd">("signup");
 
   const goTo = (next: Stage) => {
     setUnlockError(null);
@@ -92,7 +99,9 @@ export default function LoginFlow({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleEmail = async (value: string) => {
+  // ── Email step ───────────────────────────────────────────────────────────────
+
+  const handleEmail = async (value: string, mode: "login" | "register") => {
     const normalized = value.trim().toLowerCase();
     if (!normalized.includes("@")) {
       toast.error(copyFor(language, "Enter a valid email address.", "请输入有效邮箱地址。"));
@@ -103,40 +112,116 @@ export default function LoginFlow({
       setStage((await hasPassword(normalized)) ? "local-login" : "local-set-password");
       return;
     }
-    setBusy(true);
-    const { error } = await requestLoginCode(normalized);
-    setBusy(false);
-    if (error) {
-      toast.error(
-        copyFor(language, "Could not send the code. Try again.", "验证码发送失败，请稍后再试。")
-      );
-      return;
-    }
-    toast.success(copyFor(language, "Code sent to your email.", "验证码已发送到你的邮箱。"));
-    setStage("code");
+    goTo(mode === "register" ? "set-acct-pwd" : "login-pwd");
   };
 
-  const handleCode = async (code: string) => {
+  // ── Registration: set account password → signUp → OTP confirm ───────────────
+
+  const handleSetAccountPassword = async (pwd: string) => {
+    const trimmed = pwd.trim();
+    const issue = checkPassword(trimmed);
+    if (issue) {
+      toast.error(passwordIssueCopy(language, issue));
+      return;
+    }
     setBusy(true);
-    const { user, error } = await verifyLoginCode(email, code);
+    const { session, error } = await signUpWithPassword(email, trimmed);
+    setBusy(false);
+    if (error) {
+      toast.error(copyFor(language, `Registration failed: ${error}`, `注册失败：${error}`));
+      return;
+    }
+    if (session?.user) {
+      // Supabase email confirmation disabled — immediately signed in
+      setUserId(session.user.id);
+      goTo("set-password");
+      return;
+    }
+    toast.success(
+      copyFor(language, "Check your email for a 6-digit verification code.", "请查看邮箱，收取6位验证码。")
+    );
+    setCodeFlow("signup");
+    goTo("code");
+  };
+
+  // ── Login with email+password ────────────────────────────────────────────────
+
+  const handleLoginWithPassword = async (pwd: string) => {
+    setUnlockError(null);
+    setBusy(true);
+    const { user, error } = await signInWithPassword(email, pwd);
+    setBusy(false);
     if (error || !user) {
-      setBusy(false);
-      toast.error(copyFor(language, "Wrong or expired code.", "验证码错误或已过期。"));
+      setUnlockError(copyFor(language, "Wrong email or password.", "邮箱或密码错误。"));
       return;
     }
     setUserId(user.id);
     const exists = await hasVault(user.id);
-    setBusy(false);
     if (exists) {
       toast.success(copyFor(language, "Welcome back!", "欢迎回来！"));
       onUnlocked(email, { vaultLocked: true });
-      return;
+    } else {
+      goTo("set-password");
     }
-    setStage("set-password");
   };
 
+  // ── Forgot password: send OTP magic link ─────────────────────────────────────
+
+  const handleForgotPassword = async () => {
+    setBusy(true);
+    const { error } = await requestLoginCode(email);
+    setBusy(false);
+    if (error) {
+      toast.error(copyFor(language, "Could not send the code. Try again.", "验证码发送失败，请稍后再试。"));
+      return;
+    }
+    toast.success(copyFor(language, "A sign-in code has been sent to your email.", "登录验证码已发送到你的邮箱。"));
+    setCodeFlow("forgot-pwd");
+    goTo("code");
+  };
+
+  // ── OTP verification (signup confirm OR forgot-pwd sign-in) ──────────────────
+
+  const handleCode = async (code: string) => {
+    setBusy(true);
+    const res =
+      codeFlow === "signup"
+        ? await verifySignupCode(email, code)
+        : await verifyLoginCode(email, code);
+    if (res.error || !res.user) {
+      setBusy(false);
+      toast.error(copyFor(language, "Wrong or expired code.", "验证码错误或已过期。"));
+      return;
+    }
+    setUserId(res.user.id);
+    setBusy(false);
+    if (codeFlow === "signup") {
+      goTo("set-password");
+    } else {
+      const exists = await hasVault(res.user.id);
+      if (exists) {
+        toast.success(copyFor(language, "Welcome back!", "欢迎回来！"));
+        onUnlocked(email, { vaultLocked: true });
+      } else {
+        goTo("set-password");
+      }
+    }
+  };
+
+  const handleResendCode = async () => {
+    if (codeFlow === "signup") {
+      const { error } = await resendSignupCode(email);
+      if (error) toast.error(copyFor(language, "Could not resend. Try again.", "重发失败，请稍后再试。"));
+      else toast.success(copyFor(language, "Code resent.", "验证码已重新发送。"));
+    } else {
+      await requestLoginCode(email);
+      toast.success(copyFor(language, "Code resent.", "验证码已重新发送。"));
+    }
+  };
+
+  // ── Vault password setup ─────────────────────────────────────────────────────
+
   const handleSetPassword = async (rawPassword: string) => {
-    // Trim so a pasted leading/trailing space never becomes part of the password
     const password = rawPassword.trim();
     const issue = checkPassword(password);
     if (issue) {
@@ -171,7 +256,8 @@ export default function LoginFlow({
     onUnlocked(email);
   };
 
-  // Legacy local-only fallback
+  // ── Legacy local-only fallback ───────────────────────────────────────────────
+
   const handleLocalLogin = async (password: string) => {
     setUnlockError(null);
     if (!(await verifyPassword(email, password))) {
@@ -180,6 +266,7 @@ export default function LoginFlow({
     }
     onUnlocked(email);
   };
+
   const handleLocalSetPassword = async (password: string) => {
     if (password.length < 6) {
       toast.error(copyFor(language, "Password must be at least 6 characters.", "密码至少6位。"));
@@ -187,13 +274,6 @@ export default function LoginFlow({
     }
     await savePassword(email, password);
     onUnlocked(email);
-  };
-
-  const switchAccount = async () => {
-    await signOut();
-    setEmail("");
-    setUserId("");
-    goTo("email");
   };
 
   return (
@@ -213,14 +293,36 @@ export default function LoginFlow({
           <EmailStep language={language} busy={busy} onSubmit={handleEmail} />
         )}
 
+        {stage === "set-acct-pwd" && (
+          <SetAccountPasswordStep
+            language={language}
+            email={email}
+            busy={busy}
+            onSubmit={handleSetAccountPassword}
+            onBack={() => goTo("email")}
+          />
+        )}
+
+        {stage === "login-pwd" && (
+          <LoginPasswordStep
+            language={language}
+            email={email}
+            busy={busy}
+            error={unlockError}
+            onSubmit={handleLoginWithPassword}
+            onForgotPassword={handleForgotPassword}
+            onBack={() => goTo("email")}
+          />
+        )}
+
         {stage === "code" && (
           <CodeStep
             language={language}
             busy={busy}
             email={email}
             onSubmit={handleCode}
-            onResend={() => handleEmail(email)}
-            onBack={() => setStage("email")}
+            onResend={handleResendCode}
+            onBack={() => goTo(codeFlow === "signup" ? "set-acct-pwd" : "login-pwd")}
           />
         )}
 
@@ -228,11 +330,11 @@ export default function LoginFlow({
           <PasswordStep
             language={language}
             busy={busy}
-            title={copyFor(language, "Set your password", "设置你的密码")}
+            title={copyFor(language, "Set your vault password", "设置保险柜密码")}
             hint={copyFor(
               language,
-              "This password protects your evidence. Don't use your birthday or anything others might guess. Never tell anyone — not even family.",
-              "这个密码保护你的证据。不要用生日或别人猜得到的内容。不要告诉任何人——包括家人。"
+              "This password is separate from your account password. It protects your evidence and never leaves your device. Don't tell anyone — not even family.",
+              "这个密码和登录密码完全独立，专门保护你的证据，从不离开你的设备。不要告诉任何人——包括家人。"
             )}
             cta={copyFor(language, "Continue", "继续")}
             minLength={8}
@@ -260,7 +362,7 @@ export default function LoginFlow({
           <PasswordStep
             language={language}
             busy={busy}
-            title={copyFor(language, `Welcome back`, "欢迎回来")}
+            title={copyFor(language, "Welcome back", "欢迎回来")}
             hint={email}
             cta={copyFor(language, "Sign in", "登录")}
             minLength={1}
@@ -280,7 +382,9 @@ export default function LoginFlow({
             onSubmit={handleLocalSetPassword}
           />
         )}
+
         <SafetyTips language={language} variant="link" />
+        <CredentialGuide language={language} />
       </div>
 
       <UnlockSOSEntry language={language} />
@@ -297,9 +401,10 @@ function EmailStep({
 }: {
   language: AppLanguage;
   busy: boolean;
-  onSubmit: (email: string) => void;
+  onSubmit: (email: string, mode: "login" | "register") => void;
 }) {
   const [email, setEmail] = useState("");
+  const valid = email.includes("@");
   return (
     <div className="rounded-[1.75rem] border border-border bg-card/80 p-4 text-left">
       <div className="flex items-start gap-3">
@@ -308,14 +413,7 @@ function EmailStep({
         </div>
         <div>
           <p className="text-sm font-bold text-foreground">
-            {copyFor(language, "Continue with email", "使用邮箱继续")}
-          </p>
-          <p className="mt-1 text-xs leading-5 text-muted-foreground">
-            {copyFor(
-              language,
-              "We'll email you a 6-digit code to confirm it's you.",
-              "我们会发送一个6位验证码到你的邮箱，确认是你本人。"
-            )}
+            {copyFor(language, "Enter your email", "输入你的邮箱")}
           </p>
           {IS_CHINA_BUILD && (
             <p className="mt-1 text-xs leading-5 text-amber-600 dark:text-amber-400">
@@ -328,18 +426,190 @@ function EmailStep({
         <input
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && onSubmit(email)}
+          onKeyDown={(e) => e.key === "Enter" && valid && onSubmit(email, "login")}
           placeholder={copyFor(language, "Email address", "邮箱地址")}
           type="email"
+          autoComplete="email"
           className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
         />
+        <div className="flex gap-2">
+          <button
+            onClick={() => onSubmit(email, "login")}
+            disabled={busy || !valid}
+            className="flex-1 rounded-2xl border border-primary bg-background py-3 text-sm font-bold text-primary active:scale-[0.98] disabled:opacity-60"
+          >
+            {copyFor(language, "Sign in", "登录")}
+          </button>
+          <button
+            onClick={() => onSubmit(email, "register")}
+            disabled={busy || !valid}
+            className="flex-1 rounded-2xl bg-primary py-3 text-sm font-bold text-primary-foreground active:scale-[0.98] disabled:opacity-60"
+          >
+            {copyFor(language, "Register", "注册")}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SetAccountPasswordStep({
+  language,
+  email,
+  busy,
+  onSubmit,
+  onBack,
+}: {
+  language: AppLanguage;
+  email: string;
+  busy: boolean;
+  onSubmit: (pwd: string) => void;
+  onBack: () => void;
+}) {
+  const [pwd, setPwd] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [showPwd, setShowPwd] = useState(false);
+  const [matchError, setMatchError] = useState<string | null>(null);
+
+  const trySubmit = () => {
+    if (pwd !== confirm) {
+      setMatchError(copyFor(language, "Passwords don't match.", "两次输入的密码不一致。"));
+      return;
+    }
+    setMatchError(null);
+    onSubmit(pwd);
+  };
+
+  return (
+    <div className="rounded-[1.75rem] border border-border bg-card/80 p-4 text-left">
+      <div className="flex items-start gap-3">
+        <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
+          <KeyRound className="h-4 w-4 text-primary" />
+        </div>
+        <div>
+          <p className="text-sm font-bold text-foreground">
+            {copyFor(language, "Set account password", "设置账号密码")}
+          </p>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">
+            {copyFor(
+              language,
+              `For ${email}. Used to sign in. A separate vault password for your evidence comes next.`,
+              `用于 ${email} 的登录密码。接下来还会再设置一个专门保护证据的保险柜密码。`
+            )}
+          </p>
+        </div>
+      </div>
+      <div className="mt-4 space-y-3">
+        <div className="relative">
+          <input
+            value={pwd}
+            onChange={(e) => setPwd(e.target.value)}
+            placeholder={copyFor(language, "Account password", "账号密码")}
+            type={showPwd ? "text" : "password"}
+            autoComplete="new-password"
+            className="w-full rounded-2xl border border-border bg-background px-4 py-3 pr-11 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
+          />
+          <button
+            onClick={() => setShowPwd(!showPwd)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+          >
+            {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        </div>
+        <input
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && pwd.length >= 8 && trySubmit()}
+          placeholder={copyFor(language, "Confirm password", "再次输入密码")}
+          type={showPwd ? "text" : "password"}
+          autoComplete="new-password"
+          className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
+        />
+        {matchError && <p className="text-xs leading-5 text-destructive">{matchError}</p>}
         <button
-          onClick={() => onSubmit(email)}
-          disabled={busy || !email.includes("@")}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3 text-sm font-bold text-primary-foreground active:scale-[0.98] disabled:opacity-60"
+          onClick={trySubmit}
+          disabled={busy || pwd.length < 8 || confirm.length < 1}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3 text-sm font-bold text-primary-foreground disabled:opacity-60"
         >
-          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
           {copyFor(language, "Continue", "继续")}
+        </button>
+        <button onClick={onBack} className="w-full text-xs text-muted-foreground underline">
+          {copyFor(language, "Use a different email", "更换邮箱")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function LoginPasswordStep({
+  language,
+  email,
+  busy,
+  error,
+  onSubmit,
+  onForgotPassword,
+  onBack,
+}: {
+  language: AppLanguage;
+  email: string;
+  busy: boolean;
+  error?: string | null;
+  onSubmit: (pwd: string) => void;
+  onForgotPassword: () => void;
+  onBack: () => void;
+}) {
+  const [pwd, setPwd] = useState("");
+  const [showPwd, setShowPwd] = useState(false);
+  return (
+    <div className="rounded-[1.75rem] border border-border bg-card/80 p-4 text-left">
+      <div className="flex items-start gap-3">
+        <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
+          <KeyRound className="h-4 w-4 text-primary" />
+        </div>
+        <div>
+          <p className="text-sm font-bold text-foreground">
+            {copyFor(language, "Welcome back", "欢迎回来")}
+          </p>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">{email}</p>
+        </div>
+      </div>
+      <div className="mt-4 space-y-3">
+        <div className="relative">
+          <input
+            value={pwd}
+            onChange={(e) => setPwd(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && pwd.length >= 1 && onSubmit(pwd)}
+            placeholder={copyFor(language, "Account password", "账号密码")}
+            type={showPwd ? "text" : "password"}
+            autoComplete="current-password"
+            className="w-full rounded-2xl border border-border bg-background px-4 py-3 pr-11 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
+          />
+          <button
+            onClick={() => setShowPwd(!showPwd)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+          >
+            {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        </div>
+        {error && <p className="text-xs leading-5 text-destructive">{error}</p>}
+        <button
+          onClick={() => onSubmit(pwd)}
+          disabled={busy || pwd.length < 1}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3 text-sm font-bold text-primary-foreground disabled:opacity-60"
+        >
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+          {copyFor(language, "Sign in", "登录")}
+        </button>
+        <button
+          onClick={onForgotPassword}
+          disabled={busy}
+          className="w-full text-xs text-muted-foreground underline disabled:opacity-50"
+        >
+          {copyFor(language, "Forgot password? Use a one-time email code instead.", "忘记密码？改用邮箱验证码登录")}
+        </button>
+        <button onClick={onBack} className="w-full text-xs text-muted-foreground underline">
+          {copyFor(language, "Use a different email", "使用其他邮箱")}
         </button>
       </div>
     </div>
@@ -411,7 +681,7 @@ function CodeStep({
             : copyFor(language, "Resend code", "重新发送验证码")}
         </button>
         <button onClick={onBack} className="w-full text-xs text-muted-foreground underline">
-          {copyFor(language, "Use a different email", "使用其他邮箱")}
+          {copyFor(language, "Go back", "返回")}
         </button>
       </div>
     </div>
@@ -505,8 +775,8 @@ function ShowRecoveryStep({
           <p className="mt-1 text-xs leading-5 text-muted-foreground">
             {copyFor(
               language,
-              "If you change phones or forget your password, this key gets your evidence back.",
-              "换手机或忘记密码时，靠它找回你的全部证据。"
+              "If you change phones or forget your vault password, this key gets your evidence back.",
+              "换手机或忘记保险柜密码时，靠它找回你的全部证据。"
             )}
           </p>
         </div>
@@ -543,8 +813,8 @@ function ShowRecoveryStep({
         <li className="font-semibold text-foreground">
           {copyFor(
             language,
-            "⚠️ If you lose BOTH your password and this paper, nobody can recover your evidence — not even us.",
-            "⚠️ 如果密码和这张纸都丢了，证据将永远无法找回——我们也帮不了你。"
+            "⚠️ If you lose BOTH your vault password and this paper, nobody can recover your evidence — not even us.",
+            "⚠️ 如果保险柜密码和这张纸都丢了，证据将永远无法找回——我们也帮不了你。"
           )}
         </li>
       </ul>
@@ -606,3 +876,79 @@ function ConfirmRecoveryStep({
   );
 }
 
+// ── Credential guide (three-password explainer) ─────────────────────────────────
+
+function CredentialGuide({ language }: { language: AppLanguage }) {
+  const [open, setOpen] = useState(false);
+
+  const items: Array<{ label: string; body: string }> = [
+    {
+      label: copyFor(language, "1. Account password", "1. 账号密码"),
+      body: copyFor(
+        language,
+        "Set when you register. Used every time you sign in. Sent securely to our server to verify your identity.",
+        "注册时设置。每次登录时使用。通过加密传输到服务器来验证你的身份。"
+      ),
+    },
+    {
+      label: copyFor(language, "2. Vault password", "2. 保险柜密码"),
+      body: copyFor(
+        language,
+        "Also set when you register — completely separate from your account password. Used to view, export or delete evidence. Never leaves your device. Even we cannot read your files.",
+        "注册时同样设置，和账号密码完全独立。用于查看、导出或删除证据。从不离开你的设备——即使是我们也无法读取你的文件。"
+      ),
+    },
+    {
+      label: copyFor(language, "3. Paper recovery code", "3. 纸质恢复码"),
+      body: copyFor(
+        language,
+        "A 12-character code generated once when you first set up your vault. Write it on paper and keep it safe. If you forget your vault password, this is the only way to recover your evidence.",
+        "注册配置保险柜时系统生成一次，共12个字符。请用笔抄在纸上保管好。如果你忘记保险柜密码，这是找回全部证据的唯一方法。"
+      ),
+    },
+  ];
+
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className="mx-auto mt-2 block text-xs text-muted-foreground underline"
+      >
+        {copyFor(language, "What are the three passwords?", "三个密码各有什么用？")}
+      </button>
+
+      {open && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 sm:items-center"
+          onClick={() => setOpen(false)}
+        >
+          <div
+            className="max-h-[80dvh] w-full max-w-sm overflow-y-auto rounded-t-[1.75rem] border border-border bg-card p-5 text-left sm:rounded-[1.75rem]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-sm font-bold text-foreground">
+                {copyFor(language, "Your three credentials", "三个密码说明")}
+              </h2>
+              <button
+                onClick={() => setOpen(false)}
+                className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-border text-muted-foreground"
+                aria-label={copyFor(language, "Close", "关闭")}
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              {items.map((item) => (
+                <div key={item.label}>
+                  <p className="text-xs font-bold text-foreground">{item.label}</p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{item.body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}

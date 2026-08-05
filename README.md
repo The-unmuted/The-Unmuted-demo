@@ -3,11 +3,11 @@
 > Make truth harder to erase. Make seeking help easier to begin.  
 > 让真相不被轻易抹去，让求助可以更早开始。
 
-**The Unmuted** is a bilingual mobile personal safety tool designed for scenarios involving sexual harassment, stalking, sexual assault, coercion, domestic violence, and other gender-based harm.
+**The Unmuted** is a bilingual (EN/ZH) mobile safety tool for survivors of domestic violence, sexual assault, sexual harassment, stalking, and related gender-based harm in mainland China and beyond. Its five core features are: a one-tap SOS that sends your GPS location to trusted contacts without unlocking the phone; an end-to-end encrypted evidence vault where every file is AES-256-GCM encrypted on-device before upload, with one-tap export of a self-contained court package (original file + SHA-256 hash + bilingual verification instructions) that any court officer can validate with standard OS tools; guided post-incident note prompts for situations like memory gaps, sexual assault, and stalking; a city-filterable directory of human-verified hotlines for domestic violence, sexual assault, legal aid, and mental health; and a scripted process simulator that walks users through the real legal steps for reporting (家暴 / 性骚扰 / 性侵) before they have to do it for real. Known risks users should understand: the app is a web app, so each session loads code from a server — a compromised deployment could theoretically serve malicious code (long-term fix: native app); the evidence vault's encryption is only as strong as the user's password and their safekeeping of the 12-character paper recovery code — losing both means permanent, irrecoverable data loss; the app does not replace emergency services, a lawyer, or medical care; and while encrypted content is safe if the server is breached, the fact of using the app can be visible in browser history (mitigated by the quick-exit button and safe-use guide, but not eliminated on a shared or monitored device).
+
+**非默** 是一款面向性骚扰、跟踪、性侵、胁迫、家暴及其他性别伤害场景的双语移动端个人安全工具，面向中国大陆及海外用户。五项核心功能：无需解锁手机即可触发的可信联系人 SOS（自动附带 GPS 位置）；端到端加密存证（文件在设备本地先加密再上传，一键导出可用系统工具独立验证的举证包）；针对记忆空白、性侵害、跟踪等场景的事后记录指引；经人工核实、可按城市筛选的援助目录（家暴/性侵/法律/心理）；以及脚本式报案流程模拟器（家暴/性骚扰/性侵三个情景）。用户应了解的已知风险：非默是网页应用，每次启动从服务器加载代码，若部署渠道被入侵理论上可下发恶意代码（长期方案为原生 App）；存证加密的强度取决于用户密码的强度和纸质恢复码的安全保管——两者同时丢失意味着数据永久无法恢复；非默不能替代急救、律师或医疗；服务器被攻破时加密内容是安全的，但使用非默的事实可能留在浏览器历史中（快速退出按钮和安全使用指南可部分缓解，共用设备或受监控设备上仍有风险）。
 
 Core features: trusted-contact SOS, end-to-end encrypted evidence storage with one-tap court-ready export, guided post-incident documentation, verified aid directories, and a scripted process simulator that walks users through the real legal steps — safely, before it's real.
-
-**非默** 是一款面向性骚扰、跟踪、性侵、胁迫、家暴及其他性别伤害场景的双语移动端个人安全工具。
 
 核心功能：可信联系人 SOS、端到端加密存证与一键导出举证包、事后记录指引、经过核实的援助目录，以及让用户在安全环境中提前演练真实法律流程的脚本式模拟器。
 
@@ -30,7 +30,7 @@ Core features: trusted-contact SOS, end-to-end encrypted evidence storage with o
 - Every file is encrypted on the user's device with AES-256-GCM **before** any network request.
 - File keys are wrapped by a master key, which is wrapped by a key derived from the user's password with **Argon2id** (memory-hard, GPU-cracking resistant). The master key exists only in memory while unlocked.
 - A 12-character **paper recovery code**, shown exactly once at signup, is the independent second way in — losing the password doesn't mean losing the evidence.
-- The vault **auto-locks** after inactivity or when the app stays in the background; viewing, exporting, or deleting a record each requires re-entering the password at that moment.
+- The vault **auto-locks** after inactivity or when the app stays in the background. When locked, viewing, exporting, or deleting a record each requires the password; once unlocked in a session, those actions proceed directly without re-entering.
 - Deleting evidence has a **72-hour cooling-off** with a hidden, password-gated recovery path (anti-coercion).
 - A **quick-exit button** on every screen instantly replaces the page with a neutral weather search; a plain-language safe-use guide covers private browsing and history clearing.
 - Emergency contacts and personal settings never leave the device (localStorage by design).
@@ -40,7 +40,7 @@ Core features: trusted-contact SOS, end-to-end encrypted evidence storage with o
 - 每个文件都在用户设备上先用 AES-256-GCM 加密，然后才会有任何网络传输。
 - 文件密钥由主密钥保护，主密钥由用户密码经 **Argon2id**（内存困难型算法，抗 GPU 破解）派生的密钥封装；主密钥只在解锁期间存在于内存中。
 - 注册时一次性展示的 12 位**纸质恢复码**是独立的第二把钥匙——忘记密码不等于失去证据。
-- 应用在闲置或长时间切到后台后**自动上锁**；查看、导出、删除每条记录都需要当场重新输入密码。
+- 应用在闲置或长时间切到后台后**自动上锁**；保险柜锁定时，查看、导出、删除均需输入密码；本次会话内已解锁则可直接执行，无需重复输入。
 - 删除证据有 **72 小时冷静期**，并有隐藏的密码保护恢复通道（防胁迫设计）。
 - 每个页面都有**快速离开按钮**，一键变成天气搜索页；并配有无痕浏览、清除历史的白话安全指南。
 - 紧急联系人等个人信息永远只保存在用户设备本地（刻意设计，不上传服务器）。
@@ -49,27 +49,37 @@ Core features: trusted-contact SOS, end-to-end encrypted evidence storage with o
 
 ## Login | 登录方式
 
-Two entry paths, each designed for a different moment:
+Three separate credentials, each with a distinct purpose:
 
-Email OTP is the only login step — after verifying the code you enter the app directly. Password is only asked when you actually open the evidence vault to upload, view, or export.
+| Credential | Purpose | Where it goes |
+|-----------|---------|--------------|
+| **Account password** | Sign in — set at registration, used every login | Supabase server (over HTTPS) |
+| **Vault password** | Unlock evidence operations (view / export / delete) | Never leaves your device |
+| **Paper recovery code** | Reset a forgotten vault password | Shown once; you write it on paper |
 
-| Moment | What you enter |
-|--------|---------------|
-| **Every login** | Email OTP (6-digit code) |
-| **First registration** | Email OTP → set a password (protects evidence) → write down recovery key |
-| **Opening evidence vault** | Password (derives the decryption key — never sent to any server) |
+**Registration flow:** enter email → set account password + confirm → email OTP verification (one-time only) → set vault password → write down 12-character recovery code → enter app.
 
-The server only ever stores ciphertext. The password never leaves your device — an OTP code alone cannot decrypt evidence (by design).
+**Login flow:** email + account password → enter app (vault is locked). First evidence action of the session asks for the vault password; once unlocked, view and export proceed directly for the rest of the session.
 
-登录只需验证码，验证后直接进入 app。密码只在打开存证保险柜（上传 / 查看 / 导出）时才需要输入。
+**Forgot account password:** use a one-time email code to sign in, then reset in settings.
 
-| 时机 | 需要输入 |
-|------|---------|
-| **每次登录** | 邮箱验证码（6位数字） |
-| **首次注册** | 验证码 → 设置密码（保护存证）→ 抄写恢复钥匙 |
-| **打开存证保险柜** | 密码（在本机派生解密密钥，不发送给服务器） |
+The server only ever stores ciphertext. The vault password never leaves your device — losing it and the paper recovery code at the same time means permanent, irrecoverable data loss (by design).
 
-服务器只存乱码。密码永远不离开你的设备——仅凭验证码无法解密证据（刻意设计）。
+三个凭证，各有独立用途：
+
+| 凭证 | 作用 | 存储位置 |
+|------|------|---------|
+| **账号密码** | 登录身份验证，注册时设置 | Supabase 服务器（HTTPS 传输） |
+| **保险柜密码** | 解锁证据操作（查看 / 导出 / 删除） | 只在设备本地，从不离开设备 |
+| **纸质恢复码** | 忘记保险柜密码时的唯一备份 | 只展示一次，用户自写纸上 |
+
+**注册流程：** 输入邮箱 → 设置账号密码+确认 → 邮箱 OTP 验证（仅注册时一次）→ 设置保险柜密码 → 抄写12位恢复码 → 进入 App。
+
+**登录流程：** 邮箱 + 账号密码 → 进入 App（保险柜仍处于锁定状态）。本次会话第一次执行证据操作时输入保险柜密码；解锁后查看和导出操作直接执行，无需重复输入。
+
+**忘记账号密码：** 发送一次性邮箱验证码登录，之后可在设置中重置密码。
+
+服务器只存乱码。保险柜密码永远不离开你的设备——密码和纸质恢复码同时丢失意味着数据永久无法找回（刻意设计）。
 
 ---
 

@@ -63,6 +63,7 @@ export function buildPackageHtml(record: EvidenceRecord): string {
   .note { background: #fffbe6; border: 1px solid #e6d78a; border-radius: 6px; padding: 10px 14px; font-size: 13px; }
   .scenario { border: 1px solid #ccc; border-radius: 6px; padding: 10px 14px; margin: 10px 0; font-size: 13px; }
   .scenario h3 { margin: 0 0 6px; font-size: 14px; }
+  pre { background: #f3f3f3; border-radius: 4px; padding: 8px 12px; font-size: 12px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
   footer { margin-top: 32px; font-size: 12px; color: #666; border-top: 1px solid #ccc; padding-top: 10px; }
 </style>
 </head>
@@ -87,11 +88,31 @@ ${row("加密文件指纹 SHA-256", "Encrypted file SHA-256", `<code>${esc(recor
 </table>
 
 <h2>二、完整性校验方法 <span class="en">How to verify integrity</span></h2>
-<p>本包内 <code>证据文件/${esc(fileName)}</code> 的 SHA-256 指纹应与上表「原始文件指纹」完全一致。任何人都可以用系统自带工具重新计算，无需本应用：</p>
+<p>解压本包后，<code>${esc(fileName)}</code> 的 SHA-256 指纹应与上表「原始文件指纹」完全一致。用系统自带工具即可校验，无需本应用。</p>
+
+<div class="scenario">
+<h3>macOS / Linux 终端 <span class="en">macOS / Linux Terminal</span></h3>
+<p><b>最简单的方法（推荐）：</b>把 <code>证据文件/</code> 文件夹里的 <code>${esc(fileName)}</code> 直接<b>拖进终端窗口</b>，系统会自动填入完整路径，然后在前面补上命令：</p>
+<p><code>shasum -a 256 </code>（空格后拖入文件）→ 回车</p>
+<p><b>或者手动导航：</b></p>
+<pre><code># 第一步：进入解压后的文件夹（路径改成你的实际位置）
+cd ~/Downloads/举证包_${record.clientTime.slice(0, 10)}_${record.txId.slice(0, 6)}
+
+# 第二步：计算指纹
+shasum -a 256 "证据文件/${esc(fileName)}"</code></pre>
+<p class="en"><b>Easiest (recommended):</b> drag <code>${esc(fileName)}</code> from the <code>证据文件/</code> folder into the Terminal window — the full path fills in automatically. Prepend <code>shasum -a 256 </code> and press Enter.<br>
+<b>Or navigate manually:</b> <code>cd</code> into the extracted folder first, then run <code>shasum -a 256 "证据文件/${esc(fileName)}"</code></p>
+</div>
+
+<div class="scenario">
+<h3>Windows 命令提示符 <span class="en">Windows Command Prompt</span></h3>
+<p>在文件管理器中进入解压后的文件夹，在地址栏输入 <code>cmd</code> 回车打开命令行，然后运行：</p>
+<p><code>certutil -hashfile "证据文件\${esc(fileName)}" SHA256</code></p>
+<p class="en">In File Explorer, navigate into the extracted folder, type <code>cmd</code> in the address bar and press Enter, then run the command above.</p>
+</div>
+
 <table>
-${row("Windows（命令提示符）", "Windows (Command Prompt)", `<code>certutil -hashfile "证据文件\\${esc(fileName)}" SHA256</code>`)}
-${row("macOS / Linux（终端）", "macOS / Linux (Terminal)", `<code>shasum -a 256 "证据文件/${esc(fileName)}"</code>`)}
-${row("应当得到", "Expected value", `<code>${esc(record.originalHash)}</code>`)}
+${row("应当得到 / Expected value", "SHA-256", `<code>${esc(record.originalHash)}</code>`)}
 </table>
 <p class="note">说明：文件指纹（SHA-256）在取证当下由设备本地计算并固定，此后文件哪怕被改动一个字节，指纹都会完全不同。当前记录的时间为设备时间与云端服务器时间两份；可信时间戳（TSA）服务接入中，接入后将为记录追加权威时间证明。<br>
 <span class="en">The SHA-256 fingerprint was fixed on the device at capture time; any later modification changes it completely. Times shown are device and server clocks; trusted timestamping (TSA) integration is in progress.</span></p>

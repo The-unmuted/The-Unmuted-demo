@@ -293,6 +293,11 @@ function EndingView({
         <p className="mt-2 text-sm leading-6 text-foreground/85">{simText(language, ending.summary)}</p>
       </div>
 
+      {/* Debrief section heading */}
+      <h2 className="text-sm font-bold text-foreground px-1">
+        {copyFor(language, "Debrief", "复盘")}
+      </h2>
+
       {/* Good items — triggered */}
       {good.length > 0 && (
         <div className="rounded-2xl border border-border/70 bg-card p-4">
