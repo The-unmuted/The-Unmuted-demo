@@ -431,7 +431,7 @@ Per-file keys (random per evidence file) ──encrypt──▶ evidence blobs
 **Decision 2 — Vercel 迁移到 Katie 账号 (`katielin0207-devs-projects`)：**
 旧 Vercel 项目在 Wendy（DancinWendy）账号下，Katie 无法独立管理。新建项目直接连接 `The-Unmuted-v2` GitHub repo，设置所有必要环境变量，push 到 `main` 自动部署。旧链接 (`the-unmuted.vercel.app`) 通过 `index.html` 内嵌的 hostname 检测脚本自动跳转到新链接，在 Wendy 那边下次自动部署后生效（源码推送已触发）。
 
-**新链接：** `https://the-unmuted-app.vercel.app`（Katie 账号，有访问码保护）。
+**新链接：** `https://the-unmuted-one.vercel.app`（Katie 账号，有访问码保护）。
 
 **CloudBase：** CI workflow 注入 `VITE_BETA_CODE`；`VITE_BETA_CODE` GitHub Secret 已添加到 `The-Unmuted-v2`。访问码生效需等 CloudBase CI 完成下一次部署。ICP 备案完成前，建议同时在腾讯云控制台暂停 CloudBase 静态网站托管（彻底消除合规风险）。
 

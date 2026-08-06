@@ -20,7 +20,7 @@
 
 ### Added
 - **Internal beta gate (`VITE_BETA_CODE`):** when the env var is set, a fullscreen access-code screen blocks the app before React loads. Correct code stored in localStorage (one-time entry per browser). Transparent in local dev (no env var = no gate).
-- **Hostname redirect:** `index.html` inline script redirects `the-unmuted.vercel.app` → `the-unmuted-app.vercel.app` before the page loads.
+- **Hostname redirect:** `index.html` inline script redirects `the-unmuted.vercel.app` → `the-unmuted-one.vercel.app` before the page loads.
 
 ### Removed
 - **Phantom wallet dead code:** `generateWalletCommitment`, `"wallet"` / `"phantom"` type variants, `walletAddress?` on `ZKPCommitment`, wallet branch in `categoryString`, phantom branch in `selfVerify`, `generateFromWallet` hook callback. SettingsWidget sign-out hint "or wallet" removed. (~55 lines across 3 files.)
@@ -29,7 +29,7 @@
 - `aidDirectory.json`: entries 10–17 used curly-quote characters (U+201C/U+201D) as JSON structural delimiters — broke the Vite/Rollup build. Rewritten with clean ASCII quotes; Chinese bracket quotes `「」` used inside text values where needed.
 
 ### Infrastructure
-- **New Vercel project** under Katie's account (`the-unmuted-app.vercel.app`) connected to `The-Unmuted-v2`, auto-deploys on push. All env vars set (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_BETA_CODE`). SSO protection disabled.
+- **New Vercel project** under Katie's account (`the-unmuted-one.vercel.app`) connected to `The-Unmuted-v2`, auto-deploys on push. All env vars set (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_BETA_CODE`). SSO protection disabled.
 - **CloudBase CI** now injects `VITE_BETA_CODE` at build time; GitHub Secret added to `The-Unmuted-v2`.
 
 ## 2026-07-31 — 模拟 UX: real-flow steps, glossary, direct titles (D-032)

@@ -18,7 +18,7 @@ Core features: trusted-contact SOS, end-to-end encrypted evidence storage with o
 > **Internal beta — access code required** while ICP filing is in progress. Contact a team member for the code.
 > **内部测试阶段**，两条链接均需输入访问码。ICP 备案完成前不对外公开。
 
-- Vercel (global): https://the-unmuted-app.vercel.app/
+- Vercel (global): https://the-unmuted-one.vercel.app/
 - Tencent CloudBase (mainland China mirror): https://theunmuted-v2-d2gyh0rux2a05de92-1434116173.tcloudbaseapp.com
 
 ---
