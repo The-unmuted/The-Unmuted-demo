@@ -8,7 +8,7 @@ Always read this file and `docs/ai_context.md` before starting any work.
 
 **The Unmuted (非默)** is a bilingual (EN/ZH) safety app for survivors of domestic violence, built for mainland China compliance. Survivor privacy and safety are the primary design constraints — they take precedence over developer convenience.
 
-Live demo: https://the-unmuted.vercel.app/
+Live demo: https://the-unmuted-one.vercel.app/
 
 ---
 

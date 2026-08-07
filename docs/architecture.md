@@ -3,7 +3,7 @@
 ## Overview
 
 Single-Page Application (SPA) built with React 18 + TypeScript + Vite. Deployed to two hosts:
-- **Primary:** Vercel (`https://the-unmuted.vercel.app/`)
+- **Primary:** Vercel (`https://the-unmuted-one.vercel.app/`)
 - **Secondary:** Tencent CloudBase COS bucket (`ap-shanghai`, bucket `45b6-static-theunmuted-v2-...`)
 
 CI/CD: GitHub Actions auto-deploys `main` to CloudBase; Vercel deploys via GitHub integration.
