@@ -1579,23 +1579,33 @@ function CloudVaultHistory({
   const [openingTx, setOpeningTx] = useState<string | null>(null);
   const [exportingTx, setExportingTx] = useState<string | null>(null);
   const [deletingTx, setDeletingTx] = useState<string | null>(null);
-  const [pendingAction, setPendingAction] = useState<{ txId: string; kind: VaultActionKind } | null>(null);
+  // stage:
+  //   "vault-pwd"      — waiting for the vault password (open/export/delete)
+  //   "delete-confirm" — vault already unlocked & delete only needs a tap (D-022)
+  //   "export-pwd"     — vault password OK, now set the ZIP transport password
+  const [pendingAction, setPendingAction] = useState<
+    { txId: string; kind: VaultActionKind; stage: "vault-pwd" | "delete-confirm" | "export-pwd" } | null
+  >(null);
   const [pwd, setPwd] = useState("");
   const [showPwd, setShowPwd] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [pwdError, setPwdError] = useState<UnlockFailureReason | null>(null);
+  const [exportPwd, setExportPwd] = useState("");
+  const [exportPwdConfirm, setExportPwdConfirm] = useState("");
+  const [showExportPwd, setShowExportPwd] = useState(false);
+  const [exportPwdError, setExportPwdError] = useState<string | null>(null);
 
   const requestAction = (record: EvidenceRecord, kind: VaultActionKind) => {
-    if (getSessionMasterKey()) {
-      // Vault already unlocked this session — open/export proceed directly;
-      // delete still shows a confirm step (accidental-tap guard).
-      if (kind === "open") { void handleOpen(record); return; }
-      if (kind === "export") { void handleExport(record); return; }
-      setPendingAction({ txId: record.txId, kind });
+    // D-039: view (open) and export always require the vault password, even if
+    // the session is already unlocked — both write plaintext outside the app
+    // sandbox (Downloads/AirDrop/iCloud), so they need fresh authorization.
+    // Delete keeps the session-unlocked confirm-only path per D-022
+    // (anti-coercion: deletion must look final without any password ceremony).
+    if (kind === "delete" && getSessionMasterKey()) {
+      setPendingAction({ txId: record.txId, kind, stage: "delete-confirm" });
       return;
     }
-    // Vault is locked — all three need the password.
-    setPendingAction({ txId: record.txId, kind });
+    setPendingAction({ txId: record.txId, kind, stage: "vault-pwd" });
     setPwd("");
     setPwdError(null);
   };
@@ -1604,17 +1614,36 @@ function CloudVaultHistory({
     setPendingAction(null);
     setPwd("");
     setPwdError(null);
+    setExportPwd("");
+    setExportPwdConfirm("");
+    setExportPwdError(null);
   };
 
   const handleConfirm = async (record: EvidenceRecord) => {
     if (!pendingAction || verifying) return;
-    if (pendingAction.kind === "delete" && getSessionMasterKey()) {
-      // Already unlocked — confirm tap is enough, no password needed.
+
+    if (pendingAction.stage === "delete-confirm") {
       cancelAction();
       await handleDelete(record);
       return;
     }
-    // Vault is locked — verify password first.
+
+    if (pendingAction.stage === "export-pwd") {
+      const p = exportPwd;
+      if (p.length < 8) {
+        setExportPwdError(copyFor(language, "At least 8 characters.", "密码至少 8 位。"));
+        return;
+      }
+      if (p !== exportPwdConfirm) {
+        setExportPwdError(copyFor(language, "The two entries don't match.", "两次输入不一致。"));
+        return;
+      }
+      cancelAction();
+      await handleExport(record, p);
+      return;
+    }
+
+    // stage === "vault-pwd"
     setVerifying(true);
     setPwdError(null);
     const res = await unlockWithPassword(userId, pwd);
@@ -1624,10 +1653,21 @@ function CloudVaultHistory({
       return;
     }
     onUnlocked(); // refresh history so locked records get full metadata
+
+    if (pendingAction.kind === "export") {
+      // Vault password verified — collect a fresh transport password next.
+      setPendingAction({ txId: record.txId, kind: "export", stage: "export-pwd" });
+      setPwd("");
+      setPwdError(null);
+      setExportPwd("");
+      setExportPwdConfirm("");
+      setExportPwdError(null);
+      return;
+    }
+
     const kind = pendingAction.kind;
     cancelAction();
     if (kind === "open") await handleOpen(record);
-    else if (kind === "export") await handleExport(record);
     else await handleDelete(record);
   };
 
@@ -1643,7 +1683,7 @@ function CloudVaultHistory({
     }
   };
 
-  const handleExport = async (record: EvidenceRecord) => {
+  const handleExport = async (record: EvidenceRecord, exportPassword: string) => {
     setExportingTx(record.txId);
     try {
       const blob = await onOpen(record);
@@ -1653,7 +1693,7 @@ function CloudVaultHistory({
         );
         return;
       }
-      const pkg = await buildCourtPackage(record, blob);
+      const pkg = await buildCourtPackage(record, blob, exportPassword);
       const url = URL.createObjectURL(pkg);
       const a = document.createElement("a");
       a.href = url;
@@ -1663,8 +1703,8 @@ function CloudVaultHistory({
       toast.success(
         copyFor(
           language,
-          "Court package saved: original file + description + how to verify. The encrypted copy stays in your vault.",
-          "举证包已保存：原件 + 证据说明 + 校验方法。加密原件仍留在你的保险柜里。"
+          "Court package saved. The evidence inside is encrypted with the password you just set — share that password with the recipient through a secure channel.",
+          "举证包已保存。包内证据文件已用你设的密码加密——请通过安全渠道把这个密码告诉接收人。"
         )
       );
     } finally {
@@ -1776,8 +1816,8 @@ function CloudVaultHistory({
           </div>
           {pendingAction?.txId === r.txId && (
             <div className="space-y-2 pt-1">
-              {pendingAction.kind === "delete" && getSessionMasterKey() ? (
-                /* Vault already unlocked — delete just needs a confirm tap */
+              {pendingAction.stage === "delete-confirm" ? (
+                /* Vault already unlocked — delete just needs a confirm tap (D-022) */
                 <>
                   <p className="text-[11px] text-muted-foreground">
                     {copyFor(language, "Delete this record?", "要删除这条记录吗？")}
@@ -1799,14 +1839,69 @@ function CloudVaultHistory({
                     </button>
                   </div>
                 </>
+              ) : pendingAction.stage === "export-pwd" ? (
+                /* Vault password verified — now set a fresh password for the ZIP */
+                <>
+                  <p className="text-[11px] text-muted-foreground leading-4">
+                    {copyFor(
+                      language,
+                      "Set a password for this court package. The recipient needs it to open the evidence file. Don't reuse your vault password.",
+                      "为这次举证包设一个密码。接收人（律师、法官）需要这个密码才能打开证据文件。请不要用你的保险柜密码。"
+                    )}
+                  </p>
+                  <div className="relative">
+                    <input
+                      value={exportPwd}
+                      onChange={(e) => setExportPwd(e.target.value)}
+                      type={showExportPwd ? "text" : "password"}
+                      placeholder={copyFor(language, "New password (min 8 chars)", "新密码（至少 8 位）")}
+                      autoFocus
+                      className="w-full rounded-xl border border-border bg-background px-3 py-2 pr-10 text-xs text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
+                    />
+                    <button
+                      onClick={() => setShowExportPwd((s) => !s)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                    >
+                      {showExportPwd ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
+                  <input
+                    value={exportPwdConfirm}
+                    onChange={(e) => setExportPwdConfirm(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleConfirm(r)}
+                    type={showExportPwd ? "text" : "password"}
+                    placeholder={copyFor(language, "Confirm password", "再输一次")}
+                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
+                  />
+                  {exportPwdError && (
+                    <p className="text-[11px] leading-4 text-destructive">{exportPwdError}</p>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleConfirm(r)}
+                      disabled={!exportPwd || !exportPwdConfirm || exportingTx === r.txId}
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-primary py-2 text-xs font-bold text-primary-foreground disabled:opacity-60"
+                    >
+                      {exportingTx === r.txId ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Scale className="h-3.5 w-3.5" />}
+                      {copyFor(language, "Encrypt & export", "加密并导出")}
+                    </button>
+                    <button
+                      onClick={cancelAction}
+                      disabled={exportingTx === r.txId}
+                      className="rounded-xl border border-border px-4 py-2 text-xs text-muted-foreground disabled:opacity-60"
+                    >
+                      {copyFor(language, "Cancel", "取消")}
+                    </button>
+                  </div>
+                </>
               ) : (
-                /* Vault is locked — password required for view / export / delete */
+                /* stage === "vault-pwd" — vault password required for view / export / delete */
                 <>
                   <p className="text-[11px] text-muted-foreground">
                     {pendingAction.kind === "open"
                       ? copyFor(language, "Enter your password to unlock and save this file.", "输入密码后解锁并保存这个文件。")
                       : pendingAction.kind === "export"
-                        ? copyFor(language, "Enter your password to unlock and export the court package.", "输入密码后解锁并导出举证包。")
+                        ? copyFor(language, "Enter your password to unlock the vault before exporting.", "先输入密码解锁保险柜，下一步再设导出密码。")
                         : copyFor(language, "Enter your password to delete this record.", "输入密码后删除这条记录。")}
                   </p>
                   <div className="relative">
@@ -1850,7 +1945,9 @@ function CloudVaultHistory({
                       {verifying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Lock className="h-3.5 w-3.5" />}
                       {pendingAction.kind === "delete"
                         ? copyFor(language, "Confirm delete", "确定删除")
-                        : copyFor(language, "Unlock", "解锁")}
+                        : pendingAction.kind === "export"
+                          ? copyFor(language, "Next", "下一步")
+                          : copyFor(language, "Unlock", "解锁")}
                     </button>
                     <button
                       onClick={cancelAction}

@@ -453,6 +453,93 @@ Per-file keys (random per evidence file) ──encrypt──▶ evidence blobs
 
 ---
 
+## D-040 — CloudBase 传输层安全头缺失的临时缓解（等自有域名 + CDN 根治）(2026-08-11)
+
+**Context:** 外部安全审阅指出 Supabase `signup` 请求"密码明文传输"——这一条是**误判**（URL 是 `https://`，密码经 TLS 加密，客户端预 hash 反而是 anti-pattern，与所有主流认证服务做法一致）。但顺带 curl 复核 `theunmuted-v2-d2gyh0rux2a05de92-1434116173.tcloudbaseapp.com`（境内主线）的响应头时，暴露出**真问题**：
+
+```
+HTTPS 响应：无 Strict-Transport-Security、无 CSP、无 X-Frame-Options、无 X-Content-Type-Options
+HTTP 请求：直接 200 返回，不重定向到 HTTPS
+```
+
+Vercel 侧（`vercel.json`）响应头齐全，但**默认 `.tcloudbaseapp.com` 子域名由 `tcbgw` 网关统一控制，hosting 用户没有配置响应头的能力**。COS 侧 `PutObject` 只支持 Cache-Control / Content-Type / Content-Disposition / Content-Encoding / Content-Language / Expires 这几个白名单响应头，`Strict-Transport-Security` 不在其列。
+
+**Decision:** 分三层：客户端加固立即做；等自有域名彻底解决。
+
+**A. 客户端强制（本次实现，`index.html` 内）：**
+1. `<meta http-equiv="Content-Security-Policy">` 移植 Vercel 那套 CSP 到 HTML 内联，让 CloudBase 侧至少有 CSP 基础保护。meta CSP 与 header CSP 是**取交集**关系（都必须放行），所以 Vercel 侧不冲突；`frame-ancestors` 和 `report-*` 只能作为 header 生效，从 meta 中剔除；追加 `upgrade-insecure-requests` 让浏览器自动升级页内所有 http:// 资源请求。
+2. 页面顶端脚本：若 `location.protocol === 'http:'` 立即 `location.replace()` 到 `https://` 版本（排除 localhost/127.0.0.1 保留本地开发能力）。**这不是真 HSTS**——首次访问时的握手仍可能被 MitM，脚本本身也可能被中间人注入前替换掉；只覆盖"用户手打 http://"、"从旧链接进入"、"重复访问在 http 缓存"这三个场景。属于**弱化补偿**，不是等价替代。
+
+**B. 走支持工单（尝试成本为零）：** 给腾讯云 CloudBase 提工单，询问 `.tcloudbaseapp.com` 默认子域名能否在 `tcbgw` 网关侧支持 HSTS/HTTP 强跳，或提供 hosting 用户可配置的响应头能力。预期成功率不高，属于机会性尝试。
+
+**C. 根治路径（等公司主体 + ICP，与 D-016 合并推进）：**
+1. 注册公司主体 → ICP 备案 → 自有域名（如 unmuted.cn / theunmuted.cn 待定）；
+2. 腾讯云 CDN 挂到自有域名 → 在 CDN 控制台开启：HSTS（含 `preload`、`includeSubDomains`）、HTTP 强跳、完整 CSP / X-Frame-Options / X-Content-Type-Options / Referrer-Policy / Permissions-Policy——与 Vercel 侧完全对齐；
+3. 提交 [hstspreload.org](https://hstspreload.org) → 进入 Chrome/Chromium 预置 HSTS 列表 → 全球用户首次访问也不会有 HTTP 降级窗口。
+
+**为什么不 workaround 到 Cloud Function 网关做重定向：** 增加冷启动延迟、增加运营复杂度，且不解决"网关本身响应头"的问题；根本还是要走自有域名 + CDN。
+
+**关联 D-014：** 早期我们下线"模拟区块链锚定"等过度承诺文案。类似地，本决策记录本身就是**主动披露内部一处真实的传输层缺口**，遵循同一诚实原则——不在对外文案里宣称"完整的 HSTS 保护"，直到 C 部分完成。
+
+**关联 D-029：** Vercel CSP + HSTS 那次改造只解决了海外线；本条把境内线的缺口显式化并写进 P0 mitigation + 长期 roadmap。
+
+**实现文件：**
+- `index.html` — 顶端 `<meta http-equiv="Content-Security-Policy">` 与 http→https 客户端重定向脚本。
+- `docs/decisions.md` — 本条 D-040。
+- `docs/存证功能说明书.md` — 第 9 章"数据存储与合规现状"补一段披露境内线传输层缺口 + P0 缓解 + 长期计划。
+- `docs/tasks.md` — 新增两项：（1）提腾讯云工单；（2）自有域名 + CDN HSTS，标注"gated on 公司主体 + ICP"。
+
+**验证：** curl 已确认修复前 CloudBase 侧 0 个安全头；本改动只影响客户端 HTML，不改后端。修复后需要 Katie 重新触发 CloudBase CI 部署，然后（1）打开境内线用浏览器 DevTools → Network 检查 meta CSP 生效、（2）手动访问 `http://...tcloudbaseapp.com/` 应自动跳到 `https://`。
+
+---
+
+## D-039 — 明文外泄面收紧：查看/导出每次必输密码 + 举证包内层加密 (2026-08-11)
+
+**Context:** Katie 内测发现两个安全感知问题：
+1. 存证记录页的"解锁查看"和"导出举证包"在本次 session 已解锁保险柜后一点即出（D-025/D-035 的 session 免密路径）——从用户视角完全感知不到"加密"的存在，且一旦施暴者拿到已登录已解锁的手机也没有任何门槛。
+2. 一键导出的举证包 ZIP（D-020）解压后**证据文件就是明文**，落到 Downloads 目录后可能被相册预览、iCloud 同步、AirDrop 误发——加密只在云端有效，本地明文外泄面很大。
+3. 同时发现 `evidenceExport.ts:110` 的 `certutil` 命令模板中 `\${esc(fileName)}` 反斜杠转义导致模板字面量未插值，Windows 段显示原样占位符文本。
+
+**Decision:** 收紧两条边界。
+
+**A. 任何把明文写出 App 沙盒的动作，必须每次重新验证保险柜密码——无视 session 是否已解锁：**
+- **解锁查看（下载原件到本机）** ← 每次必输
+- **导出举证包** ← 每次必输
+- **删除** 保持 D-022 反胁迫设计（session 已解锁时仅需简单确认，不问密码）——因为删除的界面观感必须"立即彻底"，多一道密码反而暴露"可恢复"的暗示。
+- **元数据浏览、列表刷新** 继续免密（D-035 不变）。
+
+**B. 举证包内的证据文件本身加密封装：**
+- 内层 `证据文件/xxx.enc` = AES-256-GCM(原件, PBKDF2-SHA256(export_password, salt=16B, iter=600k)) + 12B IV + GCM tag。二进制头部：`"NMUT"` magic + 版本 1B + salt 16B + IV 12B + ciphertext。
+- 用户在"导出举证包"时**新设一个一次性密码**（≥8 位、需二次确认），通过短信/电话等安全渠道单独告知接收人。**明确提示不要复用保险柜密码**——保险柜密码一旦泄漏可解开整个证据库，一次性密码只作用于这一次导出。
+- 举证包 ZIP 内含独立的 `解密工具.html`：纯 Web Crypto API（PBKDF2 + AES-GCM），零外链零依赖，任何现代浏览器离线打开即可解密。仍满足 D-020 的"验证不依赖非默应用"原则。
+- 举证说明 HTML 更新为**两步验证**：先用解密工具+密码解密 → 再用 `shasum -a 256` / `certutil -hashfile` 校验 SHA-256 与「原始文件指纹」一致。
+
+**C. 顺手修 `certutil ${esc(fileName)}` 模板 bug**（用正斜杠路径分隔符，跨平台友好）。
+
+**加密体现在哪里（对内诚实表述）：**
+| 场景 | 加密是否起作用 |
+|------|--------------|
+| 服务器被调取 / 数据库被拖 | ✅ 云端只有密文 |
+| 换手机登录 | ✅ 必须重新密码 + 恢复码 |
+| 手机丢失、他人捡到、未登录 | ✅ 登录墙 + 10 分钟自动锁 |
+| 手机被翻、已登录已解锁 | ✅ **本次收紧后：查看/导出仍需密码** |
+| 举证包落到收件人电脑 / 中间人截获 | ✅ **本次新增：内层加密，需要密码才能解出原件** |
+| 用户自己在正常使用 | 元数据浏览无感；写出沙盒的操作有一次密码门 |
+
+**Trade-off:** 
+- 用户体验：查看/导出多输一次密码（session 免密取消）；导出多设一个一次性密码。经与产品判断，收益（明文外泄面显著收缩）远大于成本（每次操作一次额外密码）。
+- 反胁迫：删除仍保留免密确认，不因这次收紧而破坏 D-022。
+- 一次性密码需要用户记住并告知接收人。文案强调"通过短信/电话告知"，避免与文件本身同渠道发送。
+
+**实现文件：**
+- `src/lib/evidenceExport.ts` — 新增 `encryptForExport()`（PBKDF2 600k + AES-256-GCM）、`buildDecryptorHtml()`（自包含解密页）；`buildCourtPackage()` 签名加 `exportPassword`；`buildPackageHtml()` 说明改为两步验证；修复模板 bug。
+- `src/components/EvidencePage.tsx` — `pendingAction` 增加 `stage: "vault-pwd" | "delete-confirm" | "export-pwd"`；`requestAction()` 只对"删除+已解锁"走 confirm-only 路径，查看/导出永远走 vault-pwd；`handleConfirm()` 在 export 成功验证保险柜密码后进入 export-pwd 阶段收集一次性密码；`handleExport()` 签名加 `exportPassword`。
+- `src/lib/evidenceExport.test.ts` — 新增 4 个测试：加密格式头部校验、原件加密对比、round-trip 解密、解密工具自包含性；回归测试防止 `${esc(fileName)}` 未插值再次出现。
+
+**回归：** `npm test` 77/77 通过；tsc/eslint/vite build 均 clean。
+
+---
+
 ## D-036 — 邮箱+密码登录（账号密码 vs 保险柜密码双层架构）(2026-08-04)
 
 **Context:** 原先每次登录都需要邮箱 OTP 验证码，用户体验差，且与"注册时设置保险柜密码"的设计造成认知混淆（"我到底有几个密码？"）。用户明确要求改为"注册时设账号密码，之后直接用邮箱+密码登录"。

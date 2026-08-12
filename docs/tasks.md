@@ -71,7 +71,9 @@ _Last updated: 2026-08-03_
 - [x] External security review received (Codex, 2026-07-27) — encryption architecture validated; gaps prioritized. **Round-1 remediation done 2026-07-30 (D-029)**: auto-lock (10 min idle / 3 min background), wallet-era deps purged (bundle 3.29→1.35 MB), CSP + security headers on Vercel
 - [ ] **Record tamper-evidence (review item 6)** — server could silently delete/roll back records; lightweight client-side index fingerprint as interim, full fix = TSA/transparency log (needs entity)
 - [ ] **Reproducible builds / release hashes (review item 2, rest)** — so users/auditors can verify the deployed bundle matches the source
-- [ ] **Security headers on CloudBase** — vercel.json headers don't apply to the China mirror (COS static hosting); revisit at D-016 Tencent migration
+- [x] ~~Security headers on CloudBase — interim mitigation~~ — done 2026-08-11 (D-040): meta CSP + `upgrade-insecure-requests` inlined in `index.html`, http→https client-side redirect. **Not** true HSTS (first-visit MitM still possible). Katie triggers CloudBase CI deploy, then verifies in DevTools.
+- [ ] **CloudBase HSTS — support ticket** — ask Tencent whether the default `.tcloudbaseapp.com` gateway (`tcbgw`) can add HSTS/HTTP-strict-redirect at platform level, or expose response-header config for hosting owners. Free to try; expected success rate low. Owner: Katie.
+- [ ] **True HSTS on CloudBase — custom domain + CDN** (D-040 root fix, gated on 公司主体 + ICP) — after ICP filing, point custom domain at Tencent CDN, enable HSTS (with `preload`, `includeSubDomains`), HTTP strict-redirect, full CSP / X-Frame-Options / X-Content-Type-Options / Referrer-Policy / Permissions-Policy in CDN console (parity with Vercel), then submit domain to hstspreload.org.
 - [ ] External security audit (human, paid) — hackathon goal; "self-review isn't enough" acknowledged
 
 ### 模拟功能 (报案流程模拟器, D-030 — design doc: `docs/模拟功能-调研与设计方案.md`; Katie confirmed all 4 decisions 2026-07-30)

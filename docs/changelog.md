@@ -1,5 +1,33 @@
 # Changelog — The Unmuted (非默)
 
+## 2026-08-11 — CloudBase transport-layer safety net (D-040)
+
+### Security
+- **Meta-CSP + client-side HTTPS redirect for CloudBase mirror (D-040):** The default `.tcloudbaseapp.com` subdomain is fronted by the `tcbgw` gateway which does not let hosting owners set response headers — curl confirmed the China mirror was returning zero security headers (no HSTS, no CSP, no X-Frame-Options, no X-Content-Type-Options) and served plain `http://` without redirect. Since true HSTS requires a custom domain + CDN (gated on ICP filing, D-016), the interim mitigation is inlined in `index.html`: (1) `<meta http-equiv="Content-Security-Policy">` mirrors the Vercel CSP (minus `frame-ancestors` / `report-*` which only work as headers) plus `upgrade-insecure-requests`; (2) top-of-body script `if (location.protocol === 'http:') location.replace(https://…)`. This is **not** equivalent to HSTS — first-visit active MitM still possible — but it covers "user typed http://", "old bookmark", and "http cache" cases. Support ticket to Tencent asking about gateway-level HSTS filed as backlog. Root fix (custom domain + CDN) tracked in tasks.md pending 公司主体 + ICP.
+- **Note:** the same change also brings CloudBase into approximate CSP parity with Vercel (meta-CSP applies wherever the HTML is served), so mixed-content and unauthorized script/style/font/img/media/connect origins are now blocked on the China mirror too.
+
+### Docs
+- `docs/decisions.md` — new D-040 (verbose rationale + why not workaround via Cloud Function gateway).
+- `docs/tasks.md` — marked "Security headers on CloudBase" done for the interim path; added the two follow-ups (support ticket + custom-domain root fix).
+
+## 2026-08-11 — Plaintext egress hardening: password on every view/export + encrypted court package (D-039)
+
+### Security
+- **View / export always re-verify vault password (D-039):** Removed the session-unlocked short-circuit for "解锁查看" and "导出举证包" in `EvidencePage.tsx`. Both actions write plaintext outside the app sandbox (Downloads, potentially synced to iCloud / AirDropped), so they now require a fresh vault-password entry every time — even inside an already-unlocked session. Delete keeps the D-022 anti-coercion path (session-unlocked → confirm-only, no password ceremony that would tip off an onlooker).
+- **Court package inner file is encrypted (D-039):** The exported ZIP now contains `证据文件/<name>.enc` (AES-256-GCM, key derived via PBKDF2-SHA256 600k iterations from a fresh one-time password the user sets at export time), a self-contained `解密工具.html` (pure Web Crypto — no external deps, works offline in any modern browser), and the bilingual `举证说明.html` (updated to describe the two-step decrypt-then-verify flow). Recipient uses the tool + the password (shared out-of-band by the sender via SMS/phone) to decrypt, then runs `shasum` / `certutil` to verify SHA-256 matches. Meets D-020 "verifiable without 非默 app" principle.
+- **Export UX:** two-password flow — vault password (proves ownership) → fresh one-time export password (≥ 8 chars, twice for confirmation, hint against reusing vault password). Toast success copy now says "包内证据文件已用你设的密码加密——请通过安全渠道把这个密码告诉接收人。"
+
+### Fixed
+- **`buildPackageHtml` template bug (regression from earlier):** the Windows `certutil` line rendered `${esc(fileName)}` literally because a stray backslash escaped the template-literal interpolation. Fixed and covered by a regression test that asserts no un-interpolated `${` remains in the HTML.
+
+### Added
+- `encryptForExport()` and `buildDecryptorHtml()` in `evidenceExport.ts`.
+- 4 new tests in `evidenceExport.test.ts`: encrypted-format header assertions, encryption-changes-bytes check, PBKDF2 round-trip decryption test, self-contained decryptor assertion.
+
+### Docs
+- `docs/decisions.md` — new D-039.
+- `docs/存证功能说明书.md` — bumped to v1.2 (2026-08-11); section 5.6 rewritten for per-action password requirement; section 5.7 rewritten for two-password export + encrypted-inner-file format; appendix A PBKDF2 term expanded; appendix B decision index updated (D-025 marked as superseded by D-039; D-035/D-036/D-039 added).
+
 ## 2026-08-04 — Email+password login, evidence vault password-gate redesign, hash verification fix
 
 ### Changed

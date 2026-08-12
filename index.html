@@ -24,9 +24,34 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
 
     <meta name="format-detection" content="telephone=no" />
+
+    <!--
+      D-040: header-parity CSP for the CloudBase mirror.
+      Vercel already ships a stricter CSP + HSTS via vercel.json response
+      headers, but the default .tcloudbaseapp.com subdomain is fronted by the
+      `tcbgw` gateway which does not let hosting owners set response headers —
+      HSTS / CSP / X-Frame-Options / X-Content-Type-Options are all absent
+      there. Until a custom domain + ICP filing + Tencent CDN unlocks true
+      response-header control (planned with D-016), a meta-tag CSP is the
+      strongest thing we can enforce there. `frame-ancestors` and `report-*`
+      are stripped because they only work as headers; `upgrade-insecure-
+      requests` still applies from meta and covers mixed-content upgrades.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https://*.supabase.co https://baas.chainmaker.org.cn; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
+    />
   </head>
   <body>
     <script>
+      // D-040: HTTPS enforcement for the CloudBase mirror (which does not
+      // send HSTS or auto-redirect at the gateway). This is NOT true HSTS —
+      // it only protects repeat visits and users who type "http://" directly;
+      // a first-visit active MitM could still inject content before this
+      // script runs. Real HSTS is gated on custom-domain migration (D-016).
+      if (location.protocol === 'http:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+        location.replace('https:' + window.location.href.substring(window.location.protocol.length));
+      }
       if (location.hostname === 'the-unmuted.vercel.app') {
         location.replace('https://the-unmuted-one.vercel.app' + location.pathname + location.search + location.hash);
       }
