@@ -69,6 +69,12 @@ export default function LoginFlow({
   const [unlockError, setUnlockError] = useState<string | null>(null);
   // "signup" = OTP from signUp confirmation; "forgot-pwd" = magic-link OTP
   const [codeFlow, setCodeFlow] = useState<"signup" | "forgot-pwd">("signup");
+  // D-041: OTP anti-brute-force UX state. `otpAttemptsLeft` counts wrong tries
+  // in the current browser session; `codeSentAt` timestamps when the current
+  // code was sent so we can show a client-side expiry countdown (server-side
+  // expiry is authoritative, set in Supabase Dashboard).
+  const [otpAttemptsLeft, setOtpAttemptsLeft] = useState(5);
+  const [codeSentAt, setCodeSentAt] = useState<number | null>(null);
 
   const goTo = (next: Stage) => {
     setUnlockError(null);
@@ -122,6 +128,8 @@ export default function LoginFlow({
       }
       toast.success(copyFor(language, "Check your email for a 6-digit code.", "请查看邮箱，收取6位验证码。"));
       setCodeFlow("forgot-pwd");
+      setOtpAttemptsLeft(5);
+      setCodeSentAt(Date.now());
       goTo("code");
       return;
     }
@@ -154,6 +162,8 @@ export default function LoginFlow({
       copyFor(language, "Check your email for a 6-digit verification code.", "请查看邮箱，收取6位验证码。")
     );
     setCodeFlow("signup");
+    setOtpAttemptsLeft(5);
+    setCodeSentAt(Date.now());
     goTo("code");
   };
 
@@ -190,10 +200,21 @@ export default function LoginFlow({
     }
     toast.success(copyFor(language, "A sign-in code has been sent to your email.", "登录验证码已发送到你的邮箱。"));
     setCodeFlow("forgot-pwd");
+    setOtpAttemptsLeft(5);
+    setCodeSentAt(Date.now());
     goTo("code");
   };
 
   // ── OTP verification (signup confirm OR forgot-pwd sign-in) ──────────────────
+  // D-041: client-side defense-in-depth against OTP brute-force.
+  // Real defense is Supabase's server-side rate limits + 10-min expiry (set in
+  // Dashboard). This client tracker just: (1) prevents accidental typo storms,
+  // (2) surfaces "N tries left" so users understand the threat model,
+  // (3) forces a full restart after 5 wrong tries so any client-cached state
+  // (email prefill, session tokens) is discarded before the attacker can try
+  // again. It cannot stop an attacker hitting the API directly, but it makes
+  // this browser session useless as an attack tool.
+  const MAX_OTP_ATTEMPTS = 5;
 
   const handleCode = async (code: string) => {
     setBusy(true);
@@ -203,11 +224,34 @@ export default function LoginFlow({
         : await verifyLoginCode(email, code);
     if (res.error || !res.user) {
       setBusy(false);
-      toast.error(copyFor(language, "Wrong or expired code.", "验证码错误或已过期。"));
+      const next = otpAttemptsLeft - 1;
+      setOtpAttemptsLeft(next);
+      if (next <= 0) {
+        toast.error(
+          copyFor(
+            language,
+            "Too many wrong codes. Please start over and request a new code.",
+            "错误次数过多，请重新开始并申请新验证码。"
+          )
+        );
+        setOtpAttemptsLeft(MAX_OTP_ATTEMPTS);
+        setCodeSentAt(null);
+        goTo("email");
+        return;
+      }
+      toast.error(
+        copyFor(
+          language,
+          `Wrong or expired code. ${next} tries left.`,
+          `验证码错误或已过期，还剩 ${next} 次机会。`
+        )
+      );
       return;
     }
     setUserId(res.user.id);
     setBusy(false);
+    setOtpAttemptsLeft(MAX_OTP_ATTEMPTS);
+    setCodeSentAt(null);
     if (codeFlow === "signup") {
       goTo("set-password");
     } else {
@@ -224,12 +268,19 @@ export default function LoginFlow({
   const handleResendCode = async () => {
     if (codeFlow === "signup") {
       const { error } = await resendSignupCode(email);
-      if (error) toast.error(copyFor(language, "Could not resend. Try again.", "重发失败，请稍后再试。"));
-      else toast.success(copyFor(language, "Code resent.", "验证码已重新发送。"));
+      if (error) {
+        toast.error(copyFor(language, "Could not resend. Try again.", "重发失败，请稍后再试。"));
+        return;
+      }
+      toast.success(copyFor(language, "Code resent.", "验证码已重新发送。"));
     } else {
       await requestLoginCode(email);
       toast.success(copyFor(language, "Code resent.", "验证码已重新发送。"));
     }
+    // Fresh code invalidates the previous one server-side, so reset the
+    // client counter + restart the client-visible expiry countdown.
+    setOtpAttemptsLeft(MAX_OTP_ATTEMPTS);
+    setCodeSentAt(Date.now());
   };
 
   // ── Vault password setup ─────────────────────────────────────────────────────
@@ -333,6 +384,8 @@ export default function LoginFlow({
             language={language}
             busy={busy}
             email={email}
+            attemptsLeft={otpAttemptsLeft}
+            sentAt={codeSentAt}
             onSubmit={handleCode}
             onResend={handleResendCode}
             onBack={() => goTo(codeFlow === "signup" ? "set-acct-pwd" : "login-pwd")}
@@ -636,10 +689,18 @@ function LoginPasswordStep({
   );
 }
 
+// D-041: OTP expiry shown to the user should MATCH the Supabase Dashboard
+// setting (Authentication → Providers → Email → OTP Expiration). Default is
+// 3600s = 1 hour, which is unsafe; we recommend 600s = 10 min per NIST
+// SP 800-63B. If Katie changes the Dashboard value, update this constant too.
+const OTP_LIFETIME_SEC = 600;
+
 function CodeStep({
   language,
   busy,
   email,
+  attemptsLeft,
+  sentAt,
   onSubmit,
   onResend,
   onBack,
@@ -647,18 +708,35 @@ function CodeStep({
   language: AppLanguage;
   busy: boolean;
   email: string;
+  attemptsLeft: number;
+  sentAt: number | null;
   onSubmit: (code: string) => void;
   onResend: () => void;
   onBack: () => void;
 }) {
   const [code, setCode] = useState("");
   const [cooldown, setCooldown] = useState(60);
+  // Expiry countdown ticks off the wall clock so a background tab still
+  // reflects reality when the user comes back.
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     if (cooldown <= 0) return;
     const t = setTimeout(() => setCooldown((c) => c - 1), 1000);
     return () => clearTimeout(t);
   }, [cooldown]);
+
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const expirySecLeft = sentAt
+    ? Math.max(0, OTP_LIFETIME_SEC - Math.floor((now - sentAt) / 1000))
+    : OTP_LIFETIME_SEC;
+  const expiryMm = Math.floor(expirySecLeft / 60);
+  const expirySs = expirySecLeft % 60;
+  const expired = expirySecLeft === 0 && sentAt !== null;
 
   const handleResend = () => {
     onResend();
@@ -673,11 +751,35 @@ function CodeStep({
       <p className="mt-1 text-xs leading-5 text-muted-foreground">
         {copyFor(language, `Sent to ${email}`, `已发送至 ${email}`)}
       </p>
+      {sentAt !== null && (
+        <p className={`mt-1 text-[11px] leading-4 ${expired ? "text-destructive" : "text-muted-foreground"}`}>
+          {expired
+            ? copyFor(
+                language,
+                "This code has expired. Tap Resend to get a new one.",
+                "该验证码已过期，请点击「重新发送」获取新验证码。"
+              )
+            : copyFor(
+                language,
+                `Code expires in ${expiryMm}m ${expirySs.toString().padStart(2, "0")}s.`,
+                `验证码 ${expiryMm} 分 ${expirySs.toString().padStart(2, "0")} 秒后失效。`
+              )}
+        </p>
+      )}
+      {attemptsLeft < 5 && attemptsLeft > 0 && (
+        <p className="mt-1 text-[11px] leading-4 text-amber-500">
+          {copyFor(
+            language,
+            `${attemptsLeft} tries left before you'll be sent back to request a new code.`,
+            `还剩 ${attemptsLeft} 次机会，超过则需要返回重新获取验证码。`
+          )}
+        </p>
+      )}
       <div className="mt-4 space-y-3">
         <input
           value={code}
           onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-          onKeyDown={(e) => e.key === "Enter" && code.length === 6 && onSubmit(code)}
+          onKeyDown={(e) => e.key === "Enter" && code.length === 6 && !expired && onSubmit(code)}
           placeholder="000000"
           inputMode="numeric"
           autoComplete="one-time-code"
@@ -685,7 +787,7 @@ function CodeStep({
         />
         <button
           onClick={() => onSubmit(code)}
-          disabled={busy || code.length !== 6}
+          disabled={busy || code.length !== 6 || expired}
           className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3 text-sm font-bold text-primary-foreground disabled:opacity-60"
         >
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}

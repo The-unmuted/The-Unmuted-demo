@@ -453,6 +453,53 @@ Per-file keys (random per evidence file) ──encrypt──▶ evidence blobs
 
 ---
 
+## D-041 — 邮箱 OTP 抗爆破：Dashboard 缩短有效期 + 客户端 5 次尝试上限 + 有效期倒计时 (2026-08-12)
+
+**Context:** 网安朋友第二条反馈："验证码有效期过长，存在爆破风险，端点 `https://iisjendxxmxpgwohckiq.supabase.co/auth/v1/verify`"。这一条**是真的**，与前一条"密码明文传输"误判不同。
+
+**爆破可行性核算（用当前真实配置）：**
+- 6 位 OTP = 1,000,000 种组合（`docs/ai_context.md` 记录）
+- Supabase Dashboard 默认 OTP 有效期：**3600 秒（1 小时）**——远超 NIST SP 800-63B 推荐上限（10 分钟）
+- Supabase `/verify` 默认限流：约 30 次/5 分钟/IP ≈ 360 次/小时/IP
+- 单 IP：360/1,000,000 = 0.036% 成功率
+- 100 IP 代理池：3.6%
+- 1000 IP 大代理池：36% —— **真实威胁**
+
+Supabase 服务端会在单个 code 错误 5–10 次后主动作废，能拦下大部分小规模攻击，但**1 小时的窗口对代理池攻击者太宽了**。同一账号可以在窗口内被多次触发发码，攻击面进一步放大。
+
+**Decision:** 服务端 + 客户端两层收紧。
+
+**A. 服务端配置（Katie 在 Supabase Dashboard 操作，代码无法覆盖）：**
+1. Authentication → Providers → Email → **OTP Expiration: 3600 → 600**（10 分钟，对齐 NIST SP 800-63B）
+2. Authentication → Rate Limits：核实 `/verify`、`/otp` 的默认限流值，需要时进一步收紧（`/verify` 建议 ≤ 30/5min/IP，`/otp` 建议 ≤ 4/hour/email）
+3. OTP Length 保持 6（同时缩短有效期 + 服务端限流下，6 位已足够）
+4. **完成后同步更新客户端常量 `OTP_LIFETIME_SEC`**（`LoginFlow.tsx`）与该 Dashboard 值一致，避免倒计时误导
+
+**B. 客户端防御纵深（本次实现）：**
+- **错误尝试计数**（`LoginFlow.handleCode`）：全局 `otpAttemptsLeft` 状态，输错一次减 1；到 0 时弹提示、清空 `codeSentAt`、强制跳回 `email` 阶段——用户必须重新请求一份新验证码。**不能阻止 API 直连的攻击者**，但让当前浏览器 session 不再成为可用的攻击工具，也防止用户在同一台设备上被恶意脚本反复消费尝试次数。
+- **有效期倒计时**（`CodeStep`）：以进入 code 阶段的墙钟为准，每秒重算剩余 `mm:ss` 显示。到 0 时显示"该验证码已过期"，禁用「确认」按钮。用户可视地感知威胁模型，也避免"我输了没反应"的困惑。
+- **剩余尝试提示**：`attemptsLeft < 5` 时显示"还剩 X 次机会"（琥珀色，非红色以避免过度惊吓）。
+- **Resend 重置**：`handleResendCode` 成功后重置 `otpAttemptsLeft = 5` 且 `codeSentAt = Date.now()`——新码到达等价于新一轮尝试窗口。
+- **触发点**：`handleSetAccountPassword`（注册）、`handleForgotPassword`（忘记密码）、邮箱入口的 OTP 直发路径三处都统一 `setOtpAttemptsLeft(5) + setCodeSentAt(Date.now())`。
+
+**为什么不做 IP 级客户端限流：** 客户端限流对真实攻击者无效（攻击者直接打 API，绕过 UI）。真正的抗爆破在服务端 `/verify` 限流 + 短有效期，客户端只是 UX 层的诚信告知 + 防止本机被利用。
+
+**为什么不上 8 位 OTP：** 6 位在 10 分钟窗口 + 服务端限流下已够。8 位增加用户输入负担，对施暴者随时可能看手机的场景反而是负面（长码更难在 30 秒内背下），A/B 部分完成后不需要。
+
+**关联 D-036：** 双层密码架构下，OTP 仅用于（1）注册时邮箱验证一次、（2）忘记密码走 OTP magic-link 回退——即使 OTP 被爆破，攻击者也只拿到账号层访问权限，**保险柜密码仍在设备本地、永不上传**，证据密文一片解不开。这是 D-036"实名的是账号，加密的是内容"分层的实际收益。
+
+**关联 D-014：** 与本次收紧不同的是"密码明文传输"那条属于误判——Supabase `signup` 走 HTTPS/TLS，账号密码在 TLS 内明文是所有主流认证服务的标准做法（客户端预 hash 反而是 anti-pattern）。见 D-040 讨论 CloudBase 传输层时的一起说明。
+
+**实现文件：**
+- `src/components/LoginFlow.tsx` — 全局 `otpAttemptsLeft` / `codeSentAt` state；`handleCode` / `handleResendCode` / `handleSetAccountPassword` / `handleForgotPassword` / 邮箱入口 OTP 直发路径统一维护；`CodeStep` 组件加两个 props 与 UI；新增 `OTP_LIFETIME_SEC = 600` 常量。
+- `docs/decisions.md` — 本条 D-041。
+- `docs/tasks.md` — Katie 的 Dashboard 操作单列一条 P0，标注"必须先做，客户端常量再对齐"。
+- `docs/changelog.md` — 2026-08-12 条目。
+
+**验证：** tsc / 77 vitest / vite build 均 clean。等 Katie 完成 Dashboard 变更后，需要浏览器手测：（1）注册收码后倒计时正确显示；（2）连续输错 5 次自动跳回邮箱；（3）resend 后计数和倒计时都重置；（4）过期时按钮变灰。
+
+---
+
 ## D-040 — CloudBase 传输层安全头缺失的临时缓解（等自有域名 + CDN 根治）(2026-08-11)
 
 **Context:** 外部安全审阅指出 Supabase `signup` 请求"密码明文传输"——这一条是**误判**（URL 是 `https://`，密码经 TLS 加密，客户端预 hash 反而是 anti-pattern，与所有主流认证服务做法一致）。但顺带 curl 复核 `theunmuted-v2-d2gyh0rux2a05de92-1434116173.tcloudbaseapp.com`（境内主线）的响应头时，暴露出**真问题**：

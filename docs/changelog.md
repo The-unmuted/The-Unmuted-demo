@@ -1,5 +1,17 @@
 # Changelog — The Unmuted (非默)
 
+## 2026-08-12 — OTP anti-brute-force: client-side attempt cap + expiry countdown (D-041)
+
+### Security
+- **OTP 5-try cap (D-041):** External review flagged the `/auth/v1/verify` endpoint's brute-force exposure (default Supabase OTP expiry is 3600s, plenty of window for a small proxy pool to guess a 6-digit code). Real fix is a Supabase Dashboard change (OTP Expiration 3600 → 600, per NIST SP 800-63B) — filed as a P0 for Katie in tasks.md. Client-side defense-in-depth shipped now: `LoginFlow` tracks `otpAttemptsLeft` (starts at 5, decrements on wrong code, resets on resend or successful verify); after 5 wrong tries the user is forced back to the email step with "Too many wrong codes" toast, clearing the client-cached session state so this browser can't be used as an attack tool.
+- **OTP expiry countdown (D-041):** `CodeStep` now shows "验证码 X 分 Y 秒后失效" on a per-second timer, and displays "此验证码已过期" + disables the Confirm button when the window closes. Uses wall-clock so a backgrounded tab reflects reality when the user returns. Constant `OTP_LIFETIME_SEC = 600` (must be updated whenever Katie changes the Supabase Dashboard value to keep the display truthful).
+- **"N tries left" hint:** amber-colored text when `attemptsLeft < 5 && > 0`, warning without alarm.
+- Triggered wherever a new code is sent: `handleSetAccountPassword` (signup), `handleForgotPassword` (forgot-pwd magic link), and the email-step OTP direct path all reset the counter + timestamp.
+
+### Docs
+- `docs/decisions.md` — new D-041 (with brute-force math, why not client-side IP limits, why not 8-digit OTP, relationship to D-036 double-password architecture).
+- `docs/tasks.md` — Katie's P0 Dashboard action item added.
+
 ## 2026-08-11 — CloudBase transport-layer safety net (D-040)
 
 ### Security
