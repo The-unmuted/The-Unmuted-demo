@@ -13,6 +13,7 @@ import { formatBytes } from "@/lib/evidenceCrypto";
 import { AppLanguage, copyFor } from "@/lib/locale";
 import { hasReportNotes, saveEncryptedReportNotes, type EncryptedReportNoteRecord } from "@/lib/reportNotesVault";
 import { unlockWithPassword, getSessionMasterKey, type UnlockFailureReason } from "@/lib/keyVaultService";
+// DEMO branch: swapped to demoVault (IndexedDB-only, hardcoded master key).
 import {
   listDeletedEvidence,
   restoreEvidence,
@@ -20,7 +21,7 @@ import {
   type EvidenceRecord,
   type DeletedEvidenceRecord,
   type SaveEvidenceOptions,
-} from "@/lib/evidenceVaultService";
+} from "@/lib/demoVault";
 import { buildCourtPackage, courtPackageName } from "@/lib/evidenceExport";
 import {
   gradeForFile,
@@ -1630,8 +1631,9 @@ function CloudVaultHistory({
 
     if (pendingAction.stage === "export-pwd") {
       const p = exportPwd;
-      if (p.length < 8) {
-        setExportPwdError(copyFor(language, "At least 8 characters.", "密码至少 8 位。"));
+      // DEMO: minimum lowered from 8 to 6 so "123456" is accepted end-to-end.
+      if (p.length < 6) {
+        setExportPwdError(copyFor(language, "At least 6 characters.", "密码至少 6 位。"));
         return;
       }
       if (p !== exportPwdConfirm) {
@@ -1656,11 +1658,13 @@ function CloudVaultHistory({
 
     if (pendingAction.kind === "export") {
       // Vault password verified — collect a fresh transport password next.
+      // DEMO: pre-fill both fields with "123456" so the judge can just click
+      // "Encrypt & export"; they can also see & edit the value.
       setPendingAction({ txId: record.txId, kind: "export", stage: "export-pwd" });
       setPwd("");
       setPwdError(null);
-      setExportPwd("");
-      setExportPwdConfirm("");
+      setExportPwd("123456");
+      setExportPwdConfirm("123456");
       setExportPwdError(null);
       return;
     }
@@ -1849,6 +1853,20 @@ function CloudVaultHistory({
                       "为这次举证包设一个密码。接收人（律师、法官）需要这个密码才能打开证据文件。请不要用你的保险柜密码。"
                     )}
                   </p>
+                  {/* DEMO: fields are pre-filled with 123456; judges can just click export */}
+                  <div className="rounded-lg border border-primary/40 bg-primary/10 px-2.5 py-1.5 text-[10px] leading-4 text-primary">
+                    {copyFor(
+                      language,
+                      "Demo mode — the field is pre-filled with ",
+                      "Demo 演示模式 — 已预填 "
+                    )}
+                    <code className="rounded bg-background/70 px-1 py-0.5 font-mono text-[10px] text-foreground">123456</code>
+                    {copyFor(
+                      language,
+                      ". Just click Encrypt & export. The recipient uses the same password with the decryptor tool inside the ZIP.",
+                      "，直接点击「加密并导出」即可。接收人（律师/法官）用同一密码 + ZIP 内附带的解密工具解开证据文件。"
+                    )}
+                  </div>
                   <div className="relative">
                     <input
                       value={exportPwd}
@@ -1904,13 +1922,27 @@ function CloudVaultHistory({
                         ? copyFor(language, "Enter your password to unlock the vault before exporting.", "先输入密码解锁保险柜，下一步再设导出密码。")
                         : copyFor(language, "Enter your password to delete this record.", "输入密码后删除这条记录。")}
                   </p>
+                  {/* DEMO: mandatory hint that shows the fixed demo password */}
+                  <div className="rounded-lg border border-primary/40 bg-primary/10 px-2.5 py-1.5 text-[10px] leading-4 text-primary">
+                    {copyFor(
+                      language,
+                      "Demo mode — please enter ",
+                      "Demo 演示模式 — 请输入 "
+                    )}
+                    <code className="rounded bg-background/70 px-1 py-0.5 font-mono text-[10px] text-foreground">123456</code>
+                    {copyFor(
+                      language,
+                      ". (In the production version this asks for your real vault password, which stays on your device.)",
+                      "。（正式版本此处会要求你注册时设置的保险柜密码，密码永不离开你的设备。）"
+                    )}
+                  </div>
                   <div className="relative">
                     <input
                       value={pwd}
                       onChange={(e) => setPwd(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleConfirm(r)}
                       type={showPwd ? "text" : "password"}
-                      placeholder={copyFor(language, "Password", "密码")}
+                      placeholder="123456"
                       autoFocus
                       className="w-full rounded-xl border border-border bg-background px-3 py-2 pr-10 text-xs text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
                     />

@@ -11,6 +11,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { encryptFile, type EncryptionResult } from '@/lib/evidenceCrypto';
+// DEMO branch: swapped from evidenceVaultService (Supabase-backed) to demoVault
+// (IndexedDB-only, hardcoded master key). Same API surface — no other changes.
 import {
   saveEvidence,
   listEvidence,
@@ -19,11 +21,11 @@ import {
   syncPendingEvidence,
   deleteEvidence,
   purgeExpiredEvidence,
+  DEMO_USER_ID,
   type EvidenceRecord,
   type SaveEvidenceOptions,
-} from '@/lib/evidenceVaultService';
+} from '@/lib/demoVault';
 import { getSessionMasterKey } from '@/lib/keyVaultService';
-import { getCurrentUser } from '@/lib/authService';
 import { loadVaultRecords, type VaultRecord } from '@/lib/localStorage';
 import { AppLanguage, copyFor } from '@/lib/locale';
 
@@ -44,16 +46,13 @@ export function useEvidenceVault(language: AppLanguage = 'en') {
   const [steps, setSteps] = useState<VaultStepStatus>({ encrypting: 'pending', saving: 'pending' });
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<VaultResult | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
+  // DEMO: userId is a fixed constant, not fetched from Supabase auth.
+  const [userId] = useState<string | null>(DEMO_USER_ID);
   const [history, setHistory] = useState<EvidenceRecord[]>([]);
   const [legacyHistory] = useState<VaultRecord[]>(() => loadVaultRecords());
   const [batchProgress, setBatchProgress] = useState<{ current: number; total: number } | null>(null);
 
   const canUseVault = Boolean(userId && getSessionMasterKey());
-
-  useEffect(() => {
-    getCurrentUser().then((u) => setUserId(u?.id ?? null));
-  }, []);
 
   const refreshHistory = useCallback(async () => {
     if (!userId) return;

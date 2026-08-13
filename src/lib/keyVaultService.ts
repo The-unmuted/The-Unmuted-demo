@@ -158,24 +158,17 @@ async function upgradeLegacyBoxes(
   }
 }
 
-export async function unlockWithPassword(userId: string, password: string): Promise<UnlockResult> {
-  const boxes = await loadBoxes(userId);
-  if (!boxes) return { ok: false, reason: "vault-unavailable" };
-  // Copy-paste often drags in stray whitespace; retry trimmed before failing.
-  const trimmed = password.trim();
-  const candidates = trimmed && trimmed !== password ? [password, trimmed] : [password];
-  for (const candidate of candidates) {
-    try {
-      const key = await openWithPassword(candidate, boxes.passwordBox);
-      sessionMasterKey = key;
-      void syncPendingBoxes(userId);
-      void upgradeLegacyBoxes(userId, key, boxes, { password: candidate });
-      return { ok: true, key };
-    } catch {
-      // try the next candidate
-    }
-  }
-  return { ok: false, reason: "wrong-secret" };
+export async function unlockWithPassword(_userId: string, password: string): Promise<UnlockResult> {
+  // DEMO branch: no Supabase key vault. The one accepted password is "123456";
+  // on success we return the demo master key (already set by initDemoSessionKey
+  // on app load, so decryption of seeded/uploaded records works either way).
+  // Original Argon2id + key-box logic is preserved in the v2 branch.
+  const { verifyDemoPassword } = await import("./demoVault");
+  const ok = await verifyDemoPassword(password);
+  if (!ok) return { ok: false, reason: "wrong-secret" };
+  const key = sessionMasterKey;
+  if (!key) return { ok: false, reason: "vault-unavailable" };
+  return { ok: true, key };
 }
 
 /** Recovery path: unlock with the paper code, then re-wrap with a new password */
