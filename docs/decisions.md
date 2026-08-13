@@ -453,6 +453,71 @@ Per-file keys (random per evidence file) ──encrypt──▶ evidence blobs
 
 ---
 
+## D-042 — 外部安全审阅第二轮：两条误判的规范化答复（key_vaults 加密参数 & 账号密码"明文传输"）(2026-08-12)
+
+**Context:** 网安朋友在 2026-08-11/12 两天内提交了 3 条反馈：D-041 抗爆破那条是真的，另两条**都是误判**。虽然不改代码，但两条都涉及密码学基础概念的常见误区，且未来还会被别的审阅者踩同一坑——把答案规范化写进这里，形成 canonical answer。
+
+### 误判 A — "密码明文传输"（2026-08-11 提出，随 D-040 说明）
+
+**原话：** "密码传输未加密，是明文 `POST https://iisjendxxmxpgwohckiq.supabase.co/auth/v1/signup`"
+
+**为什么不成立：**
+1. URL 以 `https://` 开头 —— HTTP 请求体在离开浏览器之前已被 **TLS 1.3 加密**。DevTools 里看到 JSON 明文是浏览器进程内的 pre-TLS 视图，等同于按 F12 能看到任何网站的密码输入。
+2. Supabase / Auth0 / Firebase Auth / AWS Cognito / GitHub / 微信 —— 所有主流账号系统都是这套流程：客户端明文 → HTTPS → 服务端 bcrypt(密码 + 随机盐)。OWASP 推荐做法。
+3. "客户端预 hash 再发"是 anti-pattern：服务器存客户端 hash 等于把 hash 变成了新密码（pass-the-hash 攻击）。
+4. 我们真正的双层设计（D-036）是：**账号密码经 TLS 到 Supabase 只负责登录；保险柜密码 Argon2id 派生 KEK 永远不出设备**。即使账号密码泄漏，证据密文一片解不开。
+
+**顺带触发了真收获：** 复核时 curl 出 CloudBase 侧完全没有安全响应头（无 HSTS / CSP / X-Frame-Options / X-Content-Type-Options），HTTP 也不重定向到 HTTPS —— 这是**真缺口**，见 D-040 的 A/B/C 三层修复。
+
+### 误判 B — "`key_vaults` 加密参数过度暴露 + 使用不安全的加密算法 Base64"（2026-08-12 提出）
+
+**原话：** "加密算法参数值在接口返回中过多暴露 iv salt data `https://iisjendxxmxpgwohckiq.supabase.co/rest/v1/key_vaults`，使用不安全的加密算法 Base64"
+
+**Part 1 — "iv / salt / data 被暴露"：不成立。**
+
+看代码 `src/lib/keyVault.ts:37-45`：
+
+```ts
+export interface KeyBoxV2 {
+  v: 2; kdf: "Argon2id"; opslimit; memlimit;
+  salt: string;  // base64 — public by design
+  iv: string;    // base64 — public by design
+  data: string;  // base64 — ciphertext
+}
+```
+
+- **IV**（AES-GCM 初始化向量）：RFC 5116 / NIST SP 800-38D 要求每次加密用唯一 IV，**与密文一起公开存储**——否则合法用户也没法解密自己的数据。IV 保密没有任何安全意义。
+- **salt**（KDF 盐）：其作用是防彩虹表（同一密码派生不同 KEK），**规范要求公开存储**（OWASP / NIST SP 800-63B / libsodium 文档）。攻击者知道 salt 不获得任何优势。
+- **算法参数**（`kdf` / `opslimit` / `memlimit` / `iterations`）：客户端必须知道才能重算 KEK，Kerckhoffs 原则要求算法可公开而不影响安全性。此外 D-027 Argon2id 迁移的自动升级也依赖 `v` 字段判别版本。
+- **data**（密文）：由 KEK（Argon2id 64 MiB 派生）+ AES-256-GCM 保护。攻击者拿到全部四个字段但没有密码/恢复码——一片解不开。
+
+**Part 2 — "使用不安全的加密算法 Base64"：范畴错误。**
+
+Base64 **不是加密算法**，它是二进制→ASCII 的**文本编码方式**（因为 JSON 装不下原始二进制）。它没有密钥，没有安全属性，也不"加密"任何东西。真正的算法栈已在 `keyVault.ts` 里：
+
+```
+密码/恢复码 → Argon2id(64 MiB, 2 ops, memory-hard) → KEK(256 位)
+           → AES-256-GCM(12 字节 IV + 128 位认证 tag) → 密文
+```
+
+两个算法各自都是 2026 年最佳实践（Argon2id = PHC 2015 冠军 / OWASP 首推；AES-256-GCM = NIST 认证 + Web Crypto 硬件加速）。1Password / Bitwarden / ProtonMail / KeePass / Signal / iOS Keychain 都是同款做法。
+
+**Part 3 — 脱库攻击模型下的实际抗性：**
+- password_box：8 位强密码 × Argon2id(0.5s/次) ≈ 一亿年
+- recovery_box：12 位 62-charset 恢复码 = 3.2×10²¹ 组合 × 0.5s ≈ 5×10¹³ 年（宇宙寿命不够）
+- 前提是密码强度政策（`passwordPolicy.ts`）真的执行：≥ 8 位、非纯数字、非纯重复、常见弱密码黑名单（含中文常见如 `woaini1314`）—— 已确认在 `handleSetAccountPassword` 每一次强制运行。
+
+**RLS 补充**：`0001_key_vault_and_evidence.sql` 的策略是 `for select using (auth.uid() = user_id)`——即使朋友 curl 了 `/rest/v1/key_vaults`，他也只能看到**自己那一行**，看不到其他用户的 boxes。误以为"全库可拉"的话属于第二层误解，需要跟他澄清。
+
+**Decision:** 代码零改动。做两件预防措施：
+
+1. **在 `keyVault.ts` 的 `KeyBoxV1/V2` type 上方加长注释**，逐字段说明 salt/iv/kdf/data 为什么公开存储 + Base64 不是加密算法 + 引用同类工业系统。未来审阅者读代码时先看到这段。
+2. **本条 D-042 作为规范化答复**：将来收到同类反馈直接引用即可，不再重新论证。
+
+**关联决策：** D-017（密钥层级）、D-027（Argon2id 升级）、D-036（双层密码架构）、D-040（真缺口在 CloudBase 传输层）、D-041（真缺口在 OTP 有效期）。
+
+---
+
 ## D-041 — 邮箱 OTP 抗爆破：Dashboard 缩短有效期 + 客户端 5 次尝试上限 + 有效期倒计时 (2026-08-12)
 
 **Context:** 网安朋友第二条反馈："验证码有效期过长，存在爆破风险，端点 `https://iisjendxxmxpgwohckiq.supabase.co/auth/v1/verify`"。这一条**是真的**，与前一条"密码明文传输"误判不同。

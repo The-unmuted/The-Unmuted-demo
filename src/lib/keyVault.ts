@@ -24,14 +24,47 @@ const PBKDF2_ITERATIONS = 310_000;
 const ARGON2_OPSLIMIT = 2;
 const ARGON2_MEMLIMIT = 67_108_864;
 
+// ── D-042: why `salt`, `iv`, `kdf` and `data` are all stored in plaintext ─────
+// External security reviews have repeatedly flagged the visibility of these
+// fields in `/rest/v1/key_vaults` responses as a "vulnerability". It is not.
+//
+//   • `salt`  — KDF salt is BY DESIGN non-secret. NIST SP 800-63B and OWASP
+//               explicitly require it to be stored alongside the ciphertext so
+//               the same password can be re-derived on unlock. Its job is to
+//               defeat rainbow tables, not to be secret.
+//   • `iv`    — AES-GCM IV is BY DESIGN non-secret. RFC 5116 / NIST SP 800-38D
+//               require a unique-per-encryption IV stored with the ciphertext;
+//               a hidden IV would break decryption for the legitimate owner.
+//   • `kdf` / `opslimit` / `memlimit` / `iterations` — algorithm parameters
+//               must be stored with the ciphertext so the client knows how to
+//               re-derive the KEK. Hiding them buys nothing (Kerckhoffs's
+//               principle) and would leave old boxes un-openable after a KDF
+//               upgrade (see D-027 Argon2id migration).
+//   • `data`  — the actual ciphertext. Protected by the KEK derived from the
+//               password/recovery code + Argon2id(64 MiB, memory-hard). An
+//               attacker holding all four fields but not the password/recovery
+//               code cannot decrypt.
+//
+// Base64 is NOT an encryption algorithm — it is a text encoding so that binary
+// bytes fit inside JSON. The actual encryption stack is:
+//     password/recovery-code → Argon2id → KEK → AES-256-GCM → data
+//
+// All industry-grade E2E systems (1Password, Bitwarden, ProtonMail, KeePass,
+// Signal, iOS Keychain) store salt/iv/algorithm parameters alongside the
+// ciphertext for exactly the same reason.
+//
+// Row-level security (see 0001_key_vault_and_evidence.sql) further restricts
+// each user to their own row: even a logged-in reviewer can only inspect their
+// own boxes.
+
 /** Legacy boxes (pre 2026-07). Still openable; migrated on next successful unlock. */
 export interface KeyBoxV1 {
   v: 1;
   kdf: "PBKDF2-SHA256";
   iterations: number;
-  salt: string; // base64
-  iv: string;   // base64
-  data: string; // base64 — master key encrypted by the derived KEK
+  salt: string; // base64-encoded random salt (public by design — see D-042 note above)
+  iv: string;   // base64-encoded AES-GCM IV (public by design)
+  data: string; // base64-encoded ciphertext: master key encrypted by the derived KEK
 }
 
 export interface KeyBoxV2 {
@@ -39,9 +72,9 @@ export interface KeyBoxV2 {
   kdf: "Argon2id";
   opslimit: number;
   memlimit: number;
-  salt: string; // base64
-  iv: string;   // base64
-  data: string; // base64 — master key encrypted by the derived KEK
+  salt: string; // base64-encoded random salt (public by design — see D-042 note above)
+  iv: string;   // base64-encoded AES-GCM IV (public by design)
+  data: string; // base64-encoded ciphertext: master key encrypted by the derived KEK
 }
 
 export type KeyBox = KeyBoxV1 | KeyBoxV2;
