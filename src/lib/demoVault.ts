@@ -287,10 +287,19 @@ export async function openEvidenceFile(_userId: string, record: EvidenceRecord):
   if (!masterKey) throw new Error("vault-locked");
   const blob = await getBlob(record.txId);
   if (!blob) throw new Error("blob-not-found");
-  const wrapped = await openJson<{ key: string; iv: string }>(masterKey, record.wrappedFileKey);
-  const bytes = new Uint8Array(await blob.arrayBuffer());
+  // wrapped.key is a JsonWebKey (from evidenceCrypto.encryptFile → exportKey('jwk')),
+  // not a plain string. wrapped.iv is a hex string.
+  const wrapped = await openJson<{ key: JsonWebKey; iv: string }>(masterKey, record.wrappedFileKey);
+  // decryptFile takes a Blob (it calls .arrayBuffer() internally), so pass the
+  // blob directly — do NOT pre-convert to Uint8Array (which has no .arrayBuffer()).
   const { decryptFile } = await import("./evidenceCrypto");
-  return decryptFile(bytes, wrapped.key, wrapped.iv, record.meta.mimeType);
+  // meta.mimeType is the placeholder "application/octet-stream" when the record
+  // was returned from listEvidencePartial (vault locked); fall back to the
+  // encrypted blob's type so decrypted images/audio still render.
+  const mimeType = record.meta.mimeType && record.meta.mimeType !== "application/octet-stream"
+    ? record.meta.mimeType
+    : (blob.type || "application/octet-stream");
+  return decryptFile(blob, wrapped.key, wrapped.iv, mimeType);
 }
 
 export async function deleteEvidence(_userId: string, record: EvidenceRecord): Promise<void> {
