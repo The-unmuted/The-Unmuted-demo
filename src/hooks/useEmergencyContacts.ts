@@ -171,7 +171,7 @@ export function buildGroupSmsUri(
   return `sms:${recipients}?body=${body}`;
 }
 
-export const MAX_EMERGENCY_CONTACTS = 2;
+export const MAX_EMERGENCY_CONTACTS = 1;
 
 export function useEmergencyContacts() {
   const [contacts, setContacts] = useState<EmergencyContact[]>(() => loadContacts());

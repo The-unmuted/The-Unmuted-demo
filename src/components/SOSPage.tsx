@@ -141,8 +141,8 @@ function EmergencyContactsCard({ language }: { language: AppLanguage }) {
       <p className="text-xs leading-5 text-muted-foreground">
         {copyFor(
           language,
-          "They'll receive an SMS with your location when you trigger SOS. Up to 2 contacts.",
-          "SOS触发时，会向他们发送带有你位置的短信。最多可设置 2 位联系人。"
+          "This contact will receive an SMS with your location when you trigger SOS. Set your emergency contact in advance.",
+          "SOS 触发时，会向 TA 发送带有你位置的短信。可提前设置紧急联系人。"
         )}
       </p>
 
