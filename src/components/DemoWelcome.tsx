@@ -24,13 +24,13 @@ export default function DemoWelcome({ language, onEnter }: DemoWelcomeProps) {
       />
 
       <h1 className="mb-2 text-lg font-black tracking-wide text-foreground">
-        {copyFor(language, "The Unmuted · Demo", "非默 · Demo 演示版")}
+        {copyFor(language, "The Unmuted · Beta", "非默 · 内测版")}
       </h1>
       <p className="mb-6 max-w-md text-xs leading-5 text-muted-foreground">
         {copyFor(
           language,
-          "Public demo for the UN hackathon. No sign-up, no password — just click Enter to explore the app.",
-          "为联合国黑客松准备的公开演示版本。无需注册、无需密码，直接点击「进入 Demo」即可体验。"
+          "Internal beta version. For feature preview only — please do not upload real evidence.",
+          "内测版本。本版本用于功能预览，请勿上传真实证据。"
         )}
       </p>
 
@@ -39,15 +39,15 @@ export default function DemoWelcome({ language, onEnter }: DemoWelcomeProps) {
         className="mb-8 inline-flex items-center gap-2 rounded-2xl bg-primary px-8 py-3.5 text-sm font-bold text-primary-foreground shadow-[0_0_20px_hsl(var(--primary)/0.35)] transition-transform active:scale-95"
       >
         <PlayCircle className="h-4 w-4" />
-        {copyFor(language, "Enter Demo", "进入 Demo")}
+        {copyFor(language, "Enter Beta", "进入内测")}
       </button>
 
       <div className="w-full max-w-md rounded-2xl border border-border bg-card/70 p-4 text-left">
         <p className="mb-2 text-xs font-bold text-primary">
           {copyFor(
             language,
-            "In the production version (removed for this demo):",
-            "正式版本中（本 Demo 已跳过）："
+            "In the production version (skipped in this beta):",
+            "正式版本中（本内测版已跳过）："
           )}
         </p>
         <ul className="space-y-1.5 text-[11px] leading-5 text-muted-foreground">
@@ -83,14 +83,14 @@ export default function DemoWelcome({ language, onEnter }: DemoWelcomeProps) {
         <p className="mt-3 text-[11px] leading-5 text-muted-foreground">
           {copyFor(
             language,
-            'In this demo, when the app asks for a "vault password", just enter ',
-            "本 Demo 中如果 App 要求输入「保险柜密码」，请直接输入 "
+            'In this beta, when the app asks for a "vault password", just enter ',
+            "本内测版中如果 App 要求输入「保险柜密码」，请直接输入 "
           )}
           <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-foreground">123456</code>
           {copyFor(
             language,
-            " (flow simulation only — real cryptography runs behind the scenes with a hardcoded demo key).",
-            "（仅作流程模拟，幕后仍以硬编码 Demo 密钥执行真实的 AES-256-GCM 加密）。"
+            " (flow simulation only — real cryptography runs behind the scenes with a hardcoded beta key).",
+            "（仅作流程模拟，幕后仍以硬编码内测密钥执行真实的 AES-256-GCM 加密）。"
           )}
         </p>
       </div>

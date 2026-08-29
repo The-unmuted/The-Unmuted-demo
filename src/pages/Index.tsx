@@ -131,12 +131,12 @@ function DemoBadge({ language }: { language: "en" | "zh" }) {
       className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[9px] font-bold tracking-wide text-primary"
       title={copyFor(
         language,
-        "Demo build for UN hackathon. All data stays in your browser (IndexedDB); nothing is uploaded.",
-        "为联合国黑客松准备的演示版本。全部数据只留在你的浏览器（IndexedDB），不会上传任何内容。"
+        "Internal beta version. For feature preview only — please do not upload real evidence. All data stays in your browser (IndexedDB).",
+        "内测版本。本版本用于功能预览，请勿上传真实证据。全部数据只留在你的浏览器（IndexedDB）。"
       )}
     >
       <Sparkles className="h-2.5 w-2.5" />
-      DEMO
+      BETA
     </span>
   );
 }
