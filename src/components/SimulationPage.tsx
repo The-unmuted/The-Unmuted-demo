@@ -443,24 +443,37 @@ function EndingView({
 }
 
 function RealFlowSection({ language, steps }: { language: AppLanguage; steps: { en: string; zh: string }[] }) {
+  const [open, setOpen] = useState(false);
   return (
     <div className="rounded-2xl border border-border/70 bg-card p-4">
-      <div className="mb-3 flex items-center gap-2">
-        <ListOrdered className="h-4 w-4 text-primary" />
-        <h3 className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">
-          {copyFor(language, "Real process — the right steps", "真实流程——正确的做法")}
-        </h3>
-      </div>
-      <ol className="flex flex-col gap-3">
-        {steps.map((step, i) => (
-          <li key={i} className="flex gap-3">
-            <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-[11px] font-black text-primary">
-              {i + 1}
-            </span>
-            <p className="text-sm leading-6 text-foreground/85">{simText(language, step)}</p>
-          </li>
-        ))}
-      </ol>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between gap-2"
+      >
+        <div className="flex items-center gap-2">
+          <ListOrdered className="h-4 w-4 text-muted-foreground" />
+          <span className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">
+            {copyFor(language, `Real process — the right steps (${steps.length})`, `真实流程——正确的做法（${steps.length}）`)}
+          </span>
+        </div>
+        {open ? (
+          <ChevronUp className="h-4 w-4 text-muted-foreground" />
+        ) : (
+          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+        )}
+      </button>
+      {open && (
+        <ol className="mt-3 flex flex-col gap-3">
+          {steps.map((step, i) => (
+            <li key={i} className="flex gap-3">
+              <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-[11px] font-black text-primary">
+                {i + 1}
+              </span>
+              <p className="text-sm leading-6 text-foreground/85">{simText(language, step)}</p>
+            </li>
+          ))}
+        </ol>
+      )}
     </div>
   );
 }
