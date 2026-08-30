@@ -37,8 +37,7 @@ import {
   computeSimulationScore,
   type SimulationScoreResult,
 } from "@/lib/simulationScore";
-import { renderScoreCard, saveOrShareBlob } from "@/lib/simulationImage";
-import { Download, Share2 } from "lucide-react";
+import { renderScoreCard } from "@/lib/simulationImage";
 
 interface SimulationPageProps {
   language: AppLanguage;
@@ -591,128 +590,76 @@ function ScoreCard({
   scenarioTagline: string;
   endingTitle: string;
 }) {
-  const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState<string | null>(null);
-  const [inlineImageUrl, setInlineImageUrl] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [busy, setBusy] = useState(true);
+  const [error, setError] = useState(false);
 
-  const bandColor =
-    score.band === "high" ? "text-emerald-500" :
-    score.band === "medium" ? "text-amber-500" :
-    "text-rose-500";
-  const bandRing =
-    score.band === "high" ? "border-emerald-500/50 bg-emerald-500/5" :
-    score.band === "medium" ? "border-amber-500/50 bg-amber-500/5" :
-    "border-rose-500/50 bg-rose-500/5";
-
-  const handleSave = async () => {
-    setBusy(true);
-    setMsg(null);
-    if (inlineImageUrl) {
-      URL.revokeObjectURL(inlineImageUrl);
-      setInlineImageUrl(null);
-    }
-    try {
-      const blob = await renderScoreCard({ language, scenarioTitle, scenarioTagline, endingTitle, score });
-      const filename = `feimo-simulation-${score.score}.png`;
-      const result = await saveOrShareBlob(blob, filename);
-      if (result.method === "share") {
-        setMsg(copyFor(language, "Shared", "已分享"));
-      } else if (result.method === "download") {
-        setMsg(copyFor(language, "Image downloaded", "图片已下载"));
-      } else if (result.method === "inline" || result.method === "cancelled") {
-        // 展示图片，让用户长按保存到相册（iOS/Android 上都最可靠）
-        setInlineImageUrl(URL.createObjectURL(result.blob));
+  // Auto-generate the image on mount
+  useEffect(() => {
+    let cancelled = false;
+    let objectUrl: string | null = null;
+    (async () => {
+      try {
+        setBusy(true);
+        setError(false);
+        const blob = await renderScoreCard({
+          language,
+          scenarioTitle,
+          scenarioTagline,
+          endingTitle,
+          score,
+        });
+        if (cancelled) return;
+        objectUrl = URL.createObjectURL(blob);
+        setImageUrl(objectUrl);
+      } catch (e) {
+        console.error(e);
+        if (!cancelled) setError(true);
+      } finally {
+        if (!cancelled) setBusy(false);
       }
-    } catch (e) {
-      console.error(e);
-      setMsg(copyFor(language, "Save failed — please try again", "生成失败，请重试"));
-    } finally {
-      setBusy(false);
-      setTimeout(() => setMsg(null), 3000);
-    }
-  };
+    })();
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [language, score.score, scenarioTitle, scenarioTagline, endingTitle]);
+
+  if (busy) {
+    return (
+      <div className="flex aspect-[9/16] w-full items-center justify-center rounded-2xl border border-border/60 bg-secondary/30">
+        <p className="text-xs text-muted-foreground">
+          {copyFor(language, "Generating result card...", "生成结果卡片...")}
+        </p>
+      </div>
+    );
+  }
+
+  if (error || !imageUrl) {
+    return (
+      <div className="rounded-2xl border border-rose-500/40 bg-rose-500/5 p-4">
+        <p className="text-center text-xs text-rose-500">
+          {copyFor(language, "Failed to generate card", "生成失败")}
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <div className={`rounded-2xl border-2 p-5 ${bandRing}`}>
-      <div className="flex items-center gap-4">
-        <div className={`text-6xl font-black leading-none ${bandColor}`}>
-          {score.score}
-        </div>
-        <div className="flex-1">
-          <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-            {copyFor(language, "Your knowledge score", "本次知识准备分数")}
-          </div>
-          <div className={`mt-0.5 text-sm font-bold leading-5 ${bandColor}`}>
-            {language === "zh" ? score.label.zh : score.label.en}
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-        <div className="rounded-xl bg-background/60 px-3 py-2">
-          <div className="text-[10px] text-muted-foreground">
-            {copyFor(language, "Right actions", "做对的关键动作")}
-          </div>
-          <div className="mt-0.5 text-lg font-bold text-emerald-600">✅ {score.goodCount}</div>
-        </div>
-        <div className="rounded-xl bg-background/60 px-3 py-2">
-          <div className="text-[10px] text-muted-foreground">
-            {copyFor(language, "Missed actions", "错过的关键动作")}
-          </div>
-          <div className="mt-0.5 text-lg font-bold text-rose-600">⚠️ {score.badCount}</div>
-        </div>
-      </div>
-
-      <button
-        onClick={handleSave}
-        disabled={busy}
-        className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-60"
-      >
-        <Share2 className="h-4 w-4" />
-        {busy
-          ? copyFor(language, "Generating...", "生成中...")
-          : inlineImageUrl
-            ? copyFor(language, "Regenerate", "重新生成")
-            : copyFor(language, "Generate shareable card", "生成分享卡片")}
-      </button>
-      {msg && (
-        <p className="mt-2 text-center text-[11px] text-muted-foreground">{msg}</p>
-      )}
-
-      {inlineImageUrl && (
-        <div className="mt-4 flex flex-col gap-2">
-          <p className="text-center text-xs font-bold text-foreground">
-            {copyFor(
-              language,
-              "👇 Long-press the image to save to your album",
-              "👇 长按下方图片，保存到相册"
-            )}
-          </p>
-          <img
-            src={inlineImageUrl}
-            alt={copyFor(language, "Result card", "结果卡片")}
-            className="w-full rounded-xl border border-border"
-          />
-          <a
-            href={inlineImageUrl}
-            download={`feimo-simulation-${score.score}.png`}
-            className="flex items-center justify-center gap-2 rounded-xl border border-primary/40 bg-primary/5 px-4 py-2 text-xs font-bold text-primary"
-          >
-            <Download className="h-3.5 w-3.5" />
-            {copyFor(language, "Or download directly", "或直接下载")}
-          </a>
-        </div>
-      )}
-
-      {!inlineImageUrl && (
-        <p className="mt-2 text-center text-[10px] leading-4 text-muted-foreground/70">
-          {copyFor(
-            language,
-            "The card includes a QR code to invite others to try The Unmuted Beta.",
-            "卡片带有二维码，可邀请他人扫码体验非默内测版。"
-          )}
-        </p>
-      )}
+    <div className="flex flex-col gap-2">
+      <p className="text-center text-xs font-bold text-foreground">
+        {copyFor(
+          language,
+          "👇 Long-press the image to save to your album",
+          "👇 长按下方图片，保存到相册"
+        )}
+      </p>
+      <img
+        src={imageUrl}
+        alt={copyFor(language, "Result card", "结果卡片")}
+        className="w-full rounded-2xl"
+      />
     </div>
   );
 }
