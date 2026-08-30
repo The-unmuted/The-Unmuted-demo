@@ -312,6 +312,17 @@ function EndingView({
   const score = computeSimulationScore(flags);
   const coachHints = collectCoachHints(scenario, visitedSceneIds);
 
+  const [showAnalysis, setShowAnalysis] = useState(false);
+  const analysisRef = useRef<HTMLDivElement | null>(null);
+
+  const handleShowAnalysis = () => {
+    setShowAnalysis(true);
+    // Smooth-scroll to the analysis section on next paint
+    setTimeout(() => {
+      analysisRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+  };
+
   return (
     <div className="mt-2 flex flex-col gap-3">
       <ScoreCard
@@ -322,71 +333,88 @@ function EndingView({
         endingTitle={simText(language, ending.title)}
       />
 
-      <div className="rounded-2xl border border-border/70 bg-card p-4">
-        <h2 className="text-base font-black text-foreground">{simText(language, ending.title)}</h2>
-        <p className="mt-2 text-sm leading-6 text-foreground/85">{simText(language, ending.summary)}</p>
-      </div>
-
-      {/* Debrief section heading */}
-      <h2 className="text-sm font-bold text-foreground px-1">
-        {copyFor(language, "Debrief", "复盘")}
-      </h2>
-
-      {/* Good items — triggered */}
-      {good.length > 0 && (
-        <CollapsibleSection
-          label={copyFor(language, `What you did right (${good.length})`, `你做对了（${good.length}）`)}
-          accent="emerald"
-          defaultOpen={false}
+      {!showAnalysis && (
+        <button
+          onClick={handleShowAnalysis}
+          className="mt-1 flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3.5 text-sm font-bold text-primary-foreground"
         >
-          <div className="flex flex-col gap-3">
-            {good.map((r) => <DebriefCard key={r.id} rule={r} language={language} />)}
-          </div>
-        </CollapsibleSection>
+          {copyFor(language, "View detailed analysis", "查看具体分析")}
+          <ChevronDown className="h-4 w-4" />
+        </button>
       )}
 
-      {/* Bad items — triggered (user made these mistakes) */}
-      {triggeredBad.length > 0 && (
-        <CollapsibleSection
-          label={copyFor(language, `Where things went wrong (${triggeredBad.length})`, `这次出了问题的环节（${triggeredBad.length}）`)}
-          accent="rose"
-          defaultOpen={false}
-        >
-          <div className="flex flex-col gap-3">
-            {triggeredBad.map((r) => <DebriefCard key={r.id} rule={r} language={language} />)}
+      {showAnalysis && (
+        <div ref={analysisRef} className="flex flex-col gap-3">
+          <div className="rounded-2xl border border-border/70 bg-card p-4">
+            <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+              {copyFor(language, "This run's ending", "本次结局")}
+            </div>
+            <h2 className="text-base font-black text-foreground">{simText(language, ending.title)}</h2>
+            <p className="mt-2 text-sm leading-6 text-foreground/85">{simText(language, ending.summary)}</p>
           </div>
-        </CollapsibleSection>
-      )}
 
-      {/* Bad items — avoided (user didn't trigger, but should know about) */}
-      {avoidedBad.length > 0 && (
-        <CollapsibleSection
-          label={copyFor(language, `Risks you avoided this time (${avoidedBad.length})`, `这次你避开的风险（${avoidedBad.length}）`)}
-          accent="amber"
-          defaultOpen={false}
-        >
-          <div className="flex flex-col gap-3">
-            {avoidedBad.map((r) => <DebriefCard key={r.id} rule={r} language={language} avoided />)}
-          </div>
-        </CollapsibleSection>
-      )}
+          {/* Debrief section heading */}
+          <h2 className="text-sm font-bold text-foreground px-1">
+            {copyFor(language, "Debrief", "复盘")}
+          </h2>
 
-      {triggered.length === 0 && allBad.length === 0 && (
-        <div className="rounded-2xl border border-border/70 bg-card p-4">
-          <p className="text-sm text-muted-foreground">
-            {copyFor(language, "No debrief entries for this run.", "这条路线没有产生复盘条目。")}
-          </p>
+          {/* Good items — triggered */}
+          {good.length > 0 && (
+            <CollapsibleSection
+              label={copyFor(language, `What you did right (${good.length})`, `你做对了（${good.length}）`)}
+              accent="emerald"
+              defaultOpen={false}
+            >
+              <div className="flex flex-col gap-3">
+                {good.map((r) => <DebriefCard key={r.id} rule={r} language={language} />)}
+              </div>
+            </CollapsibleSection>
+          )}
+
+          {/* Bad items — triggered (user made these mistakes) */}
+          {triggeredBad.length > 0 && (
+            <CollapsibleSection
+              label={copyFor(language, `Where things went wrong (${triggeredBad.length})`, `这次出了问题的环节（${triggeredBad.length}）`)}
+              accent="rose"
+              defaultOpen={false}
+            >
+              <div className="flex flex-col gap-3">
+                {triggeredBad.map((r) => <DebriefCard key={r.id} rule={r} language={language} />)}
+              </div>
+            </CollapsibleSection>
+          )}
+
+          {/* Bad items — avoided (user didn't trigger, but should know about) */}
+          {avoidedBad.length > 0 && (
+            <CollapsibleSection
+              label={copyFor(language, `Risks you avoided this time (${avoidedBad.length})`, `这次你避开的风险（${avoidedBad.length}）`)}
+              accent="amber"
+              defaultOpen={false}
+            >
+              <div className="flex flex-col gap-3">
+                {avoidedBad.map((r) => <DebriefCard key={r.id} rule={r} language={language} avoided />)}
+              </div>
+            </CollapsibleSection>
+          )}
+
+          {triggered.length === 0 && allBad.length === 0 && (
+            <div className="rounded-2xl border border-border/70 bg-card p-4">
+              <p className="text-sm text-muted-foreground">
+                {copyFor(language, "No debrief entries for this run.", "这条路线没有产生复盘条目。")}
+              </p>
+            </div>
+          )}
+
+          {coachHints.length > 0 && (
+            <CoachHintsSection language={language} hints={coachHints} />
+          )}
+
+          <RealFlowSection language={language} steps={scenario.realFlow} />
+
+          {scenario.glossary && scenario.glossary.length > 0 && (
+            <GlossarySection language={language} terms={scenario.glossary} />
+          )}
         </div>
-      )}
-
-      {coachHints.length > 0 && (
-        <CoachHintsSection language={language} hints={coachHints} />
-      )}
-
-      <RealFlowSection language={language} steps={scenario.realFlow} />
-
-      {scenario.glossary && scenario.glossary.length > 0 && (
-        <GlossarySection language={language} terms={scenario.glossary} />
       )}
 
       <div className="flex flex-col gap-2">
