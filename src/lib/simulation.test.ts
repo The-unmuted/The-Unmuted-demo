@@ -107,22 +107,33 @@ describe("domestic-violence debrief", () => {
 describe("sexual-harassment scenario", () => {
   const sh = SIM_SCENARIOS.find((s) => s.id === "sexual-harassment")!;
 
-  it("police outcome depends on saved records", () => {
-    const police = sh.scenes["police-auto"];
-    expect(resolveAuto(police, new Set(["saved-records"]))).toBe("police-strong");
-    expect(resolveAuto(police, new Set())).toBe("police-weak");
+  it("opening branches to four situation-specific paths", () => {
+    const opening = sh.scenes["opening"];
+    const nextIds = opening.choices!.map((c) => c.next);
+    expect(nextIds).toContain("wechat-open");
+    expect(nextIds).toContain("workplace-open");
+    expect(nextIds).toContain("acquaintance-open");
+    expect(nextIds).toContain("landlord-open");
   });
 
-  it("civil outcome depends on saved records", () => {
-    const civil = sh.scenes["civil-auto"];
-    expect(resolveAuto(civil, new Set(["saved-records"]))).toBe("civil-win-cont");
-    expect(resolveAuto(civil, new Set())).toBe("end:civil-thin");
+  it("police outcome routes to admin-detention when evidence is strong", () => {
+    const police = sh.scenes["police-outcome-auto"];
+    expect(resolveAuto(police, new Set(["submitted-evidence", "reported-quickly"]))).toBe("admin-detention");
+    expect(resolveAuto(police, new Set(["complete-records"]))).toBe("admin-detention");
+    expect(resolveAuto(police, new Set(["signed-carefully"]))).toBe("warning-only");
+    expect(resolveAuto(police, new Set())).toBe("no-action");
   });
 
-  it("debrief flags the six-month clock when victim endured", () => {
-    const ids = evaluateDebrief(sh, new Set(["endured", "deleted-records"])).map((r) => r.id);
-    expect(ids).toContain("endured");
-    expect(ids).toContain("deleted-records");
+  it("civil-trial routes to strong-win when records + refusal + lawyer are all present", () => {
+    const civil = sh.scenes["civil-trial"];
+    expect(resolveAuto(civil, new Set(["complete-records", "clear-refusal", "hired-lawyer"]))).toBe("end:civil-strong-win");
+    expect(resolveAuto(civil, new Set(["deleted-records"]))).toBe("end:civil-lost");
+  });
+
+  it("debrief covers preserved-records and deleted-records", () => {
+    const ids = evaluateDebrief(sh, new Set(["saved-records", "deleted-records"])).map((r) => r.id);
+    expect(ids).toContain("good-saved-records");
+    expect(ids).toContain("bad-deleted-records");
   });
 });
 

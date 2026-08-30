@@ -1,900 +1,1564 @@
 {
   "id": "sexual-harassment",
-  "_comment": "模拟版本（草稿）— 全部文本待公益律师校对。依据：民法典第1010条（性骚扰独立案由 + 单位防治义务）、治安管理处罚法第22条（6个月追诉时效）第42/44条、劳动合同法第38条。",
+  "_comment": "模拟版本（草稿）— 全部文本待公益律师校对。基于 6 份真实民事判决书重写（上海徐汇/云南曲靖/北京大兴/安徽淮南/广东广州/广东梅州）。依据：民法典第990/1000/1010/1165/1183条、治安管理处罚法第44条、妇女权益保障法第23条、刑法（构成猥亵儿童罪时）第237条。",
   "title": {
     "en": "What to Do When Someone Is Sexually Harassed",
     "zh": "TA被性骚扰了该怎么做"
   },
   "tagline": {
-    "en": "Workplace harassment has three parallel legal paths — most people only know one, and one of them expires in six months.",
-    "zh": "职场性骚扰有三条并行的维权路径——多数人只知道其中一条，而其中一条只有六个月时效。"
+    "en": "Harassment has real legal paths — but real cases end with modest damages, exhausting timelines, and defense tactics you should see coming.",
+    "zh": "性骚扰有真实的维权路径——但真实案件的赔偿有限、周期漫长，加害方的辩护套路也是可预料的。"
   },
   "intro": {
-    "en": "You will walk through a realistic sequence of decisions. Every option exists in real life, and every consequence follows real legal rules. Nothing you choose here is recorded.",
-    "zh": "你将经历一连串真实存在的决策点。每个选项都是现实中真实的选择，每个后果都遵循真实的法律规则。你在这里的任何选择都不会被记录。"
+    "en": "You will pick which kind of harassment happened, then walk through a realistic sequence of decisions. Every option exists in real life, and every consequence follows real legal rules from six real Chinese court judgments. Nothing you choose here is recorded.",
+    "zh": "你先选择「发生的是哪一种」，然后经历一连串真实存在的决策点。每个选项都是现实中真实的选择，每个后果都基于六份真实的中国法院判决书。你在这里的任何选择都不会被记录。"
   },
   "entry": "opening",
   "scenes": {
     "opening": {
       "narration": {
-        "en": "Your department supervisor has been sending you suggestive messages after work hours. Today, in the pantry, he found an excuse to touch you. You feel disgusted and afraid.",
-        "zh": "部门主管最近总在下班后给你发暧昧信息。今天在茶水间，他借故碰了你。你觉得恶心，也害怕。"
+        "en": "Sexual harassment takes many shapes. Which situation are you walking through today?",
+        "zh": "性骚扰有很多种。你今天想走的是哪一种情境？"
       },
       "coach": {
-        "en": "Chat records are usually the most direct evidence in harassment cases — what happens to them now matters later.",
-        "zh": "聊天记录通常是性骚扰案件里最直接的证据——现在怎么处理它们，以后会见分晓。"
+        "en": "Each of the four situations has different evidence sources, different reporting paths, and different realistic outcomes.",
+        "zh": "四种情境的证据来源、报案路径和真实结果都不同。"
       },
       "choices": [
         {
           "text": {
-            "en": "Screenshot everything and back the records up",
-            "zh": "把信息全部截图，另外备份"
+            "en": "Text harassment — WeChat / SMS messages",
+            "zh": "文字骚扰——微信/短信"
           },
-          "feedback": {
-            "en": "The messages are preserved with timestamps, in a place he cannot reach.",
-            "zh": "这些信息连同时间戳被保存在了他碰不到的地方。"
-          },
-          "flags": [
-            "saved-records"
-          ],
-          "next": "escalate"
+          "flags": ["path-wechat"],
+          "next": "wechat-open"
         },
         {
           "text": {
-            "en": "Delete the whole chat — you can't stand seeing it",
-            "zh": "把聊天记录全删了，看着就恶心"
+            "en": "Workplace harassment — a colleague or supervisor",
+            "zh": "职场骚扰——同事或上司"
           },
-          "feedback": {
-            "en": "The chat is gone. So is the most direct proof that it happened.",
-            "zh": "记录没有了。最直接的证据也随之消失了。"
-          },
-          "flags": [
-            "deleted-records"
-          ],
-          "next": "escalate"
+          "flags": ["path-workplace"],
+          "next": "workplace-open"
         },
         {
           "text": {
-            "en": "Pretend nothing happened and watch for now",
-            "zh": "先装作没事，观察一下"
+            "en": "Acquaintance harassment — physical contact in a closed space",
+            "zh": "熟人骚扰——封闭空间的身体接触"
           },
-          "feedback": {
-            "en": "You wait. The messages sit in the chat, unsaved elsewhere.",
-            "zh": "你先按兵不动。信息还留在聊天框里，没有另外备份。"
+          "flags": ["path-acquaintance"],
+          "next": "acquaintance-open"
+        },
+        {
+          "text": {
+            "en": "Landlord / intruder harassment — someone entered your home",
+            "zh": "入户骚扰——房东或来访者进入你家"
           },
-          "next": "escalate"
+          "flags": ["path-landlord"],
+          "next": "landlord-open"
         }
       ]
     },
-    "escalate": {
+
+    "wechat-open": {
       "narration": {
-        "en": "A week later he escalates: he keeps you back alone after a meeting, puts a hand on your shoulder, and hints — \"be cooperative, and your promotion will go smoothly.\"",
-        "zh": "一周后，他变本加厉：会后单独留下你，把手搭在你肩上，暗示“配合一点，晋升的事好说”。"
+        "en": "You met him through work. He added you on WeChat. First a few normal messages, then late-night ones. Today he sent an explicit video, followed by a hotel photo and \"I'm in room 318, come over.\"",
+        "zh": "因工作对接认识。他加了你的微信。先是几条正常聊天，后来变成深夜消息。今天他发来一段不雅视频，接着又发来一张酒店房间的照片和一句「我在 318 房，过来吧」。"
       },
       "coach": {
-        "en": "Harassment can be fought on three parallel tracks — police report, written complaint to the employer, and a civil lawsuit. They don't exclude each other.",
-        "zh": "性骚扰的维权有三条并行路径——报警、书面向单位投诉、民事起诉。三条路互不排斥。"
+        "en": "WeChat / SMS harassment is provable in court — chat records are the primary evidence. Complete records + proof the account belongs to the sender = the whole case.",
+        "zh": "微信/短信骚扰在法律上可维权——聊天记录是核心证据。完整聊天记录 + 证明账号归属对方 = 整个案子的基础。"
       },
       "choices": [
         {
           "text": {
-            "en": "Refuse clearly, then write down the time, place, and what happened",
-            "zh": "明确拒绝，事后立刻记下时间、地点、经过"
+            "en": "Screenshot everything, then export the full chat history",
+            "zh": "全部截图，并导出完整聊天记录"
           },
           "feedback": {
-            "en": "Your clear refusal matters legally — \"against one's will\" is an element of harassment. Your contemporaneous notes fix the details.",
-            "zh": "明确拒绝在法律上很重要——“违背他人意愿”正是性骚扰的构成要件。当时记下的细节把事实固定了下来。"
+            "en": "You screenshot each message with timestamps visible, then use WeChat's export function to save the full text log. Files saved to cloud drive.",
+            "zh": "你逐条截图（保留时间戳），并用微信自带的导出功能保存完整文字聊天记录，文件存到云盘。"
           },
-          "flags": [
-            "refused-recorded"
-          ],
-          "next": "paths-choice"
+          "flags": ["saved-records", "complete-records"],
+          "next": "wechat-respond"
         },
         {
           "text": {
-            "en": "You freeze in the moment — afterwards you cry to your best friend",
-            "zh": "当场僵住了，事后找最好的朋友哭了一场"
+            "en": "Take a few screenshots of the worst messages",
+            "zh": "只截几张最严重的消息"
           },
           "feedback": {
-            "en": "Freezing is a normal response. And your friend now knows — a witness to your state and your account, close in time.",
-            "zh": "僵住是正常的应激反应。而朋友现在知道了——她成了离事发时间最近的证人。"
+            "en": "You save three screenshots of the video message and the hotel photo. The earlier flirty messages remain only in the chat itself.",
+            "zh": "你截了三张：不雅视频、酒店照片、那句「过来吧」。之前的暧昧消息还留在聊天里，没有另存。"
           },
-          "flags": [
-            "told-friend"
-          ],
-          "next": "paths-choice"
+          "flags": ["saved-records"],
+          "next": "wechat-respond"
         },
         {
           "text": {
-            "en": "Endure it — you can't afford to lose this job",
-            "zh": "忍着，这份工作不能丢"
+            "en": "Delete the whole chat",
+            "zh": "删除全部聊天记录"
           },
           "feedback": {
-            "en": "You keep your head down. He reads the silence as safety.",
-            "zh": "你低头忍了下来。他把沉默当成了安全信号。"
+            "en": "You clear the chat. The conversation history is removed from your phone.",
+            "zh": "你清空了聊天记录。这段对话从你手机上消失了。"
           },
-          "flags": [
-            "endured"
-          ],
-          "next": "time-pass"
+          "flags": ["deleted-records"],
+          "next": "wechat-respond"
         }
       ]
     },
-    "paths-choice": {
+
+    "wechat-respond": {
       "narration": {
-        "en": "You decide not to stay silent. What is your first move?",
-        "zh": "你决定不再沉默。第一步做什么？"
+        "en": "The messages keep coming. You have to decide how — or whether — to respond.",
+        "zh": "消息还在继续。你要决定怎么回应，或者要不要回应。"
       },
       "coach": {
-        "en": "Note: the administrative (police) track has a 6-month statute of limitations. The civil track allows 3 years.",
-        "zh": "注意：治安（报警）路径的追诉时效只有6个月；民事路径的诉讼时效是3年。"
+        "en": "In real cases, defendants often argue \"she didn't say no clearly, so it wasn't against her will.\" Courts sometimes reject this — but a clear written \"stop\" removes the argument.",
+        "zh": "真实案件里，被告常主张「她没明确拒绝，所以不违背意愿」。法院有时不采纳这个说法——但一条明确的书面「停止」能直接消除这个争议。"
       },
       "choices": [
         {
           "text": {
-            "en": "Report to the police",
-            "zh": "报警"
+            "en": "Reply once, clearly: \"Please stop. Do not contact me again.\"",
+            "zh": "回复一次，明确：「请停止。不要再联系我。」"
           },
-          "flags": [
-            "reported"
-          ],
-          "next": "police-auto"
+          "feedback": {
+            "en": "You send the message and screenshot your own reply. He reads it. He doesn't reply.",
+            "zh": "你发送了这条消息，并截图保存自己的回复。他看到了，没有回复。"
+          },
+          "flags": ["clear-refusal"],
+          "next": "wechat-report-choice"
         },
         {
           "text": {
-            "en": "File a written complaint to the company — by email, so it leaves a trace",
-            "zh": "书面向公司投诉——用邮件，留下痕迹"
+            "en": "Don't reply, don't block — leave the chat open",
+            "zh": "不回复也不拉黑——聊天窗口留着"
           },
           "feedback": {
-            "en": "The email is sent and archived. From now on, the company cannot claim it didn't know.",
-            "zh": "邮件发出并存档。从这一刻起，公司再也不能说“不知情”。"
+            "en": "You leave everything as is. He sends two more messages before going quiet.",
+            "zh": "你什么都没做。他又发了两条，然后沉默了。"
           },
-          "flags": [
-            "written-complaint"
-          ],
-          "next": "company-response"
+          "next": "wechat-report-choice"
         },
         {
           "text": {
-            "en": "Drop hints in the team group chat, but file nothing formal",
-            "zh": "只在部门群里暗示了几句，没有正式投诉"
+            "en": "Block him and delete the contact",
+            "zh": "拉黑并删除联系人"
           },
           "feedback": {
-            "en": "Hints evaporate. Formally, no complaint exists.",
-            "zh": "暗示会蒸发。在正式记录里，投诉从未发生。"
+            "en": "You block him. His name disappears from your contact list. Any records not already saved elsewhere become inaccessible from your end.",
+            "zh": "你拉黑他，他的名字从通讯录消失。任何未另外备份的消息，从你这一端也看不到了。"
           },
-          "flags": [
-            "informal-only"
-          ],
-          "next": "company-nothing"
+          "flags": ["blocked-contact"],
+          "next": "wechat-report-choice"
         }
       ]
     },
-    "police-auto": {
+
+    "wechat-report-choice": {
+      "narration": {
+        "en": "A week has passed. You have not slept well.",
+        "zh": "一周过去了。你睡得不好。"
+      },
+      "coach": {
+        "en": "For WeChat/SMS harassment: police may or may not treat it as public-order violation (§44). Civil lawsuit (Civil Code §1010) is often the more direct path. Statute of limitations for civil claims is 3 years — and must be raised in the first-instance trial to preserve.",
+        "zh": "微信/短信骚扰：警方可能作为治安案件（第44条）处理，也可能不予受理。民事诉讼（民法典第1010条）往往是更直接的路径。民事诉讼时效 3 年，且必须在一审时提出诉讼时效抗辩才有效。"
+      },
+      "choices": [
+        {
+          "text": {
+            "en": "Report to police first",
+            "zh": "先去派出所报案"
+          },
+          "flags": ["reported-police"],
+          "next": "police-scene"
+        },
+        {
+          "text": {
+            "en": "Skip police, file a civil lawsuit directly",
+            "zh": "不去派出所，直接提民事诉讼"
+          },
+          "flags": ["civil-direct"],
+          "next": "civil-decision"
+        },
+        {
+          "text": {
+            "en": "Do nothing for now",
+            "zh": "暂时不处理"
+          },
+          "flags": ["wait"],
+          "next": "time-passes"
+        }
+      ]
+    },
+
+    "workplace-open": {
+      "narration": {
+        "en": "Your supervisor at work has been making comments — jokes with sexual undertones, comments on your body. Today, in the office pantry, he found an excuse to touch your waist.",
+        "zh": "你的部门主管最近说话不对劲——带黄色暗示的玩笑，评价你的身材。今天在茶水间，他借故碰了你的腰。"
+      },
+      "coach": {
+        "en": "Workplace harassment cases turn on witnesses. Real judgments (e.g., 北京大兴 2021) show: colleague testimony that the perpetrator \"often tells dirty jokes\" can be enough to establish harassment even without physical-evidence.",
+        "zh": "职场性骚扰案件的关键是证人。真实判决（如北京大兴 2021 案）显示：即使没有物证，同事证言「他平时爱开黄段子」也可能足以认定骚扰成立。"
+      },
+      "choices": [
+        {
+          "text": {
+            "en": "Immediately message a trusted colleague describing what happened",
+            "zh": "立刻给信任的同事发消息，说明刚才发生了什么"
+          },
+          "feedback": {
+            "en": "You WeChat a coworker \"XX 主管刚才在茶水间碰了我腰。\" The message is sent, time-stamped, seen.",
+            "zh": "你给同事发微信：「XX 主管刚才在茶水间碰了我腰。」消息发送成功，带时间戳，对方已读。"
+          },
+          "flags": ["contemporaneous-note", "colleague-knows"],
+          "next": "workplace-evidence"
+        },
+        {
+          "text": {
+            "en": "Note down what happened in your own phone — time, place, exact words",
+            "zh": "自己在手机备忘录里记下——时间、地点、原话"
+          },
+          "feedback": {
+            "en": "You type it up: date, time, room, what he said, what he did. Saved.",
+            "zh": "你打字记下：日期、时间、地点、他说了什么、做了什么。保存。"
+          },
+          "flags": ["contemporaneous-note"],
+          "next": "workplace-evidence"
+        },
+        {
+          "text": {
+            "en": "Do nothing for now, go back to work",
+            "zh": "先不做任何事，回去继续工作"
+          },
+          "feedback": {
+            "en": "You go back to your desk. No one else is told.",
+            "zh": "你回到工位。没告诉其他人。"
+          },
+          "flags": ["no-record"],
+          "next": "workplace-evidence"
+        }
+      ]
+    },
+
+    "workplace-evidence": {
+      "narration": {
+        "en": "The next weeks. You notice things you hadn't before — other female colleagues' body language when he walks past.",
+        "zh": "接下来几周。你注意到一些以前没注意的事——其他女同事看他走过来时的身体反应。"
+      },
+      "coach": {
+        "en": "In real workplace cases, other colleagues' testimony about the perpetrator's pattern (\"often makes crude jokes,\" \"has done this to others\") is the strongest indirect evidence. Colleagues willing to testify make the case.",
+        "zh": "真实职场骚扰案件里，其他同事关于加害者一贯行为（「常说黄段子」「对别人也做过」）的证言是最强的间接证据。愿意出庭作证的同事能救活整个案子。"
+      },
+      "choices": [
+        {
+          "text": {
+            "en": "Talk to two female colleagues privately, ask if they've experienced the same",
+            "zh": "私下问两位女同事，她们是不是也遇到过"
+          },
+          "feedback": {
+            "en": "Both say yes. One is willing to be a witness if things go to court. The other says she can't afford to lose the job.",
+            "zh": "两人都说是。一位愿意在必要时出庭作证。另一位说她不能失去这份工作。"
+          },
+          "flags": ["witnesses-willing"],
+          "next": "workplace-report-choice"
+        },
+        {
+          "text": {
+            "en": "Approach HR informally and describe the pattern",
+            "zh": "非正式地向 HR 说明情况"
+          },
+          "feedback": {
+            "en": "HR listens, takes no notes, tells you \"we'll look into it\" and suggests you \"try not to be alone with him.\"",
+            "zh": "HR 听完，没做笔记，跟你说「我们会了解一下」，建议你「尽量不要和他单独在一起」。"
+          },
+          "flags": ["hr-notified-informal"],
+          "next": "workplace-report-choice"
+        },
+        {
+          "text": {
+            "en": "Keep it to yourself and keep documenting incidents",
+            "zh": "先不告诉别人，继续记录每次发生的事"
+          },
+          "feedback": {
+            "en": "You start a private log: date, time, what he said, what he did, who was nearby.",
+            "zh": "你建立一份私人记录：日期、时间、他说什么、做什么、周围有谁。"
+          },
+          "flags": ["solo-documentation"],
+          "next": "workplace-report-choice"
+        }
+      ]
+    },
+
+    "workplace-report-choice": {
+      "narration": {
+        "en": "It doesn't stop. Now you have to decide the next real step.",
+        "zh": "情况没有停止。现在你要决定实质性的下一步。"
+      },
+      "coach": {
+        "en": "Three paths, not mutually exclusive: (1) written complaint to your employer under Civil Code §1010 par. 2 (unit's anti-harassment duty); (2) report to police under Public Security Punishment Law §44; (3) civil lawsuit under Civil Code §1010 par. 1. In real cases, going only through HR without external paper is often the weakest option.",
+        "zh": "三条路径，不排斥：（1）依民法典 1010 条第二款向单位书面投诉（单位反骚扰义务）；（2）依治安管理处罚法第 44 条向公安报案；（3）依民法典 1010 条第一款提民事诉讼。真实案件中，只走 HR 不留外部书面记录往往是最弱的选择。"
+      },
+      "choices": [
+        {
+          "text": {
+            "en": "File a formal written complaint to your employer (email, keep the record)",
+            "zh": "向单位提交正式书面投诉（邮件形式，保留记录）"
+          },
+          "feedback": {
+            "en": "You send the complaint via work email to HR and a compliance address, copying yourself. The email is time-stamped and traceable.",
+            "zh": "你通过公司邮箱向 HR 和合规邮箱发送书面投诉，抄送自己，邮件带时间戳可追溯。"
+          },
+          "flags": ["formal-complaint"],
+          "next": "workplace-response"
+        },
+        {
+          "text": {
+            "en": "Go to the police station",
+            "zh": "去派出所报案"
+          },
+          "flags": ["reported-police"],
+          "next": "police-scene"
+        },
+        {
+          "text": {
+            "en": "Do both — formal complaint at work AND police report",
+            "zh": "两条一起走——书面投诉 + 报警"
+          },
+          "flags": ["formal-complaint", "reported-police"],
+          "next": "police-scene"
+        },
+        {
+          "text": {
+            "en": "Skip administrative paths, go directly to civil court",
+            "zh": "跳过行政路径，直接民事起诉"
+          },
+          "flags": ["civil-direct"],
+          "next": "civil-decision"
+        }
+      ]
+    },
+
+    "workplace-response": {
+      "narration": {
+        "en": "A week later HR replies. They have \"investigated\" and taken \"appropriate action\" — the supervisor has been \"reminded to be more careful.\" He is still your supervisor. Or: after your complaint, you find yourself abruptly reassigned to a worse post.",
+        "zh": "一周后 HR 回复。他们「已经调查」并采取了「适当措施」——主管「已被提醒注意分寸」。他仍是你的主管。或者：你的投诉之后，你突然被调岗到条件更差的岗位。"
+      },
+      "coach": {
+        "en": "Real cases show: unit's response is often superficial. If you're retaliated against (reassignment, isolation, termination), you can (a) sue for wrongful termination under Labor Contract Law §38, (b) escalate to police, (c) proceed with civil lawsuit under Civil Code §1010.",
+        "zh": "真实案件显示：单位回应常常是表面功夫。若受到报复（调岗、孤立、辞退），可以（a）依劳动合同法第 38 条主张违法解除赔偿；（b）向公安报案升级；（c）继续依民法典 1010 条提民事诉讼。"
+      },
+      "choices": [
+        {
+          "text": {
+            "en": "Go to the police station",
+            "zh": "去派出所报案"
+          },
+          "flags": ["reported-police"],
+          "next": "police-scene"
+        },
+        {
+          "text": {
+            "en": "File civil lawsuit against him and the unit",
+            "zh": "民事起诉他和单位"
+          },
+          "flags": ["civil-direct", "sued-unit"],
+          "next": "civil-decision"
+        },
+        {
+          "text": {
+            "en": "Resign and start looking for a new job",
+            "zh": "辞职，开始找新工作"
+          },
+          "flags": ["gave-up"],
+          "next": "time-passes"
+        }
+      ]
+    },
+
+    "acquaintance-open": {
+      "narration": {
+        "en": "It happens with someone you know — a neighbor, a family friend, someone at a small gathering. He waits until you're momentarily alone in a closed space. He puts his arms around you from behind. He touches you.",
+        "zh": "发生在一个熟人身上——邻居、家庭朋友、聚会里认识的人。他等到你短暂独处在一个封闭空间里。他从后面搂住你，动了手。"
+      },
+      "coach": {
+        "en": "Acquaintance harassment cases are hard: usually no witness, physical contact leaves little trace. In real cases (e.g., 云南曲靖 2024), first-instance courts sometimes dismiss entirely. But if the perpetrator is administratively detained by police, that record becomes crucial civil evidence.",
+        "zh": "熟人性骚扰案件难度高：通常没有证人，身体接触留不下痕迹。真实案件（如云南曲靖 2024）中一审有时全部驳回。但只要警方作出行政拘留决定，这份记录就是民事诉讼的关键证据。"
+      },
+      "choices": [
+        {
+          "text": {
+            "en": "Push away, get out of the space immediately, call someone",
+            "zh": "推开他，立即离开那个空间，联系一个信任的人"
+          },
+          "feedback": {
+            "en": "You break free and get to a public area. You call your closest friend and describe exactly what happened.",
+            "zh": "你挣脱开，走到公共区域。你打电话给最好的朋友，详细说了发生的事。"
+          },
+          "flags": ["escaped", "told-someone-immediately"],
+          "next": "acquaintance-report-choice"
+        },
+        {
+          "text": {
+            "en": "Freeze — unable to move, then he lets go and leaves",
+            "zh": "僵住——动不了，然后他放开你走了"
+          },
+          "feedback": {
+            "en": "You stand there for a while. When you can move again, he is gone.",
+            "zh": "你在原地站了一会儿。等你能动时，他已经走了。"
+          },
+          "flags": ["frozen"],
+          "next": "acquaintance-report-choice"
+        },
+        {
+          "text": {
+            "en": "Play it off, laugh nervously, get away as normally as you can",
+            "zh": "装没事、干笑一下、尽可能自然地走开"
+          },
+          "feedback": {
+            "en": "You manage a smile and leave.",
+            "zh": "你挤出一个笑，离开了。"
+          },
+          "flags": ["forced-normalcy"],
+          "next": "acquaintance-report-choice"
+        }
+      ]
+    },
+
+    "acquaintance-report-choice": {
+      "narration": {
+        "en": "Now — hours later, the next day, or the day after — you have to decide.",
+        "zh": "现在——几小时后，或者第二天，或者更晚——你要决定。"
+      },
+      "coach": {
+        "en": "Report to police within days: reasons — (a) statements are freshest, (b) any surveillance is still retrievable, (c) administrative detention (拘留 5-15 日) creates a public record that supports later civil claims. Statute for public-order sexual harassment is 6 months.",
+        "zh": "尽快报警的理由：（a）陈述最清晰；（b）监控还能调取；（c）行政拘留（5-15 日）会形成公开记录，支撑日后民事索赔。治安处罚追诉时效为 6 个月。"
+      },
+      "choices": [
+        {
+          "text": {
+            "en": "Go to the police station within 48 hours",
+            "zh": "48 小时内去派出所"
+          },
+          "flags": ["reported-police", "reported-quickly"],
+          "next": "police-scene"
+        },
+        {
+          "text": {
+            "en": "Go to the police station a week later",
+            "zh": "一周后去派出所"
+          },
+          "flags": ["reported-police"],
+          "next": "police-scene"
+        },
+        {
+          "text": {
+            "en": "Do not go to the police; try to avoid him",
+            "zh": "不去派出所；尽量避开他"
+          },
+          "flags": ["no-report"],
+          "next": "time-passes"
+        },
+        {
+          "text": {
+            "en": "Confront him privately and demand an apology",
+            "zh": "私下找他要道歉"
+          },
+          "feedback": {
+            "en": "You send him a message. He responds \"you misunderstood, we're all friends\" — and starts telling mutual acquaintances that you're being dramatic.",
+            "zh": "你给他发消息。他回复「你误会了，大家都是朋友」——并开始跟共同的熟人说你在小题大做。"
+          },
+          "flags": ["confronted-alone", "reputation-attack"],
+          "next": "time-passes"
+        }
+      ]
+    },
+
+    "landlord-open": {
+      "narration": {
+        "en": "He is your landlord. Today he came \"to check on a leak.\" Once inside, standing at your bedroom door, he stood there with his pants down.",
+        "zh": "他是你的房东。今天他借口「查看漏水」上门。进门后，站在你卧室门口——他把裤子脱下来了。"
+      },
+      "coach": {
+        "en": "Real judgment (上海徐汇 2026): landlord entered under pretext, exposed himself, was administratively detained 7 days, then victim won civil case — modest damages (¥4,000) plus written apology.",
+        "zh": "真实判决（上海徐汇 2026）：房东借故入户裸露，被行政拘留 7 日；被害人后来民事胜诉——精神抚慰金 4000 元加书面道歉。"
+      },
+      "choices": [
+        {
+          "text": {
+            "en": "Close the door, run out of the apartment, call police immediately",
+            "zh": "关上门，跑出屋子，立即报警"
+          },
+          "feedback": {
+            "en": "You get out. You call 110 from downstairs. Police arrive within 30 minutes.",
+            "zh": "你跑出门。你在楼下拨打 110。警察 30 分钟内到达。"
+          },
+          "flags": ["reported-quickly", "reported-police", "escaped"],
+          "next": "police-scene"
+        },
+        {
+          "text": {
+            "en": "Yell at him to leave, and file a report the next day",
+            "zh": "大声让他离开，第二天再报警"
+          },
+          "feedback": {
+            "en": "He leaves. You spend the night unable to sleep. Next morning you go to the police station.",
+            "zh": "他离开了。你一夜没睡。第二天早上你去了派出所。"
+          },
+          "flags": ["reported-police"],
+          "next": "police-scene"
+        },
+        {
+          "text": {
+            "en": "Don't report. Move out as soon as you can",
+            "zh": "不报警，尽快搬家"
+          },
+          "feedback": {
+            "en": "You spend the next week finding a new place. You don't feel safe until you've moved.",
+            "zh": "你花了一周找新住处。搬走前，一直不觉得安全。"
+          },
+          "flags": ["no-report", "moved-out"],
+          "next": "time-passes"
+        }
+      ]
+    },
+
+    "police-scene": {
+      "narration": {
+        "en": "At the police station, an officer takes your statement. The questions are precise, and some feel intrusive: what exactly did he do, what did you do, what did you say, did you resist, did anyone else see, do you have any recordings or messages.",
+        "zh": "在派出所，民警给你做笔录。问题很具体，有的让你不适：他到底做了什么，你怎么反应的，说了什么，有没有反抗，有没有其他人看到，有没有录音或聊天记录。"
+      },
+      "coach": {
+        "en": "Sign the transcript only after checking every page. Ask for a Case Receipt (受案回执). Two outcomes possible: (1) administrative detention 5-15 days under §44; (2) a written Assurance (保证书) — no detention. Which one depends on evidence, severity, and — sometimes — the specific station.",
+        "zh": "签笔录前逐页核对。索要《受案回执》。可能有两种结果：（1）依治安管理处罚法第 44 条行政拘留 5-15 日；（2）加害者出具《保证书》——不作行政拘留。哪种取决于证据、严重程度，有时也取决于具体派出所。"
+      },
+      "choices": [
+        {
+          "text": {
+            "en": "Read every page carefully, correct wording, then sign — and ask for the Case Receipt",
+            "zh": "逐页仔细阅读、修改措辞、再签字——并索要《受案回执》"
+          },
+          "feedback": {
+            "en": "You make two small corrections. Sign each page. The officer prints and stamps the Case Receipt.",
+            "zh": "你改了两处措辞。逐页签字。民警打印并盖章《受案回执》，给你一份。"
+          },
+          "flags": ["signed-carefully", "got-receipt"],
+          "next": "police-outcome-auto"
+        },
+        {
+          "text": {
+            "en": "Sign and leave",
+            "zh": "签字后离开"
+          },
+          "feedback": {
+            "en": "You sign each page. You leave the station.",
+            "zh": "你在每一页签字。离开派出所。"
+          },
+          "next": "police-outcome-auto"
+        },
+        {
+          "text": {
+            "en": "Sign, ask for the Case Receipt, and provide your saved evidence (screenshots, records, witness names)",
+            "zh": "签字、索要《受案回执》，并提交你保留的证据（截图、录音、证人名单）"
+          },
+          "feedback": {
+            "en": "You upload the WeChat chat export and provide two colleague names as potential witnesses. Officer notes everything in the case file.",
+            "zh": "你上传微信聊天记录导出文件，提供两位可作证的同事姓名。民警一一登入案卷。"
+          },
+          "flags": ["signed-carefully", "got-receipt", "submitted-evidence"],
+          "next": "police-outcome-auto"
+        }
+      ]
+    },
+
+    "police-outcome-auto": {
       "auto": [
         {
-          "has": [
-            "saved-records"
-          ],
-          "next": "police-strong"
+          "has": ["submitted-evidence", "reported-quickly"],
+          "next": "admin-detention"
         },
         {
-          "next": "police-weak"
+          "has": ["complete-records"],
+          "next": "admin-detention"
+        },
+        {
+          "has": ["witnesses-willing"],
+          "next": "admin-detention"
+        },
+        {
+          "has": ["escaped", "reported-quickly"],
+          "next": "admin-detention"
+        },
+        {
+          "has": ["signed-carefully"],
+          "next": "warning-only"
+        },
+        {
+          "next": "no-action"
         }
       ]
     },
-    "police-strong": {
+
+    "admin-detention": {
       "narration": {
-        "en": "At the station you submit the screenshots and your written notes. The case is registered; days later he receives an administrative detention for molestation.",
-        "zh": "在派出所，你提交了截图和书面记录。案件受理；几天后，他因猥亵行为被处以行政拘留。"
+        "en": "Within 3-7 days, the police issue an Administrative Penalty Decision (行政处罚决定书). Under Public Security Punishment Law §44, he is detained for 5-15 days. You receive a copy of the decision. He is taken into custody.",
+        "zh": "3-7 天内，公安出具《行政处罚决定书》。依治安管理处罚法第 44 条，他被行政拘留 5-15 天。你收到一份决定书。他被带走。"
       },
       "coach": {
-        "en": "The administrative punishment decision is itself powerful evidence for the company and any later lawsuit.",
-        "zh": "这份行政处罚决定书本身，就是之后对公司施压和民事诉讼的有力证据。"
+        "en": "The Administrative Penalty Decision is your most powerful evidence in a follow-up civil case. Real cases: with this document, plaintiffs recovered ¥2,000-¥4,000 in emotional damages plus written apology. Without it, emotional damages become very hard to prove.",
+        "zh": "《行政处罚决定书》是日后民事诉讼里你最有力的证据。真实案件：有这份文书的原告，通常获得 2000-4000 元精神抚慰金加书面道歉。没有这份文书，精神损害赔偿很难支持。"
       },
       "choices": [
         {
           "text": {
-            "en": "Also file a written complaint to the company, attaching the punishment decision",
-            "zh": "同时书面向公司投诉，附上处罚决定书"
+            "en": "File a civil lawsuit for emotional damages and written apology",
+            "zh": "提起民事诉讼，主张精神抚慰金和书面道歉"
           },
-          "flags": [
-            "written-complaint",
-            "pressed-company"
-          ],
-          "next": "outcome-auto"
+          "flags": ["civil-lawsuit"],
+          "next": "civil-decision"
         },
         {
           "text": {
-            "en": "The detention is enough — leave it here",
-            "zh": "他被拘留了，到此为止吧"
+            "en": "Stop here",
+            "zh": "到此为止"
           },
-          "next": "end:police-only"
+          "flags": ["stopped-at-admin"],
+          "next": "end:admin-only"
         }
       ]
     },
-    "police-weak": {
+
+    "warning-only": {
       "narration": {
-        "en": "The officer listens, but without the chat records there is little to act on: \"Come back with some evidence — witnesses, recovered messages.\"",
-        "zh": "民警听完了，但没有聊天记录，能做的很有限：“再收集一些证据来——证人、恢复的记录都行。”"
-      },
-      "choices": [
-        {
-          "text": {
-            "en": "Gather what still exists — colleagues' accounts — and file a written complaint to the company",
-            "zh": "收集还存在的证据——同事的证言——并书面向公司投诉"
-          },
-          "feedback": {
-            "en": "Two colleagues quietly admit he did the same to them.",
-            "zh": "两位同事悄悄告诉你：他对她们也做过一样的事。"
-          },
-          "flags": [
-            "written-complaint"
-          ],
-          "next": "company-response"
-        },
-        {
-          "text": {
-            "en": "Give up — maybe it really is unprovable",
-            "zh": "算了，也许真的证明不了"
-          },
-          "flags": [
-            "gave-up"
-          ],
-          "next": "end:gave-up"
-        }
-      ]
-    },
-    "company-response": {
-      "narration": {
-        "en": "HR invites you to a meeting.",
-        "zh": "HR 约你面谈。"
-      },
-      "speaker": {
-        "en": "HR",
-        "zh": "HR"
-      },
-      "line": {
-        "en": "\"Colleagues, you know... could it be a misunderstanding? He's a senior employee. Let's not blow this up.\"",
-        "zh": "“都是同事……会不会是误会？他也是老员工了，别把事情闹大。”"
+        "en": "A few days later the officer calls: they've had him in, he's signed a written Assurance (保证书) saying he will not contact you again. No administrative detention. Case closed at the police level.",
+        "zh": "几天后民警来电：他们把他叫来了，他签了一份《保证书》，承诺不再联系你。没有行政拘留。派出所这一层处理结束。"
       },
       "coach": {
-        "en": "Employers have a statutory duty to prevent and stop workplace sexual harassment (Civil Code art. 1010 ¶2). Your written complaint is proof the company knew.",
-        "zh": "单位对职场性骚扰负有法定的防止和制止义务（民法典1010条第2款）。你的书面投诉就是公司“知情”的证据。"
+        "en": "A signed Assurance is still evidence — it's essentially an admission. Real judgment (北京大兴 2021) used a signed Assurance plus colleague testimony to win civil damages of ¥5,000 for the plaintiff, with no criminal or administrative penalty behind it.",
+        "zh": "《保证书》仍然是证据——本质上是一种自认。真实判决（北京大兴 2021）就是靠《保证书》加同事证言，为原告争取到 5000 元精神抚慰金，即使没有刑事或行政处罚。"
       },
       "choices": [
         {
           "text": {
-            "en": "Insist on a written reply and concrete action, and keep every email",
-            "zh": "坚持要求书面答复和具体处理，保留全部邮件"
-          },
-          "flags": [
-            "pressed-company"
-          ],
-          "next": "outcome-auto"
-        },
-        {
-          "text": {
-            "en": "Let HR talk you into \"settling it quietly\" — nothing in writing",
-            "zh": "被HR劝住，“私下解决”——什么书面结果都没留"
-          },
-          "feedback": {
-            "en": "The meeting ends with warm words and no record. On paper, nothing was ever wrong.",
-            "zh": "面谈在客气话中结束，没有留下任何记录。在纸面上，一切从未出过问题。"
-          },
-          "flags": [
-            "hr-appeased"
-          ],
-          "next": "time-pass"
-        }
-      ]
-    },
-    "company-nothing": {
-      "narration": {
-        "en": "Nothing changes. Without a formal complaint, the company can keep pretending not to see. He continues.",
-        "zh": "什么都没有改变。没有正式投诉，公司可以一直装作看不见。他还在继续。"
-      },
-      "choices": [
-        {
-          "text": {
-            "en": "Send a formal written complaint now",
-            "zh": "现在就补一封正式的书面投诉"
-          },
-          "flags": [
-            "written-complaint"
-          ],
-          "next": "company-response"
-        },
-        {
-          "text": {
-            "en": "Keep enduring",
-            "zh": "继续忍"
-          },
-          "flags": [
-            "endured"
-          ],
-          "next": "time-pass"
-        }
-      ]
-    },
-    "time-pass": {
-      "narration": {
-        "en": "Seven months pass. He has moved on to a new hire, and you learn other colleagues went through the same. You decide to act.",
-        "zh": "七个月过去了。他开始对新来的同事下手，你也得知其他同事有过同样的经历。你决定行动。"
-      },
-      "coach": {
-        "en": "The administrative track expires 6 months after the act — but the civil lawsuit (3-year limit) and the workplace track are still open.",
-        "zh": "治安路径的追诉时效是6个月——已经过了。但民事诉讼（3年时效）和职场路径都还开着。"
-      },
-      "choices": [
-        {
-          "text": {
-            "en": "Go to the police now",
-            "zh": "现在去报警"
-          },
-          "flags": [
-            "reported-late"
-          ],
-          "next": "police-late"
-        },
-        {
-          "text": {
-            "en": "File a civil lawsuit — together with the other women",
-            "zh": "直接提起民事诉讼——和其他受害的同事一起"
-          },
-          "flags": [
-            "civil-suit",
-            "joined-victims"
-          ],
-          "next": "civil-auto"
-        },
-        {
-          "text": {
-            "en": "You were forced to resign because of the harassment — file for labour arbitration to claim severance",
-            "zh": "骚扰持续，你被迫辞职了——申请劳动仲裁主张经济补偿"
-          },
-          "flags": [
-            "forced-resign"
-          ],
-          "feedback": {
-            "en": "Resigning under these conditions is a legally recognised 'constructive dismissal' — you may be entitled to severance pay.",
-            "zh": "在这种情况下辞职，法律上属于被迫解除劳动合同，你可能有权要求经济补偿金。"
-          },
-          "next": "labor-arb-scene"
-        }
-      ]
-    },
-    "police-late": {
-      "narration": {
-        "en": "The officer checks the dates and shakes his head: \"More than six months — we can no longer impose administrative punishment. You can still sue him in civil court.\"",
-        "zh": "民警核对日期后摇了摇头：“超过六个月了，治安处罚已经没法给了。不过你还可以走民事诉讼。”"
-      },
-      "choices": [
-        {
-          "text": {
-            "en": "File the civil lawsuit",
+            "en": "File a civil lawsuit",
             "zh": "提起民事诉讼"
           },
-          "flags": [
-            "civil-suit"
-          ],
-          "next": "civil-auto"
+          "flags": ["civil-lawsuit", "used-assurance"],
+          "next": "civil-decision"
         },
         {
           "text": {
-            "en": "Give up — it has dragged too long",
-            "zh": "算了，拖太久了"
+            "en": "Stop here",
+            "zh": "到此为止"
           },
-          "flags": [
-            "gave-up"
-          ],
-          "next": "end:gave-up"
+          "flags": ["stopped-at-warning"],
+          "next": "end:warning-alone"
         }
       ]
     },
-    "outcome-auto": {
-      "auto": [
-        {
-          "has": [
-            "reported"
-          ],
-          "next": "end:dual-track"
-        },
-        {
-          "has": [
-            "saved-records"
-          ],
-          "next": "end:company-win"
-        },
-        {
-          "next": "end:company-partial"
-        }
-      ]
-    },
-    "civil-auto": {
-      "auto": [
-        {
-          "has": [
-            "saved-records"
-          ],
-          "next": "civil-win-cont"
-        },
-        {
-          "next": "end:civil-thin"
-        }
-      ]
-    },
-    "civil-win-cont": {
+
+    "no-action": {
       "narration": {
-        "en": "The court found sexual harassment established under Civil Code §1010 and ordered him to apologise and pay compensation. Other colleagues' testimony and your saved records made the difference.",
-        "zh": "法院依据民法典第1010条认定性骚扰成立，判令他赔礼道歉并赔偿损失。其他同事的证言和你保存的记录起了关键作用。"
+        "en": "Two weeks pass. You get a written Notice of Non-Case-Filing (不予立案通知书) or, more commonly, silence. The officer says there's \"not enough to pursue.\"",
+        "zh": "两周过去。你收到《不予立案通知书》，或者更常见的——没有回音。民警说「证据不足以处理」。"
       },
       "coach": {
-        "en": "A judgment in your favour is only the first step — if he does not comply, the court can enforce it. You have the right to apply for compulsory enforcement.",
-        "zh": "胜诉判决只是第一步——如果他不主动履行，法院可以强制执行。你有权申请强制执行。"
+        "en": "Within 7 days of a Non-Filing Notice you can apply for reconsideration (复议). Separately, you can go to the procuratorate to request supervision (立案监督). And — crucially — the civil path stays open independently: Civil Code §1010 has its own 3-year statute.",
+        "zh": "《不予立案通知书》下达后 7 日内可申请复议。另可向检察院申请立案监督。而且——很重要——民事路径独立于治安：民法典 1010 条的诉讼时效是 3 年，不受这里影响。"
       },
       "choices": [
         {
           "text": {
-            "en": "He refuses to pay — apply to court for compulsory enforcement",
-            "zh": "他拒绝履行——向法院申请强制执行"
+            "en": "Apply for reconsideration within 7 days",
+            "zh": "7 日内申请复议"
           },
-          "flags": [
-            "enforcement-applied"
-          ],
-          "next": "end:civil-enforced"
+          "flags": ["applied-review"],
+          "next": "review-outcome"
         },
         {
           "text": {
-            "en": "He complies with the judgment",
-            "zh": "他主动履行了判决"
+            "en": "File a civil lawsuit directly",
+            "zh": "直接提起民事诉讼"
           },
-          "next": "end:civil-win-final"
+          "flags": ["civil-direct"],
+          "next": "civil-decision"
+        },
+        {
+          "text": {
+            "en": "Take no further action",
+            "zh": "不再采取行动"
+          },
+          "flags": ["gave-up"],
+          "next": "end:gave-up"
         }
       ]
     },
-    "labor-arb-scene": {
+
+    "review-outcome": {
       "narration": {
-        "en": "You submit a labour arbitration application, stating that you were constructively dismissed due to the company's failure to prevent sexual harassment.",
-        "zh": "你向劳动争议仲裁委员会申请仲裁，主张因公司未能防止性骚扰、你被迫解除劳动合同，要求经济补偿金。"
+        "en": "Reconsideration takes another 30 days. The result: the original decision is upheld. Or — rarely — the case is re-opened. Either way, your Case Receipt and every document from this process is now on file.",
+        "zh": "复议再走 30 天。结果：原决定维持。或者——少数情况下——重新立案。无论哪种，你的《受案回执》和这一路所有文书都归了档。"
       },
       "coach": {
-        "en": "Labour Contract Law §38: if the employer fails to provide a safe working environment, the employee may terminate the contract and claim severance. §46 sets the calculation: one month's average wage per year of service. Labour arbitration must come before any court action — and the time limit is 1 year from resignation.",
-        "zh": "劳动合同法第38条：用人单位未依法保障劳动权益的，劳动者可以解除合同并主张经济补偿。第46条：每满一年支付一个月工资。劳动仲裁是诉讼的前置程序——申请时效为离职之日起1年内。"
+        "en": "Even if reconsideration fails, the documented pursuit strengthens a later civil claim: it shows you took the harassment seriously and exhausted administrative remedies.",
+        "zh": "即使复议失败，走过这一遍留下的记录也能加强日后的民事诉讼：它证明你认真对待了骚扰，并穷尽了行政救济渠道。"
+      },
+      "choices": [
+        {
+          "text": {
+            "en": "File a civil lawsuit now",
+            "zh": "现在提起民事诉讼"
+          },
+          "flags": ["civil-lawsuit", "exhausted-admin"],
+          "next": "civil-decision"
+        },
+        {
+          "text": {
+            "en": "Stop here",
+            "zh": "到此为止"
+          },
+          "flags": ["stopped-after-review"],
+          "next": "end:reconsidered"
+        }
+      ]
+    },
+
+    "civil-decision": {
+      "narration": {
+        "en": "You're consulting on a civil lawsuit. Damages typically claimed: emotional distress (精神抚慰金), written apology (书面赔礼道歉), medical costs if any, lawyer fees. Realistic total claim: ¥30,000-¥80,000.",
+        "zh": "你在咨询民事诉讼。通常主张：精神抚慰金、书面赔礼道歉、就医费用（如有）、律师费。现实诉请金额：3-8 万元。"
+      },
+      "coach": {
+        "en": "Reality check from 6 real Chinese judgments: courts typically award ¥2,000-¥8,000 in emotional damages (about 10-20% of what's claimed). Medical/nutrition/lost-wages/lawyer fees are often reduced or denied without receipts + causation proof. Written apology is often granted. Do NOT expect big payouts — this is about the record and the apology.",
+        "zh": "6 份真实判决的实况：法院通常判精神抚慰金 2000-8000 元（相当于诉请的 10-20%）。医疗/营养/误工/律师费如无票据+因果关系证明，常被砍或驳回。书面道歉通常获支持。不要期待高额赔偿——这条路的核心是留下记录和拿到道歉。"
+      },
+      "choices": [
+        {
+          "text": {
+            "en": "Hire a lawyer, claim ¥30,000",
+            "zh": "委托律师，起诉请求 3 万元"
+          },
+          "flags": ["hired-lawyer", "filed-civil"],
+          "next": "civil-trial"
+        },
+        {
+          "text": {
+            "en": "File pro se, claim ¥5,000",
+            "zh": "自己起诉，请求 5000 元"
+          },
+          "flags": ["filed-civil", "pro-se"],
+          "next": "civil-trial"
+        },
+        {
+          "text": {
+            "en": "Do not file suit",
+            "zh": "不提起诉讼"
+          },
+          "flags": ["did-not-sue"],
+          "next": "end:no-civil"
+        }
+      ]
+    },
+
+    "civil-trial": {
+      "narration": {
+        "en": "Case accepted. Trial scheduled 2-4 months later. In court, the defense will argue: (a) you didn't clearly refuse, (b) the behavior was trivial and brief, (c) he was already administratively punished — no need for more, (d) your claimed emotional damages are exaggerated / unrelated.",
+        "zh": "案件受理，2-4 个月后开庭。法庭上，辩方会主张：（a）你没有明确拒绝；（b）行为轻微、时间极短；（c）他已经受过行政处罚，不应再赔；（d）你所主张的精神损害被夸大 / 与本案无关。"
+      },
+      "coach": {
+        "en": "These defense arguments are word-for-word from the six real cases. Courts often reject (c) — administrative punishment does not bar civil damages. Argument (a) — no clear refusal — is sometimes accepted, which is why a clear written \"stop\" earlier matters. (d) usually reduces emotional damages award, not eliminates it.",
+        "zh": "这些辩护词一字不差地来自六份真实判决。法院通常不采纳（c）——行政处罚不能替代民事赔偿。（a）没明确拒绝——有时被采纳，这也是为什么当初留下明确书面「停止」很重要。（d）通常导致精神抚慰金被打折，但不会归零。"
       },
       "auto": [
         {
-          "has": [
-            "written-complaint"
-          ],
-          "next": "end:labor-win"
+          "has": ["complete-records", "clear-refusal", "hired-lawyer"],
+          "next": "end:civil-strong-win"
         },
         {
-          "next": "end:labor-weak"
+          "has": ["submitted-evidence", "witnesses-willing"],
+          "next": "end:civil-strong-win"
+        },
+        {
+          "has": ["used-assurance"],
+          "next": "end:civil-partial-win"
+        },
+        {
+          "has": ["complete-records"],
+          "next": "end:civil-partial-win"
+        },
+        {
+          "has": ["reported-police"],
+          "next": "end:civil-partial-win"
+        },
+        {
+          "has": ["no-record"],
+          "next": "end:civil-lost"
+        },
+        {
+          "has": ["deleted-records"],
+          "next": "end:civil-lost"
+        },
+        {
+          "next": "end:civil-partial-win"
+        }
+      ]
+    },
+
+    "time-passes": {
+      "narration": {
+        "en": "Weeks, then months. You've thought about it every day, and done nothing. One morning you decide.",
+        "zh": "几周、几个月。你每天都想到这件事，但什么都没做。某天早上你决定了。"
+      },
+      "coach": {
+        "en": "Public-order harassment: 6-month time limit for administrative punishment (Punishment Law §22). Civil lawsuit: 3-year statute (Civil Code §188), first-instance-raising rule. So — police path may be closed, civil path is still open.",
+        "zh": "治安处罚：处罚时效 6 个月（治安管理处罚法第 22 条）。民事诉讼：时效 3 年（民法典第 188 条），须在一审时主张。所以——治安处罚这条路可能已经关闭，但民事诉讼这条路还开着。"
+      },
+      "choices": [
+        {
+          "text": {
+            "en": "Go to the police station",
+            "zh": "去派出所报案"
+          },
+          "flags": ["late-police"],
+          "next": "late-police-auto"
+        },
+        {
+          "text": {
+            "en": "File a civil lawsuit",
+            "zh": "提起民事诉讼"
+          },
+          "flags": ["civil-direct", "late-civil"],
+          "next": "civil-decision"
+        },
+        {
+          "text": {
+            "en": "Call 12338 (women's rights hotline) first",
+            "zh": "先拨打 12338（妇女维权热线）"
+          },
+          "flags": ["sought-support"],
+          "next": "support-first"
+        },
+        {
+          "text": {
+            "en": "Do nothing further",
+            "zh": "不再采取行动"
+          },
+          "flags": ["let-go"],
+          "next": "end:let-go"
+        }
+      ]
+    },
+
+    "late-police-auto": {
+      "auto": [
+        {
+          "has": ["reported-quickly"],
+          "next": "police-scene"
+        },
+        {
+          "next": "end:time-expired"
+        }
+      ]
+    },
+
+    "support-first": {
+      "narration": {
+        "en": "You call 12338. A trained counsellor listens for as long as you need. She explains your options in plain language, connects you to a legal aid lawyer, and asks if you want a follow-up call next week.",
+        "zh": "你拨打 12338。接线员认真听你说完。她用平实的话解释你有哪些选择，帮你对接法律援助律师，并问你要不要下周再通话一次。"
+      },
+      "coach": {
+        "en": "12338 is free. Legal aid (法律援助) is free for those below the local income threshold — no need to pay lawyer fees to file a civil suit.",
+        "zh": "12338 免费。符合当地收入门槛的可申请法律援助（免费律师）——不需要自付律师费就能提民事诉讼。"
+      },
+      "choices": [
+        {
+          "text": {
+            "en": "Take the legal aid lawyer, file civil suit",
+            "zh": "接受法律援助律师，提起民事诉讼"
+          },
+          "flags": ["civil-lawsuit", "legal-aid"],
+          "next": "civil-decision"
+        },
+        {
+          "text": {
+            "en": "Take the support only — no lawsuit right now",
+            "zh": "只接受心理支持，暂不诉讼"
+          },
+          "flags": ["support-only"],
+          "next": "end:support-only"
         }
       ]
     }
   },
+
   "endings": {
-    "police-only": {
+    "admin-only": {
       "title": {
-        "en": "Punished — but he keeps his position",
-        "zh": "他被处罚了——但职位还在"
+        "en": "Administrative penalty — case closed at police level",
+        "zh": "行政处罚——治安案件层面结案"
       },
       "summary": {
-        "en": "The administrative detention is real accountability. But back at work he is still your supervisor, and the company was never formally put on notice. The written complaint track remains open whenever you choose — the punishment decision would make it very hard for the company to look away.",
-        "zh": "行政拘留是真实的追责。但回到公司，他仍是你的上级，而公司从未被正式告知。书面投诉这条路随时还可以走——有处罚决定书在手，公司很难再装看不见。"
+        "en": "He was detained 5-15 days under Public Security Punishment Law §44. The Administrative Penalty Decision is on file — permanent record. You chose not to pursue civil damages. The 3-year civil-suit window under Civil Code §1010 remains open — you can restart later if circumstances change.",
+        "zh": "他依治安管理处罚法第 44 条被行政拘留 5-15 天。《行政处罚决定书》归档——是永久记录。你选择不再追民事赔偿。民法典 1010 条 3 年民事诉讼时效仍在——若日后情况变化，仍可重启。"
       }
     },
-    "dual-track": {
+    "warning-alone": {
       "title": {
-        "en": "Both tracks, full result",
-        "zh": "双管齐下——最完整的结果"
+        "en": "Written Assurance only — no further action",
+        "zh": "仅取得《保证书》——未进一步维权"
       },
       "summary": {
-        "en": "Administrative detention on record, and the company — facing your written complaint with the punishment decision attached — transfers him out and issues formal discipline. Your evidence chain also supports civil damages (Civil Code art. 1010) if you choose to pursue them. This is what the process looks like when every window was used.",
-        "zh": "治安处罚在案，而收到附有处罚决定书的书面投诉后，公司将他调离并给予处分。你手里的证据链也足以支撑民事索赔（民法典1010条），起不起诉由你决定。当每个窗口都被用上时，流程就是这个样子。"
-      }
-    },
-    "company-win": {
-      "title": {
-        "en": "The company is forced to act",
-        "zh": "公司被迫处理了"
-      },
-      "summary": {
-        "en": "Faced with screenshots and your insistence on a written reply, the company disciplines and transfers him. Your complaint record also preserves your right to claim compensation if you resign over this (Labor Contract Law art. 38), and the civil track stays open for 3 years.",
-        "zh": "面对截图和你对书面答复的坚持，公司对他作出处分并调离。你的投诉记录同时保住了两个权利：因此被迫离职可主张经济补偿（劳动合同法第38条），民事起诉的3年时效也还在。"
-      }
-    },
-    "company-partial": {
-      "title": {
-        "en": "\"Handled internally\" — but the record now exists",
-        "zh": "“内部处理”了——但记录已经留下"
-      },
-      "summary": {
-        "en": "Without the chat records, the company downplays it: a vague \"internal criticism\". Not the outcome you deserved — but your written complaint permanently fixed the company's knowledge. If it happens again, to you or anyone, that record becomes the foundation of a much stronger case.",
-        "zh": "没有聊天记录，公司轻描淡写：一句含糊的“内部批评”。这不是你应得的结果——但你的书面投诉永久固定了“公司知情”这一事实。将来无论发生在你还是别人身上，这份记录都是更有力追责的地基。"
-      }
-    },
-    "civil-thin": {
-      "title": {
-        "en": "The lawsuit struggles without the records",
-        "zh": "没有记录，诉讼举步维艰"
-      },
-      "summary": {
-        "en": "The deleted chat was the most direct evidence. The other women's testimony keeps the case alive and pushes the company into building a real anti-harassment policy, but personal liability against him fails for lack of proof. Nothing here says you were wrong to feel what you felt — the missing piece was information nobody gave you in time.",
-        "zh": "删掉的聊天记录本是最直接的证据。其他同事的证言让案件没有归零，也逼着公司建立了真正的反骚扰制度，但对他个人的追责因证据不足没能成立。这不说明你的感受有错——缺的只是当时没人告诉你的那条信息。"
+        "en": "He signed a written commitment not to contact you again. No formal penalty, no civil case. The Assurance itself is an admission — if the same behavior repeats, or if you change your mind, this document plus your Case Receipt still supports a civil claim within 3 years.",
+        "zh": "他签了《保证书》承诺不再联系你。没有正式处罚，也没有民事诉讼。《保证书》本身就是一种自认——若他再犯，或你日后改主意，这份文书加上《受案回执》仍可在 3 年内支撑民事诉讼。"
       }
     },
     "gave-up": {
       "title": {
-        "en": "The fight stopped here — for now",
-        "zh": "维权停在了这里——暂时"
+        "en": "The paper trail closed but the record exists",
+        "zh": "文书这条线关闭了，但记录仍在"
       },
       "summary": {
-        "en": "This attempt ends without a result. But nothing that happened erases your rights: the civil limitation period runs three years, the workplace duty never expires, and records you still hold keep their value. 12338 and 12348 can walk the next attempt with you.",
-        "zh": "这一次的尝试没有结果。但你的权利并没有消失：民事时效有三年，单位的防治义务永远存在，你手里还留着的记录也仍然有效。下一次，12338 和 12348 可以陪你一起走。"
+        "en": "You did not apply for reconsideration. The 7-day window has passed. But the Case Receipt from your original report is permanent — if the same person harasses again or a related case emerges, this record can be reopened via procuratorate supervision (立案监督, no strict deadline).",
+        "zh": "你没有申请复议。7 日窗口已过。但首次报案的《受案回执》是永久记录——若同一人再次骚扰，或有关联案件出现，可通过检察院立案监督重启这条线（无严格时限）。"
       }
     },
-    "civil-win-final": {
+    "reconsidered": {
       "title": {
-        "en": "Judgment fulfilled",
-        "zh": "判决已履行"
+        "en": "You exhausted administrative remedies",
+        "zh": "你穷尽了行政救济渠道"
       },
       "summary": {
-        "en": "He complied. The court record and the judgment exist — this case is documented in a way that cannot be erased. The judgment also exposed the company's failure to act, which may prompt systemic change. Civil Code §1010 ¶2 places prevention duties on employers; this verdict reinforces that.",
-        "zh": "他履行了判决。法院记录和判决书存在于此——这起案件以一种无法抹去的方式被记录下来。判决同时暴露了公司的不作为，可能推动制度层面的改变。民法典第1010条第2款明确了用人单位的防治义务；这份判决书让这条义务更有约束力。"
+        "en": "Reconsideration was pursued. Whether it succeeded or not, the paper trail is now unusually complete. This paper trail can meaningfully support a civil claim if you decide to file later — the 3-year civil window under Civil Code §1010 remains open.",
+        "zh": "你走完了复议。无论复议成功与否，你的文书链条现在异常完整。若日后决定民事起诉，这份完整的文书能有力支撑——民法典 1010 条 3 年时效仍在。"
       }
     },
-    "civil-enforced": {
+    "civil-strong-win": {
       "title": {
-        "en": "Judgment enforced — the court collected on your behalf",
-        "zh": "强制执行——法院替你追回来了"
+        "en": "Civil verdict — full support for damages and apology",
+        "zh": "民事判决——赔偿和道歉全部支持"
       },
       "summary": {
-        "en": "You applied to the court for compulsory enforcement. The court had the authority to freeze bank accounts, seize assets, and restrict high-value spending (限制消费令) — the judgment was ultimately satisfied. Choosing enforcement is choosing not to let him ignore a ruling.",
-        "zh": "你申请了强制执行。法院有权冻结银行账户、查封财产、发出限制消费令——判决最终得到了实现。申请强制执行，是不让他把判决书当废纸的选择。"
+        "en": "The court found harassment established. Judgment: written apology (content reviewed by the court) + emotional damages typically ¥4,000-¥8,000 + reasonable medical/transport costs + partial lawyer fees (usually 60% of what you paid). This is the ceiling of what these cases realistically achieve. Total often ¥5,000-¥10,000. Most importantly, there is now a court judgment on public record establishing what he did.",
+        "zh": "法院认定骚扰成立。判决：书面赔礼道歉（内容须经法院审核）+ 精神抚慰金通常 4000-8000 元 + 合理医疗费/交通费 + 部分律师费（通常按实付金额的 60% 支持）。这是这类案件现实的天花板。总金额通常 5000-10000 元。更重要的是，现在有一份公开的法院判决书认定了他的所作所为。"
       }
     },
-    "labor-win": {
+    "civil-partial-win": {
       "title": {
-        "en": "Arbitration upheld — severance awarded",
-        "zh": "仲裁胜诉——经济补偿金到手"
+        "en": "Civil verdict — partial win",
+        "zh": "民事判决——部分胜诉"
       },
       "summary": {
-        "en": "Your written complaint to the company established a clear record that it 'knew' about the harassment — the arbitration committee found the company failed its prevention duty, making your resignation a legally recognised constructive dismissal. You were awarded severance pay calculated at one month's wage per year of service (Labour Contract Law §46). The written record was what made the difference.",
-        "zh": "你的书面投诉记录证明了公司「知情」——仲裁委认定公司未尽防治义务，你的辞职构成被迫解除劳动合同。经济补偿金按每满一年一个月工资的标准发放（劳动合同法第46条）。书面投诉记录是这个结果的关键。"
+        "en": "Harassment established. Emotional damages: usually ¥2,000-¥5,000 (much less than claimed). Medical/nutrition/lost-wages/lawyer fees: mostly denied for lack of direct causation evidence. Written apology: often granted. This is the typical outcome in real cases — the record and the apology matter more than the money.",
+        "zh": "骚扰成立。精神抚慰金：通常 2000-5000 元（远低于诉请）。医疗/营养/误工/律师费：多因缺乏直接因果关系证据被驳。书面赔礼道歉：通常获支持。这是真实案件的常规结果——记录和道歉比金钱更重要。"
       }
     },
-    "labor-weak": {
+    "civil-lost": {
       "title": {
-        "en": "Arbitration made difficult — no written record that the company knew",
-        "zh": "仲裁举步维艰——没有书面记录证明公司知情"
+        "en": "Civil case dismissed — insufficient evidence",
+        "zh": "民事诉讼被驳回——证据不足"
       },
       "summary": {
-        "en": "Without a written complaint, it is hard to show the company was officially notified. The arbitration committee could not establish that the company 'knew' and failed to act — the constructive-dismissal claim is difficult to sustain. The civil lawsuit path (3-year limitation) is still available. And for the next case: one email to HR is all it takes to create that record.",
-        "zh": "没有书面投诉，难以证明公司正式知情。仲裁委无法认定公司「知情后不作为」——被迫解除的主张难以成立。民事诉讼路径（3年时效）仍然可以走。下一次记住：一封发给HR的邮件，就是那份记录。"
+        "en": "Without saved records, corroborating witnesses, or a prior administrative/police record, courts often dismiss. Real judgment (云南曲靖 2024) illustrates: even after the perpetrator was administratively detained 9 days, the first-instance court dismissed the entire civil suit; only on appeal was ¥5,000 in emotional damages awarded. Second appeal is possible; procedural mistakes can be raised.",
+        "zh": "没有保存证据、没有旁证证人、也没有事前的行政/公安记录，法院常判驳回。真实判决（云南曲靖 2024）显示：即使加害者已被行政拘留 9 天，一审仍全部驳回；二审才改判精神抚慰金 5000 元。可以上诉；程序性瑕疵可以主张。"
+      }
+    },
+    "no-civil": {
+      "title": {
+        "en": "Not pursuing civil — the paper trail exists",
+        "zh": "未提起民事——但文书记录已存在"
+      },
+      "summary": {
+        "en": "You chose not to file civil suit. The prior police record + any Assurance / Administrative Decision remain your evidence, permanently. The 3-year civil window under Civil Code §1010 stays open — you can still file within that period if you change your mind.",
+        "zh": "你选择不提民事诉讼。此前的公安记录 + 任何《保证书》/《行政处罚决定书》，都是你永久保留的证据。民法典 1010 条 3 年时效仍在——若日后改主意，仍可在时效内提起。"
+      }
+    },
+    "let-go": {
+      "title": {
+        "en": "Choosing to let go — a valid path",
+        "zh": "选择放下——一条合理的路径"
+      },
+      "summary": {
+        "en": "Choosing not to fight is not a failure. Many survivors choose this — sometimes because the legal cost outweighs the likely reward. 12338 remains free if you ever want to talk. The 3-year civil window stays open regardless.",
+        "zh": "选择不打这场仗，不是失败。很多幸存者会这样选——有时是因为诉讼成本大于可能的回报。12338 永远免费。民法典 3 年民事时效仍开着。"
+      }
+    },
+    "time-expired": {
+      "title": {
+        "en": "Public-order 6-month window closed — but civil is still open",
+        "zh": "治安处罚 6 个月时效已过——但民事仍开着"
+      },
+      "summary": {
+        "en": "Under Punishment Law §22, public-order sexual harassment must be reported within 6 months for administrative detention. That window is closed. BUT — Civil Code §1010 civil suit has 3 years. You can still file a civil case and win emotional damages, especially if you have chat records, messages, or any witness. Legal aid via 12338 is free.",
+        "zh": "依治安管理处罚法第 22 条，性骚扰治安处罚追诉时效 6 个月。这个窗口已过。但——民法典 1010 条民事诉讼时效 3 年。你仍可提民事诉讼获得精神抚慰金，尤其若有聊天记录、消息或任何证人。12338 可对接免费法律援助。"
+      }
+    },
+    "support-only": {
+      "title": {
+        "en": "Choosing support first",
+        "zh": "先选择支持"
+      },
+      "summary": {
+        "en": "You called 12338 and accepted psychological support. This is a valid, complete path — it doesn't have to lead to lawsuit. The legal option remains available: Civil Code §1010 gives 3 years. Whenever you decide, 12338 can accompany that step too.",
+        "zh": "你拨了 12338，接受了心理支持。这本身就是完整的一条路——不必以诉讼收场。法律路径仍开着：民法典 1010 条 3 年时效。若你日后决定走，12338 也可以陪你一起。"
       }
     }
   },
+
   "debrief": [
     {
-      "id": "saved-records",
+      "id": "good-saved-records",
       "kind": "good",
-      "has": [
-        "saved-records"
-      ],
-      "title": {
-        "en": "You preserved the chat records",
-        "zh": "第一时间保存了聊天记录"
-      },
+      "has": ["saved-records"],
+      "title": { "en": "You preserved evidence", "zh": "你保留了证据" },
       "detail": {
-        "en": "Screenshots with timestamps, backed up beyond his reach — the single most direct evidence in harassment cases.",
-        "zh": "带时间戳的截图、另行备份——这是性骚扰案件里最直接的证据。"
+        "en": "Screenshots with timestamps + full chat export are the strongest primary evidence in text-based harassment cases. Even partial screenshots meaningfully strengthen your case.",
+        "zh": "带时间戳的截图 + 完整聊天记录导出，是文字类骚扰案件里最强的直接证据。即使只有部分截图，也能显著加强你的案子。"
       },
       "basis": {
-        "en": "Civil Code art. 1010 requires proving conduct against one's will — contemporaneous records are the core proof.",
-        "zh": "民法典1010条要求证明“违背他人意愿”的行为——即时留存的记录是核心证明手段。"
+        "en": "Civil Procedure Law Art. 67 (party bears burden of proof); real cases (梅州 2024) awarded on WeChat screenshots alone.",
+        "zh": "民事诉讼法第 67 条（当事人对自己的主张有举证责任）；真实案件（梅州 2024）仅凭微信截图就获判赔偿。"
       }
     },
     {
-      "id": "deleted-records",
+      "id": "good-complete-records",
+      "kind": "good",
+      "has": ["complete-records"],
+      "title": { "en": "You saved the complete chat, not just highlights", "zh": "你保留了完整聊天，不只是几张截图" },
+      "detail": {
+        "en": "Defense often argues \"selective screenshots taken out of context.\" A full chat export makes this argument fail.",
+        "zh": "辩方常主张「截图是断章取义」。完整的聊天记录导出能直接破掉这个说法。"
+      },
+      "basis": {
+        "en": "Evidence rules on integrity of electronic data.",
+        "zh": "电子数据证据的完整性规则。"
+      }
+    },
+    {
+      "id": "good-clear-refusal",
+      "kind": "good",
+      "has": ["clear-refusal"],
+      "title": { "en": "You made your refusal explicit and preserved it", "zh": "你明确拒绝了，并保留了记录" },
+      "detail": {
+        "en": "A written \"stop, do not contact me again\" — plus screenshot of your own message — removes the defense argument \"she didn't clearly say no.\" This is the single cheapest way to strengthen a future case.",
+        "zh": "书面「请停止，不要再联系我」+ 截图自己这条消息——能直接消除「她没明确拒绝」的辩护。这是加强日后案件最简单也最便宜的一步。"
+      },
+      "basis": {
+        "en": "Civil Code Art. 1010 requires \"against will\" (违背他人意愿).",
+        "zh": "民法典 1010 条要求「违背他人意愿」。"
+      }
+    },
+    {
+      "id": "good-contemporaneous-note",
+      "kind": "good",
+      "has": ["contemporaneous-note"],
+      "title": { "en": "You documented the incident immediately", "zh": "你在事发当时记录了细节" },
+      "detail": {
+        "en": "A note or message written within hours (date, time, exact words, location) is treated as much more credible than a memory recalled weeks later.",
+        "zh": "事发几小时内写下的记录（日期、时间、原话、地点）在证据可信度上，远高于几周后回忆得来的陈述。"
+      },
+      "basis": {
+        "en": "Judicial practice on contemporaneous documentation.",
+        "zh": "对同期记录的司法实务采信规则。"
+      }
+    },
+    {
+      "id": "good-colleague-knows",
+      "kind": "good",
+      "has": ["colleague-knows"],
+      "title": { "en": "A colleague heard about it in real time", "zh": "有同事在第一时间知道了" },
+      "detail": {
+        "en": "A person who learned of it within hours can testify to your immediate state and account. This is admissible corroborating evidence.",
+        "zh": "在事发几小时内得知的人，日后可就你「事发后即时状态和陈述」出庭作证——这是可采信的间接证据。"
+      },
+      "basis": {
+        "en": "Criminal Procedure Law Art. 50 (witness testimony admissibility).",
+        "zh": "刑事诉讼法第 50 条（证人证言的证据地位）。"
+      }
+    },
+    {
+      "id": "good-witnesses-willing",
+      "kind": "good",
+      "has": ["witnesses-willing"],
+      "title": { "en": "You found colleagues willing to testify", "zh": "你找到了愿意出庭的同事" },
+      "detail": {
+        "en": "In workplace harassment, colleague testimony about the perpetrator's pattern (e.g., \"often makes crude jokes\") can be decisive — sometimes even without physical evidence. Real case: 北京大兴 2021 turned on exactly this.",
+        "zh": "在职场性骚扰案件里，同事就加害者一贯行为（如「常说黄段子」）出庭作证有时是决定性的——甚至可无物证。真实案件：北京大兴 2021 就是靠这个赢的。"
+      },
+      "basis": {
+        "en": "Civil Procedure Law Art. 72 (witness duty).",
+        "zh": "民事诉讼法第 72 条（证人的作证义务）。"
+      }
+    },
+    {
+      "id": "good-formal-complaint",
+      "kind": "good",
+      "has": ["formal-complaint"],
+      "title": { "en": "You submitted a formal written complaint", "zh": "你提交了正式书面投诉" },
+      "detail": {
+        "en": "Unlike a verbal HR chat, an email to HR + compliance is time-stamped, traceable, and puts the unit's Civil Code §1010 par. 2 duty into effect. This paper trail is essential if the unit later retaliates.",
+        "zh": "不同于口头找 HR 谈，发到 HR 和合规邮箱的书面投诉带时间戳、可追溯，并激活了民法典 1010 条第二款单位反骚扰义务。若单位日后报复，这份记录是必需的。"
+      },
+      "basis": {
+        "en": "Civil Code Art. 1010 par. 2; Labor Contract Law Art. 38 (termination for cause by employee).",
+        "zh": "民法典 1010 条第 2 款；劳动合同法第 38 条（劳动者被迫解除权）。"
+      }
+    },
+    {
+      "id": "good-reported-police",
+      "kind": "good",
+      "has": ["reported-police"],
+      "title": { "en": "You went to the police", "zh": "你去了派出所" },
+      "detail": {
+        "en": "A police report — even if it ends only in a written Assurance — creates official records that support later civil claims. Not reporting leaves you relying on your own word alone.",
+        "zh": "报警——哪怕结果只是《保证书》——都会形成官方记录，为日后民事诉讼提供支撑。不报警意味着你只能靠自己的陈述。"
+      },
+      "basis": {
+        "en": "Public Security Punishment Law §44; Criminal Procedure Law Art. 110 (mandatory acceptance of reports).",
+        "zh": "治安管理处罚法第 44 条；刑事诉讼法第 110 条（应当受理报案）。"
+      }
+    },
+    {
+      "id": "good-reported-quickly",
+      "kind": "good",
+      "has": ["reported-quickly"],
+      "title": { "en": "You reported within days", "zh": "你在几天内报了案" },
+      "detail": {
+        "en": "Fast reporting = statements are freshest, CCTV still retrievable (15-30 day retention), higher chance of administrative detention rather than mere Assurance.",
+        "zh": "尽快报警 = 陈述最清晰，监控还能调取（保存 15-30 天），获得行政拘留（而非《保证书》）的概率更高。"
+      },
+      "basis": {
+        "en": "Public Security Punishment Law §22 (6-month time limit); CCTV retention practice.",
+        "zh": "治安管理处罚法第 22 条（6 个月时效）；监控保存实践。"
+      }
+    },
+    {
+      "id": "good-got-receipt",
+      "kind": "good",
+      "has": ["got-receipt"],
+      "title": { "en": "You obtained the Case Receipt (受案回执)", "zh": "你取得了《受案回执》" },
+      "detail": {
+        "en": "The Case Receipt proves police accepted the report. Every subsequent path — reconsideration, prosecutorial supervision, civil action citing prior report — depends on it.",
+        "zh": "《受案回执》是警方已受案的凭证。后续所有渠道——复议、立案监督、民事诉讼引用先前报案——都依赖它。"
+      },
+      "basis": {
+        "en": "Public Security Regulations on Handling Criminal Cases: acceptance requires issuing a receipt.",
+        "zh": "《公安机关办理刑事案件程序规定》：受案应当出具回执。"
+      }
+    },
+    {
+      "id": "good-signed-carefully",
+      "kind": "good",
+      "has": ["signed-carefully"],
+      "title": { "en": "You read the transcript carefully before signing", "zh": "你在签字前逐页核对了笔录" },
+      "detail": {
+        "en": "The transcript is what the court sees, not what you remember saying. Correct any inaccurate wording BEFORE signing — after signing, it's on the record as your statement.",
+        "zh": "笔录是法院看到的内容，不是你记得说过的话。任何措辞不准确的地方，必须签字前修改——一旦签字，这就是你的官方陈述。"
+      },
+      "basis": {
+        "en": "Public Security Regulations on Handling Criminal Cases: transcript signature protocol.",
+        "zh": "《公安机关办理刑事案件程序规定》：笔录签字程序。"
+      }
+    },
+    {
+      "id": "good-submitted-evidence",
+      "kind": "good",
+      "has": ["submitted-evidence"],
+      "title": { "en": "You proactively submitted evidence to police", "zh": "你主动向警方提交了证据" },
+      "detail": {
+        "en": "Police do not necessarily know what you have. Handing over chat records, witness names, and any recordings at the report stage significantly increases the chance of administrative detention rather than just an Assurance.",
+        "zh": "警方不一定知道你手里有什么。报案时主动提交聊天记录、证人姓名、录音等，能显著提高获得行政拘留（而非仅《保证书》）的概率。"
+      },
+      "basis": {
+        "en": "Investigative practice on victim-provided evidence.",
+        "zh": "对被害人主动提供证据的侦查实务。"
+      }
+    },
+    {
+      "id": "good-applied-review",
+      "kind": "good",
+      "has": ["applied-review"],
+      "title": { "en": "You applied for reconsideration", "zh": "你申请了复议" },
+      "detail": {
+        "en": "Non-filing is not the last word. Reconsideration within 7 days — and/or prosecutorial supervision — puts the decision under external review. Even if unsuccessful, the paper trail supports a later civil action.",
+        "zh": "不予立案不是最终决定。7 日内申请复议——以及/或申请立案监督——把决定放在外部审查之下。即使不成功，这份记录也能支撑日后民事诉讼。"
+      },
+      "basis": {
+        "en": "Criminal Procedure Law Arts. 112-113.",
+        "zh": "刑事诉讼法第 112-113 条。"
+      }
+    },
+    {
+      "id": "good-hired-lawyer",
+      "kind": "good",
+      "has": ["hired-lawyer"],
+      "title": { "en": "You hired a lawyer for the civil case", "zh": "你为民事诉讼委托了律师" },
+      "detail": {
+        "en": "Civil harassment cases turn on evidence framing. A lawyer meaningfully improves outcomes AND part of lawyer fees is recoverable (real cases: ~60% of paid amount). Legal aid (法律援助) is free for those below income threshold.",
+        "zh": "民事骚扰案件成败取决于证据组织。律师能显著改善结果，且律师费部分可回收（真实案件：实付的约 60%）。收入低于当地门槛可申请法律援助（免费）。"
+      },
+      "basis": {
+        "en": "Civil Code Art. 1010; Legal Aid Law.",
+        "zh": "民法典 1010 条；法律援助法。"
+      }
+    },
+    {
+      "id": "good-legal-aid",
+      "kind": "good",
+      "has": ["legal-aid"],
+      "title": { "en": "You used legal aid", "zh": "你使用了法律援助" },
+      "detail": {
+        "en": "Legal aid lawyers are free for eligible applicants. This removes the biggest structural barrier to filing civil harassment cases.",
+        "zh": "法律援助律师对符合条件者免费。这消除了提起民事骚扰诉讼最大的结构性障碍。"
+      },
+      "basis": {
+        "en": "Legal Aid Law; 12338 hotline referral pathway.",
+        "zh": "《法律援助法》；12338 热线转介路径。"
+      }
+    },
+    {
+      "id": "good-sought-support",
+      "kind": "good",
+      "has": ["sought-support"],
+      "title": { "en": "You called 12338 for support", "zh": "你拨打了 12338 寻求支持" },
+      "detail": {
+        "en": "12338 is the national women's-rights hotline. It provides free psychological support AND direct referral to legal aid — nothing you say is binding.",
+        "zh": "12338 是全国妇联维权公益服务热线，提供免费心理支持并可直接转介法律援助——通话内容不会成为任何形式的约束。"
+      },
+      "basis": {
+        "en": "12338 hotline (All-China Women's Federation).",
+        "zh": "12338 全国妇联维权公益服务热线。"
+      }
+    },
+    {
+      "id": "bad-deleted-records",
       "kind": "bad",
-      "has": [
-        "deleted-records"
-      ],
-      "title": {
-        "en": "The chat records were deleted",
-        "zh": "聊天记录被删掉了"
-      },
+      "has": ["deleted-records"],
+      "title": { "en": "The chat was deleted", "zh": "聊天记录被删除了" },
       "detail": {
-        "en": "Wanting it out of sight is completely understandable. The method nobody taught: screenshot and back up first — you never have to look at it again, but don't delete it.",
-        "zh": "不想再看到它们，完全可以理解。缺失的只是没人教过的方法：先截图备份——之后可以永远不看，但不要删。"
+        "en": "Wanting to erase evidence of harm is a trauma response, not a mistake. But in text-based cases, deleted chats are hard or impossible to recover — the case now depends on the other party's phone. Recovery via WeChat backup / phone forensics is sometimes possible.",
+        "zh": "想删除这些东西是创伤反应，不是错误。但在文字类骚扰案件里，删除的聊天记录很难或无法恢复——案件此时要依赖对方手机。通过微信备份/手机数据恢复有时可以救回。"
       },
       "basis": {
-        "en": "Destroyed records cannot be restored as evidence; the burden of proof stays with you.",
-        "zh": "删毁的记录无法作为证据恢复，而举证责任仍在你这一边。"
+        "en": "Evidence recovery via electronic-data forensic examination.",
+        "zh": "通过电子数据鉴定进行证据恢复。"
       }
     },
     {
-      "id": "refused-recorded",
-      "kind": "good",
-      "has": [
-        "refused-recorded"
-      ],
-      "title": {
-        "en": "You refused clearly and wrote it down",
-        "zh": "明确拒绝，并当时记了下来"
-      },
-      "detail": {
-        "en": "The refusal establishes \"against your will\"; the contemporaneous notes fix time, place, and details before memory blurs.",
-        "zh": "拒绝确立了“违背意愿”；当时的记录在记忆模糊前固定了时间、地点和细节。"
-      },
-      "basis": {
-        "en": "\"Against one's will\" is an element of harassment under Civil Code art. 1010.",
-        "zh": "“违背他人意愿”是民法典1010条性骚扰的构成要件。"
-      }
-    },
-    {
-      "id": "told-friend",
-      "kind": "good",
-      "has": [
-        "told-friend"
-      ],
-      "title": {
-        "en": "You told someone close in time",
-        "zh": "第一时间告诉了信任的人"
-      },
-      "detail": {
-        "en": "A near-contemporaneous account to a friend is witness evidence — and support you deserved anyway.",
-        "zh": "事发后不久向朋友的陈述可以成为证人证言——同时，这本来就是你应得的支持。"
-      },
-      "basis": {
-        "en": "Witness testimony is admissible evidence in both civil and administrative cases.",
-        "zh": "证人证言在民事和治安案件中都是法定证据种类。"
-      }
-    },
-    {
-      "id": "endured",
+      "id": "bad-no-record",
       "kind": "bad",
-      "has": [
-        "endured"
-      ],
-      "title": {
-        "en": "The silence was read as safety — and a clock was running",
-        "zh": "沉默被他当成了安全——而时钟在走"
-      },
+      "has": ["no-record"],
+      "title": { "en": "No record was made in the moment", "zh": "事发当时没有记录" },
       "detail": {
-        "en": "Fear for a job is rational; the missing information was the 6-month administrative limitation. The correct method: even while deciding, keep saving evidence — the records work whenever you are ready.",
-        "zh": "怕丢工作是理性的；缺失的信息是治安追诉时效只有6个月。正确方法：哪怕还没决定要不要维权，也先持续存证——等你准备好时，记录随时可用。"
+        "en": "Not documenting is not a personal failing — most people don't think of it in the moment. But without a contemporaneous note or message, precise wording fades within days and defense can more easily argue \"you misremember.\"",
+        "zh": "没记录不是个人过失——大多数人当下不会想到。但没有同期书面记录，具体措辞几天内就模糊，辩方也更容易主张「你记错了」。"
       },
       "basis": {
-        "en": "Public Security Administration Punishments Law art. 22: no punishment where 6 months have passed undetected.",
-        "zh": "治安管理处罚法第22条：违法行为在6个月内没有被发现的，不再处罚。"
+        "en": "Judicial practice on witness memory reliability.",
+        "zh": "对证人记忆可靠性的司法实务。"
       }
     },
     {
-      "id": "written-complaint",
-      "kind": "good",
-      "has": [
-        "written-complaint"
-      ],
-      "title": {
-        "en": "You complained to the employer in writing",
-        "zh": "书面向单位投诉了"
-      },
-      "detail": {
-        "en": "Email leaves a trace. From that moment the company legally \"knows\" — its inaction becomes actionable, and forced resignation can carry compensation.",
-        "zh": "邮件留痕。从那一刻起，公司在法律上“知情”——它的不作为从此可以被追究，因骚扰被迫离职也可主张经济补偿。"
-      },
-      "basis": {
-        "en": "Civil Code art. 1010 ¶2 (employer's duty); Labor Contract Law art. 38.",
-        "zh": "民法典1010条第2款（单位义务）；劳动合同法第38条。"
-      }
-    },
-    {
-      "id": "informal-only",
+      "id": "bad-blocked-contact",
       "kind": "bad",
-      "has": [
-        "informal-only"
-      ],
-      "title": {
-        "en": "The complaint was never made formal",
-        "zh": "投诉一直停留在暗示"
-      },
+      "has": ["blocked-contact"],
+      "title": { "en": "You blocked and deleted the contact", "zh": "你拉黑并删除了联系人" },
       "detail": {
-        "en": "Hints in a group chat cannot later prove the company knew. The correct method: one email, plain words, to HR and a manager — that is all \"written\" takes.",
-        "zh": "群里的暗示日后无法证明公司知情。正确方法：一封邮件、直白的措辞、发给HR和管理者——“书面”只需要这么多。"
-      },
-      "basis": {
-        "en": "Employer liability requires proof the employer knew or should have known.",
-        "zh": "追究单位责任的前提，是能证明单位知情或应当知情。"
+        "en": "Blocking feels protective and often is. The cost: after blocking, if you didn't already back up the full chat elsewhere, you may lose access to those records. Screenshot + export FIRST, then block.",
+        "zh": "拉黑令你感到安全，通常也确实如此。代价：如果拉黑前没备份完整聊天记录，你可能失去这份证据。先截图 + 导出，然后再拉黑。"
       }
     },
     {
-      "id": "hr-appeased",
+      "id": "bad-confronted-alone",
       "kind": "bad",
-      "has": [
-        "hr-appeased"
-      ],
-      "title": {
-        "en": "The meeting ended with nothing in writing",
-        "zh": "面谈结束时，什么书面结果都没留下"
-      },
+      "has": ["confronted-alone"],
+      "title": { "en": "You confronted him alone before reporting", "zh": "你在报警前私下找他对质" },
       "detail": {
-        "en": "\"Settling quietly\" protected the company, not you. The correct method: after any meeting, send a follow-up email summarizing what was said and demanding a written reply — turning the conversation itself into a record.",
-        "zh": "“私下解决”保护的是公司，不是你。正确方法：任何面谈之后，发一封跟进邮件复述谈话内容并要求书面答复——把谈话本身变成记录。"
-      },
-      "basis": {
-        "en": "Without records, the employer's statutory duty (art. 1010 ¶2) cannot be enforced.",
-        "zh": "没有记录，单位的法定义务（1010条第2款）就无从追究。"
+        "en": "Confrontation before police involvement typically triggers: (a) he deletes his own chat records, (b) he starts telling mutual friends you're being dramatic (reputation attack), (c) he coordinates his story. All make the later case harder.",
+        "zh": "警方介入前的对质通常会导致：（a）他删除自己的聊天记录；（b）他开始跟共同的熟人说你在小题大做（名誉攻击）；（c）他串好说辞。所有这些都让日后案件更难。"
       }
     },
     {
-      "id": "reported",
-      "kind": "good",
-      "has": [
-        "reported"
-      ],
-      "title": {
-        "en": "You reported within the administrative window",
-        "zh": "在治安时效内报了警"
-      },
-      "detail": {
-        "en": "Molestation and sending obscene material are punishable by detention — and the punishment decision then powers every other track.",
-        "zh": "猥亵、发送淫秽信息侮辱他人可处拘留——处罚决定书还能反过来支撑其他所有路径。"
-      },
-      "basis": {
-        "en": "Public Security Administration Punishments Law arts. 42/44.",
-        "zh": "治安管理处罚法第42/44条。"
-      }
-    },
-    {
-      "id": "reported-late",
+      "id": "bad-frozen",
       "kind": "bad",
-      "has": [
-        "reported-late"
-      ],
-      "title": {
-        "en": "The 6-month administrative window had closed",
-        "zh": "六个月的治安时效已经关上"
-      },
+      "has": ["frozen"],
+      "title": { "en": "You froze in the moment — this is a normal response", "zh": "当下你僵住了——这是正常反应" },
       "detail": {
-        "en": "The system failure here: almost nobody is told this clock exists. What remains true: the civil track (3 years) and the workplace track were still open — and you used them.",
-        "zh": "这一环节的系统性问题在于：几乎没有人被告知这个时钟的存在。仍然成立的是：民事路径（3年）和职场路径都还开着——而你用上了它们。"
+        "en": "Freezing (\"tonic immobility\") is one of three biological trauma responses (fight/flight/freeze). It is NEVER consent, and courts increasingly recognize this. But defense may still try to use it — a later contemporaneous note or immediate call to a friend counters this.",
+        "zh": "僵住（「僵直反应」）是三种创伤生理反应之一（战/逃/僵）。这绝不代表同意，法院也越来越认识到这一点。但辩方仍可能尝试用它做文章——事后立刻的书面记录或立即打电话给朋友能反驳这一点。"
       },
       "basis": {
-        "en": "Art. 22 (6-month limit); Civil Code general limitation is 3 years for the civil claim.",
-        "zh": "治安管理处罚法第22条（6个月）；民事请求权的一般诉讼时效为3年。"
+        "en": "Trauma response literature; increasingly recognized in Chinese judicial reasoning on sexual violence.",
+        "zh": "创伤反应研究；中国司法在性暴力案件中越来越明确采纳。"
       }
     },
     {
-      "id": "civil-suit",
-      "kind": "good",
-      "has": [
-        "civil-suit"
-      ],
-      "title": {
-        "en": "You brought the civil claim",
-        "zh": "提起了民事诉讼"
-      },
-      "detail": {
-        "en": "Since 2021 harassment is an independent cause of action — you can sue the harasser directly for apology, cessation, and damages.",
-        "zh": "2021年起，性骚扰是独立案由——可以直接起诉行为人，要求赔礼道歉、停止侵害、赔偿损失。"
-      },
-      "basis": {
-        "en": "Civil Code art. 1010 ¶1.",
-        "zh": "民法典1010条第1款。"
-      }
-    },
-    {
-      "id": "joined-victims",
-      "kind": "good",
-      "has": [
-        "joined-victims"
-      ],
-      "title": {
-        "en": "You stood together with the other women",
-        "zh": "和其他受害者站在了一起"
-      },
-      "detail": {
-        "en": "Multiple consistent accounts corroborate each other and dismantle the \"misunderstanding\" defense.",
-        "zh": "多名受害者相互印证的陈述，让“误会”的辩解无处立足。"
-      },
-      "basis": {
-        "en": "Corroborating testimony substantially strengthens the evidence chain.",
-        "zh": "相互印证的证言会显著加强证据链。"
-      }
-    },
-    {
-      "id": "gave-up",
+      "id": "bad-forced-normalcy",
       "kind": "bad",
-      "has": [
-        "gave-up"
-      ],
-      "title": {
-        "en": "The attempt stopped without support",
-        "zh": "这次尝试在孤立无援中停下了"
-      },
+      "has": ["forced-normalcy"],
+      "title": { "en": "You forced normalcy — the fake smile", "zh": "你强作镇定——那个假笑" },
       "detail": {
-        "en": "The missing piece was not courage — it was backup. 12338 (women's rights hotline) and 12348 (legal aid) exist to carry cases exactly like this one, for free.",
-        "zh": "缺的不是勇气，是支援。12338（妇女维权热线）和 12348（法律援助）正是为这样的案件存在的，而且免费。"
+        "en": "Forcing normalcy is a very common social survival response. Defense will try to argue \"she smiled/wasn't upset.\" This does not legally mean consent, but it's why immediately messaging a friend or making a note after leaving the scene is important — it preserves your real reaction.",
+        "zh": "强作镇定是非常常见的社会生存反应。辩方会主张「她还笑了/看起来没事」。这在法律上不代表同意，但也正是为什么离开现场后立刻联系朋友或记录很重要——能保留你真实的反应。"
+      }
+    },
+    {
+      "id": "bad-hr-notified-informal",
+      "kind": "bad",
+      "has": ["hr-notified-informal"],
+      "title": { "en": "The HR conversation left no paper trail", "zh": "找 HR 的口头谈话没留下书面记录" },
+      "detail": {
+        "en": "Verbal HR meetings routinely produce no written record. If the unit later retaliates against you (reassignment, termination) or the harassment continues, you cannot prove you notified them. Follow up with a written email restating what you said — that becomes the record.",
+        "zh": "口头找 HR 谈通常不产生任何书面记录。若单位日后报复（调岗、辞退）或骚扰继续，你无法证明曾通知过他们。事后补一封书面邮件重述所谈内容——这才形成记录。"
       },
       "basis": {
-        "en": "Legal aid covers rights-infringement claims for those who need it.",
-        "zh": "法律援助制度覆盖此类权益受侵害的求助。"
+        "en": "Civil Code Art. 1010 par. 2 (unit's duty is triggered by notice — but notice needs to be provable).",
+        "zh": "民法典 1010 条第 2 款（单位反骚扰义务由「已知」触发——但「已知」需要可证明）。"
+      }
+    },
+    {
+      "id": "bad-solo-documentation",
+      "kind": "bad",
+      "has": ["solo-documentation"],
+      "title": { "en": "Documenting alone is a start — but not enough", "zh": "自己记录是起点——但还不够" },
+      "detail": {
+        "en": "Private notes are useful, but self-authored records alone have low probative value. Adding: (a) a message to a colleague at the time, (b) formal complaint to unit, (c) police report — each dramatically increases the record's weight.",
+        "zh": "自己记录有用，但单方面自制的记录证明力较低。加上：（a）事发当时给同事发的消息；（b）向单位正式书面投诉；（c）报警——每一步都会显著提升记录的证明力。"
+      }
+    },
+    {
+      "id": "bad-reputation-attack",
+      "kind": "bad",
+      "has": ["reputation-attack"],
+      "title": { "en": "He started spreading counter-narratives", "zh": "他开始向共同的熟人散布反向说辞" },
+      "detail": {
+        "en": "Reputation attack after private confrontation is textbook — \"she misunderstood, she's dramatic.\" This is the exact reason lawyers say: don't confront alone before official channels. If it's already happened, keep any messages / screenshots of the counter-narratives — they can support a separate defamation claim.",
+        "zh": "私下对质后的名誉攻击是教科书套路——「她误会了，她小题大做」。这也是为什么律师说：走官方渠道前不要私下对质。若已发生，保留任何反向说辞的消息/截图——可支撑单独的名誉侵权诉讼。"
+      }
+    },
+    {
+      "id": "bad-stopped-at-admin",
+      "kind": "bad",
+      "has": ["stopped-at-admin"],
+      "title": { "en": "You stopped at administrative penalty — the civil path was still open", "zh": "你止步于行政处罚——民事路径其实还开着" },
+      "detail": {
+        "en": "Not pursuing civil is a valid choice, but many survivors later regret it because civil damages + written apology give a different kind of closure. Not too late: 3-year Civil Code §1010 window remains.",
+        "zh": "不追民事是正当选择，但许多幸存者事后后悔——因为民事赔偿 + 书面道歉能提供另一种意义的了结。也不算晚：民法典 1010 条 3 年时效仍在。"
+      }
+    },
+    {
+      "id": "bad-stopped-at-warning",
+      "kind": "bad",
+      "has": ["stopped-at-warning"],
+      "title": { "en": "You stopped at the Assurance — but the Assurance is your best evidence", "zh": "你止步于《保证书》——但《保证书》本身是你最好的证据" },
+      "detail": {
+        "en": "The signed Assurance is essentially an admission. Real case (北京大兴 2021) used exactly this pattern — Assurance + colleague testimony — to win civil damages of ¥5,000 with no other formal penalty behind it. 3-year civil window is still open.",
+        "zh": "签下的《保证书》本质上是自认。真实案件（北京大兴 2021）正是靠这个模式——《保证书》+ 同事证言——为原告争取到 5000 元赔偿，即使没有其他正式处罚。3 年民事时效仍开着。"
+      }
+    },
+    {
+      "id": "bad-gave-up",
+      "kind": "bad",
+      "has": ["gave-up"],
+      "title": { "en": "You gave up mid-process — this is exhaustion, not failure", "zh": "你中途放弃——这是精疲力尽，不是失败" },
+      "detail": {
+        "en": "Fighting harassment cases is genuinely exhausting. Giving up doesn't erase what happened — your Case Receipt remains permanent record. If you ever want to restart: procuratorate supervision (立案监督) has no strict deadline, civil path has 3 years.",
+        "zh": "打骚扰官司真的很耗神。放弃不会抹掉发生的事——《受案回执》永远在。若日后想重启：立案监督无严格时限，民事路径 3 年。"
+      }
+    },
+    {
+      "id": "bad-stopped-after-review",
+      "kind": "bad",
+      "has": ["stopped-after-review"],
+      "title": { "en": "You stopped after reconsideration — but the paper trail is complete", "zh": "你复议后停下了——但你的文书链条已很完整" },
+      "detail": {
+        "en": "You did more paperwork than most survivors. That complete trail — receipt + non-filing + reconsideration decision — makes a future civil case unusually well-supported. Not now doesn't mean not ever.",
+        "zh": "你做的书面工作比大多数幸存者都完整。这条完整的记录——回执 + 不予立案 + 复议决定——让日后的民事案件基础异常扎实。「现在不做」不代表「永远不做」。"
+      }
+    },
+    {
+      "id": "bad-pro-se",
+      "kind": "bad",
+      "has": ["pro-se"],
+      "title": { "en": "Self-representing is legally allowed but tactically risky", "zh": "自己代理法律上允许，但战术上有风险" },
+      "detail": {
+        "en": "Civil procedure allows self-representation. However, in harassment cases specifically, evidence framing and cross-examination technique meaningfully change outcomes. If cost is the barrier: legal aid (法律援助) is free for eligible applicants — apply via 12338 or local justice bureau.",
+        "zh": "民事程序允许自我代理。但性骚扰案件中，证据组织和交叉质证的技巧对结果影响很大。若费用是障碍：法律援助对符合条件者免费——可通过 12338 或当地司法局申请。"
+      }
+    },
+    {
+      "id": "bad-did-not-sue",
+      "kind": "bad",
+      "has": ["did-not-sue"],
+      "title": { "en": "You did not sue — the record still exists", "zh": "你没有起诉——记录仍在" },
+      "detail": {
+        "en": "Not suing is a valid choice. Costs (time, retraumatization, modest awards) genuinely may outweigh benefits. But: 3-year civil window under Civil Code §1010 remains. You can decide later.",
+        "zh": "不起诉是正当选择。成本（时间、二次伤害、赔偿有限）确实可能大于收益。但：民法典 1010 条 3 年时效仍在。你可以以后再决定。"
+      }
+    },
+    {
+      "id": "bad-let-go",
+      "kind": "bad",
+      "has": ["let-go"],
+      "title": { "en": "Choosing not to fight — this is a legitimate ending", "zh": "选择不打——这是合理的收尾" },
+      "detail": {
+        "en": "Not fighting is not defeat. Many survivors find that focused recovery serves them better than the legal process. 12338 remains available if that ever changes.",
+        "zh": "不打不等于输。很多幸存者发现，专注于恢复对自己比走法律程序更好。12338 永远开着。"
+      }
+    },
+    {
+      "id": "bad-moved-out",
+      "kind": "bad",
+      "has": ["moved-out"],
+      "title": { "en": "You moved out — safety first was right, but the record wasn't made", "zh": "你搬走了——先保障安全是对的，但没形成记录" },
+      "detail": {
+        "en": "Moving out was the right immediate call for safety. But without a police report, there's no record — meaning if he does the same to the next tenant, the pattern won't be visible. A late report is still possible (6-month administrative / 3-year civil window).",
+        "zh": "为了安全立即搬走是对的。但没有报警意味着没有记录——若他对下一位租客做同样的事，模式看不出来。晚报仍可能（治安 6 个月 / 民事 3 年时效）。"
       }
     }
   ],
+
   "realFlow": [
     {
-      "en": "Save evidence immediately: screenshot every message, email, or incident log with timestamps. Don't delete anything — you can choose never to look at it again, but keep it.",
-      "zh": "立即保存证据：截图保存每一条消息、邮件或事件记录，并开启时间戳。不要删除——你可以选择永远不再看，但要留着。"
+      "en": "First hour — Preserve evidence: screenshot messages with timestamps visible, export full chat history, write down date/time/location/exact words while memory is fresh.",
+      "zh": "第 1 小时内——保存证据：截图消息（保留时间戳）、导出完整聊天记录、趁记忆清晰记下日期/时间/地点/原话。"
     },
     {
-      "en": "Write down the time, place, witnesses, and exactly what happened — as soon as possible while memory is fresh. Tell a trusted person (this creates a witness).",
-      "zh": "趁记忆清晰，立即写下时间、地点、目击者和经过。告诉一个信任的人——TA日后可以作为证人。"
+      "en": "First 24 hours — Tell one trusted person by message (creates a contemporaneous witness). If it happened at work, send an email to yourself describing the incident.",
+      "zh": "24 小时内——通过消息告诉一个信任的人（形成事发即时证人）。若发生在工作场合，给自己发一封电子邮件描述经过。"
     },
     {
-      "en": "Send a written complaint to HR or a manager via email. Use plain, direct language. This makes the company legally 'aware' and starts the clock on their obligation to act.",
-      "zh": "通过邮件向HR或管理者发出书面投诉，措辞直白。从这一刻起，公司在法律上「知情」，有义务采取措施。"
+      "en": "First week — If workplace: submit written complaint to HR + compliance by email (never verbal-only). If landlord/acquaintance: report to police station. Ask for Case Receipt (受案回执).",
+      "zh": "第 1 周——若为职场骚扰：通过邮件向 HR 和合规邮箱提交书面投诉（不要仅口头）。若为房东/熟人骚扰：去派出所报案。索要《受案回执》。"
     },
     {
-      "en": "After any verbal meeting with HR, send a follow-up email summarising what was said and asking for a written response — this turns the conversation into a record.",
-      "zh": "与HR任何口头面谈之后，发跟进邮件复述谈话内容并要求书面答复——把对话变成记录。"
+      "en": "At police station — Read every page of the transcript before signing; correct any inaccurate wording. Provide all evidence (chat records, witness names). Ask which outcome to expect: administrative detention (拘留) under §44, or written Assurance (保证书).",
+      "zh": "派出所——签字前逐页阅读笔录，修改不准确的措辞。提交所有证据（聊天记录、证人名单）。询问可能的结果：依第 44 条行政拘留，还是《保证书》。"
     },
     {
-      "en": "Within 6 months of the incident: file a police report for public-order offences (猥亵、侮辱). This 6-month window is almost never publicised.",
-      "zh": "事发6个月内：就猥亵、侮辱行为向派出所报警（治安处罚）。这个6个月时效几乎从未被公开告知。"
+      "en": "Within 3-30 days — Police issue Administrative Penalty Decision, or Assurance, or Non-Filing Notice. Keep any and all documents; they are permanent evidence.",
+      "zh": "3-30 天内——公安出具《行政处罚决定书》、《保证书》或《不予立案通知书》。保留所有文书，它们是永久证据。"
     },
     {
-      "en": "File a civil lawsuit (up to 3 years): sue the perpetrator under Civil Code §1010 for stopping the harm, an apology, and financial compensation. This path is independent of the police path.",
-      "zh": "提起民事诉讼（3年时效）：依据民法典§1010起诉行为人，要求停止侵害、赔礼道歉、赔偿损失。此路径独立于公安路径。"
+      "en": "If Non-Filing (不予立案) — Within 7 days, apply in writing for reconsideration (复议) at the same station. Separately, apply for prosecutorial supervision (立案监督) at the procuratorate — no strict deadline.",
+      "zh": "如不予立案——7 日内向原派出所书面申请复议。另可向检察院申请立案监督——无严格时限。"
     },
     {
-      "en": "Call 12338 (women's rights hotline) or 12348 (free legal aid) — both are free and handle cases like this.",
-      "zh": "拨打12338（妇女维权热线）或12348（法律援助热线）——都免费，都处理此类案件。"
+      "en": "Civil lawsuit (independent path) — Statute of limitations 3 years (Civil Code §188), must raise limitation defense in first instance. File under Civil Code §1010 par. 1. Realistic damages: emotional damages ¥2,000-¥8,000, plus written apology, plus reasonable direct costs.",
+      "zh": "民事诉讼（独立路径）——诉讼时效 3 年（民法典第 188 条），时效抗辩须一审提出。依民法典 1010 条第 1 款起诉。现实赔偿：精神抚慰金 2000-8000 元，加书面赔礼道歉，加合理直接费用。"
+    },
+    {
+      "en": "Trial — Defense will argue: (a) no clear refusal, (b) trivial/brief, (c) already administratively punished, (d) exaggerated harm. Courts often reject (c), sometimes accept (a) if no clear \"stop\" message exists.",
+      "zh": "开庭——辩方会主张：（a）无明确拒绝；（b）行为轻微/时间短；（c）已受行政处罚；（d）损害被夸大。法院通常不采纳（c）；若无明确「停止」的书面记录，有时采纳（a）。"
+    },
+    {
+      "en": "If workplace retaliation (reassignment, termination) — Sue under Labor Contract Law §38 for forced resignation compensation, OR wrongful termination compensation (2× monthly salary × years worked). Real case: employee won ¥167,760 for wrongful termination even in a case involving harassment allegations.",
+      "zh": "如遭工作报复（调岗、辞退）——依劳动合同法第 38 条主张被迫解除的经济补偿，或违法解除的赔偿金（月工资 × 工龄 × 2）。真实案件：即使是骚扰指控相关案件，员工也曾获判违法解除赔偿 167,760 元。"
+    },
+    {
+      "en": "At every stage — 12338 (national women's-rights hotline) provides free psychological support AND direct referral to legal aid. It costs nothing to call.",
+      "zh": "全程——12338（全国妇联维权公益服务热线）提供免费心理支持并可直接转介法律援助。拨打不收费。"
     }
   ],
+
   "glossary": [
     {
-      "term": {
-        "en": "6-Month Public-Order Limitation Period (治安追诉时效)",
-        "zh": "治安追诉时效（6个月）"
-      },
+      "term": { "en": "Sexual Harassment (性骚扰)", "zh": "性骚扰" },
       "note": {
-        "en": "For offences handled by police as public-order violations (like sexual harassment involving molestation or insult), the law requires a report within 6 months of the incident. After that, police can no longer issue a penalty. The civil lawsuit path (3 years) and the workplace complaint path stay open independently.",
-        "zh": "对于猥亵、侮辱等治安违法行为，法律要求在行为发生后6个月内向公安报案。超过这个期限，警方不能再作出处罚决定。但民事诉讼路径（3年）和职场投诉路径仍独立有效。"
+        "en": "Under Civil Code §1010: acts against another's will using words, text, images, or physical behavior that constitute sexual harassment. Victims may seek civil liability. Note: text messages alone (WeChat/SMS) can be actionable.",
+        "zh": "民法典 1010 条：违背他人意愿，以言语、文字、图像、肢体行为等方式实施性骚扰。被害人可依法请求民事责任。注：单是文字消息（微信/短信）也可维权。"
       }
     },
     {
-      "term": {
-        "en": "Company's Legal Duty to Act (用人单位义务)",
-        "zh": "用人单位的法定义务"
-      },
+      "term": { "en": "Case Receipt (受案回执)", "zh": "受案回执" },
       "note": {
-        "en": "Under Civil Code §1010, once a company knows (or should know) that harassment is happening, it is legally required to take action. If it does nothing, it shares civil liability. A written complaint creates the 'knew' moment on record.",
-        "zh": "依据民法典第1010条，用人单位知情后有法定义务采取措施。不作为的，在民事诉讼中承担连带责任。书面投诉正是制造这个「知情」时间点的方式。"
+        "en": "Written proof police accepted your report. Required for every subsequent step (reconsideration, prosecutorial supervision, civil claim citing prior report). Always request; never lose.",
+        "zh": "警方受案的书面凭证。后续所有步骤（复议、立案监督、民事诉讼引用先前报案）都需要。务必索要，妥善保管。"
       }
     },
     {
-      "term": {
-        "en": "Civil Lawsuit for Sexual Harassment (性骚扰民事诉讼)",
-        "zh": "性骚扰民事诉讼"
-      },
+      "term": { "en": "Administrative Penalty Decision (行政处罚决定书)", "zh": "行政处罚决定书" },
       "note": {
-        "en": "Since 2021, sexual harassment is an independent civil cause of action — you can sue the perpetrator directly without first going through police. Claims can include stopping the harm, a public apology, and financial compensation. Limitation period: 3 years.",
-        "zh": "2021年起，性骚扰是独立的民事诉讼案由——无需先走公安路径，可直接起诉行为人。可主张停止侵害、赔礼道歉、赔偿损失。诉讼时效3年。"
+        "en": "Written decision imposing administrative detention (5-15 days for sexual harassment under Public Security Punishment Law §44). This document is the strongest evidence in a subsequent civil case.",
+        "zh": "作出行政拘留的书面决定（性骚扰依治安管理处罚法第 44 条为 5-15 天）。此文书是日后民事诉讼里最强的证据。"
       }
     },
     {
-      "term": {
-        "en": "Written Complaint vs. Verbal Report (书面投诉 vs 口头反映)",
-        "zh": "书面投诉 vs 口头反映"
-      },
+      "term": { "en": "Written Assurance (保证书)", "zh": "保证书" },
       "note": {
-        "en": "A verbal complaint to HR (in person or in a group chat) is hard to prove later. A written complaint — even a single email — creates a timestamped record that the company was officially notified. This is the difference between a complaint that can be used and one that can be ignored.",
-        "zh": "口头向HR反映（当面或群聊）事后很难证明。一封书面邮件就能制造一个有时间戳的通知记录，证明公司正式知情。这是「能用」和「被忽略」的区别。"
+        "en": "Written commitment signed by the offender (usually at police station) not to repeat the behavior. Lesser than administrative detention, but still important: it's essentially an admission and can support civil claims.",
+        "zh": "加害者（通常在派出所）签署的书面承诺，保证不再实施该行为。轻于行政拘留，但仍很重要：本质上是自认，可支撑民事诉讼。"
+      }
+    },
+    {
+      "term": { "en": "Non-Filing Notice (不予立案通知书)", "zh": "不予立案通知书" },
+      "note": {
+        "en": "Written decision that police will not treat the report as a formal case (usually citing insufficient evidence). Not final — challenge within 7 days via reconsideration, or via prosecutorial supervision (no strict deadline).",
+        "zh": "警方决定不作为正式案件处理的书面通知（通常以证据不足为由）。不是终点——7 日内申请复议，或申请立案监督（无严格时限）。"
+      }
+    },
+    {
+      "term": { "en": "Reconsideration (复议)", "zh": "复议" },
+      "note": {
+        "en": "Written application within 7 days of Non-Filing Notice, requesting the same police station reconsider. Must cite specific evidence and challenge the reasoning point-by-point.",
+        "zh": "收到《不予立案通知书》后 7 日内的书面申请，要求原派出所重新审查。须写明具体证据，逐点质疑不立案理由。"
+      }
+    },
+    {
+      "term": { "en": "Emotional Damages (精神抚慰金)", "zh": "精神抚慰金" },
+      "note": {
+        "en": "Civil damages for emotional harm under Civil Code §1183. In real sexual harassment cases, typically awarded ¥2,000-¥8,000 — much less than commonly claimed. Not zero, but not high either.",
+        "zh": "依民法典 1183 条主张的精神损害赔偿。真实性骚扰案件中，通常判 2000-8000 元——远低于常见诉请。不是零，但也不高。"
+      }
+    },
+    {
+      "term": { "en": "Written Apology (书面赔礼道歉)", "zh": "书面赔礼道歉" },
+      "note": {
+        "en": "Civil remedy under Civil Code §1000. Content typically requires court pre-approval. If defendant refuses, court can publish the judgment in newspaper / online at defendant's expense.",
+        "zh": "民法典 1000 条的民事救济。内容通常须事先经法院审核。若被告拒绝履行，法院可在报刊/网络公告判决（费用由被告承担）。"
+      }
+    },
+    {
+      "term": { "en": "Unit Anti-Harassment Duty (单位反骚扰义务)", "zh": "单位反骚扰义务" },
+      "note": {
+        "en": "Under Civil Code §1010 par. 2, work units and educational institutions must take reasonable measures to prevent and address sexual harassment. Written notice to HR triggers this duty; verbal-only notice may not.",
+        "zh": "民法典 1010 条第 2 款：用人单位、学校等应采取合理措施预防和制止性骚扰。书面通知 HR 会触发此义务；仅口头通知可能不构成。"
+      }
+    },
+    {
+      "term": { "en": "Wrongful Termination Compensation (违法解除赔偿金)", "zh": "违法解除赔偿金" },
+      "note": {
+        "en": "Under Labor Contract Law §87, if employer illegally terminates you (e.g., in retaliation for reporting harassment), compensation is 2× (monthly salary × years worked). Real case: employee won ¥167,760 for wrongful termination.",
+        "zh": "依劳动合同法第 87 条，若用人单位违法解除劳动合同（如因你举报骚扰报复），赔偿金为 2 ×（月工资 × 工龄）。真实案件：员工获判违法解除赔偿 167,760 元。"
+      }
+    },
+    {
+      "term": { "en": "Public-Order 6-Month Time Limit (治安时效 6 个月)", "zh": "治安处罚 6 个月时效" },
+      "note": {
+        "en": "Under Public Security Punishment Law §22, sexual harassment must be reported within 6 months to be administratively punishable. After 6 months, administrative detention path is closed — but civil path (3 years) remains fully open.",
+        "zh": "治安管理处罚法第 22 条：性骚扰须在 6 个月内被发现才可行政处罚。超过 6 个月，行政拘留这条路关闭——但民事诉讼路径（3 年）仍完全开放。"
+      }
+    },
+    {
+      "term": { "en": "Civil Lawsuit 3-Year Limit (民事诉讼 3 年时效)", "zh": "民事诉讼 3 年时效" },
+      "note": {
+        "en": "Under Civil Code §188, civil claims must be filed within 3 years. Statute of limitations defense must be raised in first-instance trial to be effective — raising it only on appeal generally doesn't work.",
+        "zh": "民法典第 188 条：民事诉讼须在 3 年内提起。诉讼时效抗辩须在一审时提出方为有效——仅在二审提出通常不被支持。"
+      }
+    },
+    {
+      "term": { "en": "12338 Hotline (12338 妇女维权公益服务热线)", "zh": "12338 妇女维权公益服务热线" },
+      "note": {
+        "en": "National hotline by All-China Women's Federation. Free psychological support and legal advice; can refer to free legal aid lawyers. No obligation to act on anything discussed.",
+        "zh": "全国妇联开通的公益服务热线。免费提供心理支持和法律咨询，可转介免费法律援助律师。谈过的任何事都不强制采取行动。"
+      }
+    },
+    {
+      "term": { "en": "Legal Aid (法律援助)", "zh": "法律援助" },
+      "note": {
+        "en": "Under the Legal Aid Law, individuals below local income threshold get free lawyer representation, including for sexual harassment civil suits. Apply via 12338 or local justice bureau (司法局).",
+        "zh": "依《法律援助法》，低于当地收入门槛者可获得免费律师代理，包括性骚扰民事诉讼。通过 12338 或当地司法局申请。"
       }
     }
   ]

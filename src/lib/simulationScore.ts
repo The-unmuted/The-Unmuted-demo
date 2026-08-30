@@ -58,6 +58,47 @@ export const FLAG_WEIGHTS: Record<string, number> = {
   "delayed-night": -2,         // 当晚未行动
   "long-delay": -3,            // 长期沉默
   "silence": -2,               // 尚未决定
+
+  // ─── 性骚扰情景（sexual-harassment.json）新增 flag ───
+  // 高价值好行为
+  "saved-records": 10,             // 保存证据（截图+备份）
+  "complete-records": 8,           // 完整聊天记录导出
+  "clear-refusal": 8,              // 明确书面拒绝
+  "reported-police": 10,           // 报警
+  "got-receipt": 10,               // 索要《受案回执》
+  "formal-complaint": 8,           // 单位书面投诉
+  "witnesses-willing": 8,          // 找到愿出庭的同事
+  "signed-carefully": 5,           // 逐页核对笔录
+  "submitted-evidence": 8,         // 主动提交证据给警方
+  "applied-review": 5,             // 申请复议
+  "hired-lawyer": 5,               // 委托律师
+  "legal-aid": 5,                  // 使用法律援助
+  "sought-support": 3,             // 拨打 12338
+  "reported-quickly": 5,           // 尽快报警
+  // 中等好行为
+  "colleague-knows": 5,            // 事发时告诉同事
+  "contemporaneous-note": 5,       // 事发时同期记录
+  "escaped": 3,                    // 立即离开现场
+  "told-someone-immediately": 5,   // 事发后立即告诉信任的人
+  // 差行为 / 系统性错误
+  "deleted-records": -8,           // 删除聊天记录
+  "blocked-contact": -3,           // 拉黑（未备份即删除）
+  "no-record": -5,                 // 事发当时没记录（覆盖性侵版本同名 flag —— 数值差异不大）
+  "hr-notified-informal": -5,      // 只找 HR 口头谈
+  "solo-documentation": -2,        // 只自己记录（缺乏外部记录）
+  "confronted-alone": -8,          // 报警前私下对质
+  "reputation-attack": -3,         // 因私下对质引发的名誉攻击（后果 flag）
+  // 中途停手（记录已存在，但未走完）
+  "stopped-at-admin": -3,          // 止步于行政处罚
+  "stopped-at-warning": -3,        // 止步于《保证书》
+  "stopped-after-review": -3,      // 复议后停手
+  "did-not-sue": -2,               // 未提民事诉讼
+  "pro-se": -3,                    // 自我代理（技术风险）
+  "moved-out": -3,                 // 只搬家不报警
+  "let-go": -2,                    // 选择放下
+  // 创伤反应类（低扣分 —— 复盘文本明确说「不是你的错」）
+  "frozen": -2,                    // 僵住
+  "forced-normalcy": -2,           // 强作镇定
 };
 
 const BASE_SCORE = 40;
@@ -178,6 +219,43 @@ export const FLAG_SHORT_LABELS: Record<string, { en: string; zh: string }> = {
   "silence": { en: "Have not yet decided", zh: "尚未采取行动" },
   "gave-up-sa": { en: "Missed the reconsideration window", zh: "错过 7 日复议窗口" },
   "civil-claim-emotional": { en: "Claimed emotional damages in the case", zh: "附带民事主张精神抚慰金（常被驳回）" },
+
+  // ─── 性骚扰情景（sexual-harassment.json）───
+  // good
+  "saved-records": { en: "Preserved evidence with screenshots", zh: "保存了证据（截图+备份）" },
+  "complete-records": { en: "Exported complete chat history", zh: "导出完整聊天记录" },
+  "clear-refusal": { en: "Made refusal explicit in writing", zh: "书面明确拒绝" },
+  "reported-police": { en: "Filed a police report", zh: "去派出所报案" },
+  "reported-quickly": { en: "Reported within days of the incident", zh: "事发几天内就报了案" },
+  "got-receipt": { en: "Obtained the Case Receipt", zh: "取得了《受案回执》" },
+  "formal-complaint": { en: "Submitted written complaint to employer", zh: "向单位提交书面投诉" },
+  "witnesses-willing": { en: "Found colleagues willing to testify", zh: "找到愿出庭作证的同事" },
+  "signed-carefully": { en: "Reviewed and corrected the transcript", zh: "逐页核对笔录后签字" },
+  "submitted-evidence": { en: "Proactively provided evidence to police", zh: "主动向警方提交证据" },
+  "applied-review": { en: "Applied for reconsideration", zh: "申请了复议" },
+  "hired-lawyer": { en: "Hired a lawyer for the civil case", zh: "为民事诉讼委托律师" },
+  "legal-aid": { en: "Used legal aid (free lawyer)", zh: "使用了法律援助（免费律师）" },
+  "sought-support": { en: "Called 12338 for support", zh: "拨打 12338 寻求支持" },
+  "colleague-knows": { en: "A colleague learned in real time", zh: "第一时间告知了同事" },
+  "contemporaneous-note": { en: "Documented details immediately", zh: "事发当时记录了细节" },
+  "escaped": { en: "Got out of the space safely", zh: "安全离开了现场" },
+  "told-someone-immediately": { en: "Told a trusted person right away", zh: "事后立即告诉信任的人" },
+  // bad
+  "deleted-records": { en: "Deleted the chat records", zh: "删除了聊天记录" },
+  "blocked-contact": { en: "Blocked before backing up records", zh: "备份前就拉黑了" },
+  "hr-notified-informal": { en: "HR notified only verbally, no paper trail", zh: "只找 HR 口头谈，没留下书面记录" },
+  "solo-documentation": { en: "Only self-documented, no external record", zh: "仅自己记录，没有外部记录" },
+  "confronted-alone": { en: "Confronted the perpetrator alone first", zh: "报警前先私下对质" },
+  "reputation-attack": { en: "Faced counter-narrative from acquaintances", zh: "遭到来自熟人的反向说辞攻击" },
+  "stopped-at-admin": { en: "Stopped at administrative penalty", zh: "止步于行政处罚，未提民事" },
+  "stopped-at-warning": { en: "Stopped after just the Assurance", zh: "止步于《保证书》，未提民事" },
+  "stopped-after-review": { en: "Stopped after exhausting admin remedies", zh: "复议后停手，未提民事" },
+  "did-not-sue": { en: "Chose not to file civil lawsuit", zh: "选择不提民事诉讼" },
+  "pro-se": { en: "Self-represented in civil case", zh: "民事诉讼自我代理" },
+  "moved-out": { en: "Moved out without reporting", zh: "只搬家，没报警" },
+  "let-go": { en: "Chose to let it go", zh: "选择放下这件事" },
+  "frozen": { en: "Froze in the moment — normal trauma response", zh: "当下僵住——正常创伤反应" },
+  "forced-normalcy": { en: "Forced a normal appearance to escape", zh: "强作镇定以便脱身" },
 };
 
 export function shortLabelFor(flag: string, language: "en" | "zh"): string {
