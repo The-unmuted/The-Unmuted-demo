@@ -168,43 +168,51 @@ function drawHeadlineAndScenario(ctx: CanvasRenderingContext2D, opts: RenderOpts
   const cardH = 330;
   drawGlassCard(ctx, cardX, cardY, cardW, cardH);
 
+  // 左右两栏布局：文字 60%，胶囊标签 40%
+  const badgeColW = 160;
+  const textColW = cardW - badgeColW - 64;
+  const textX = cardX + 32;
+
   // "本次情景" 小标签
   ctx.font = `600 20px ${FONT_ZH}`;
   ctx.fillStyle = COLOR.textDim;
   ctx.textAlign = "left";
   ctx.textBaseline = "top";
-  ctx.fillText(lang === "zh" ? "本次情景" : "This scenario", cardX + 32, cardY + 32);
+  ctx.fillText(lang === "zh" ? "本次情景" : "This scenario", textX, cardY + 40);
 
   // 情景标题
   ctx.font = `bold 34px ${FONT_ZH}`;
   ctx.fillStyle = COLOR.text;
-  wrapText(ctx, opts.scenarioTitle, cardX + 32, cardY + 72, cardW - 64, 44, "left");
+  wrapText(ctx, opts.scenarioTitle, textX, cardY + 82, textColW, 44, "left");
 
   // 情景简述
   ctx.font = `500 20px ${FONT_ZH}`;
   ctx.fillStyle = COLOR.textMuted;
-  wrapText(ctx, opts.scenarioTagline, cardX + 32, cardY + 172, cardW - 64, 30, "left");
+  wrapText(ctx, opts.scenarioTagline, textX, cardY + 190, textColW, 30, "left");
 
-  // 底部小徽章：显示 4 个能力关键词
+  // 右侧竖排 4 个胶囊标签
   const badges = lang === "zh"
     ? ["人身安全", "识别风险", "寻求帮助", "证据保存"]
     : ["Safety", "Risk", "Help", "Evidence"];
-  const badgeY = cardY + cardH - 60;
-  let badgeX = cardX + 32;
-  ctx.font = `600 18px ${FONT_ZH}`;
-  for (const b of badges) {
-    const bw = ctx.measureText(b).width + 28;
-    drawRoundRect(ctx, badgeX, badgeY, bw, 34, 17);
-    ctx.strokeStyle = "rgba(192, 132, 252, 0.4)";
+  const badgeX = cardX + cardW - badgeColW - 4;
+  const badgeH = 44;
+  const badgeGap = 16;
+  const totalBadgeH = badges.length * badgeH + (badges.length - 1) * badgeGap;
+  const badgeStartY = cardY + (cardH - totalBadgeH) / 2;
+  ctx.font = `600 20px ${FONT_ZH}`;
+  ctx.textBaseline = "middle";
+  ctx.textAlign = "center";
+  for (let i = 0; i < badges.length; i++) {
+    const by = badgeStartY + i * (badgeH + badgeGap);
+    drawRoundRect(ctx, badgeX, by, badgeColW, badgeH, 22);
+    ctx.strokeStyle = "rgba(192, 132, 252, 0.45)";
     ctx.lineWidth = 1.5;
     ctx.stroke();
     ctx.fillStyle = COLOR.textMuted;
-    ctx.textBaseline = "middle";
-    ctx.fillText(b, badgeX + 14, badgeY + 17);
-    badgeX += bw + 12;
-    if (badgeX + 100 > cardX + cardW) break;
+    ctx.fillText(badges[i], badgeX + badgeColW / 2, by + badgeH / 2);
   }
   ctx.textBaseline = "alphabetic";
+  ctx.textAlign = "left";
 }
 
 // ─── 3. 分数区（含 4 档标尺）──────────────────────
