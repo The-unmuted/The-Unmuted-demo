@@ -60,7 +60,9 @@ export const FLAG_WEIGHTS: Record<string, number> = {
   "silence": -2,               // 尚未决定
 };
 
-const BASE_SCORE = 50;
+const BASE_SCORE = 40;
+
+export type ScoreBand = "excellent" | "good" | "partial" | "weak";
 
 export interface SimulationScoreResult {
   /** 0-100 的最终分数。 */
@@ -71,10 +73,138 @@ export interface SimulationScoreResult {
   badCount: number;
   /** 按贡献排序的详细项（用于展示）。 */
   breakdown: Array<{ flag: string; delta: number; kind: "good" | "bad" }>;
-  /** 分数等级：high / medium / low。 */
-  band: "high" | "medium" | "low";
-  /** 用于结果卡片的简短标签。 */
+  /** 分数等级：4 档。 */
+  band: ScoreBand;
+  /** 用于结果卡片的简短标签（档位中文名，如「部分准备」）。 */
   label: { en: string; zh: string };
+  /** 主副标题（结果页顶部大字），比 label 更鼓励。 */
+  headline: { en: string; zh: string };
+  /** 分数下方的一句话说明。 */
+  detail: { en: string; zh: string };
+}
+
+const BANDS: Record<
+  ScoreBand,
+  { min: number; label: { en: string; zh: string }; headline: { en: string; zh: string }; detail: { en: string; zh: string } }
+> = {
+  excellent: {
+    min: 80,
+    label: { en: "Well-prepared", zh: "准备充分" },
+    headline: {
+      en: "You covered the essentials.",
+      zh: "你已经掌握了关键步骤。",
+    },
+    detail: {
+      en: "Your choices show a solid grasp of what to do — this preparation could save a friend or yourself.",
+      zh: "你的选择显示出对关键步骤的清晰把握——这份准备可能会保护你自己或朋友。",
+    },
+  },
+  good: {
+    min: 60,
+    label: { en: "Basic preparation", zh: "基本准备" },
+    headline: {
+      en: "You've built a solid base.",
+      zh: "你已经打下了基础。",
+    },
+    detail: {
+      en: "You caught the essentials but missed some details that could make a difference in the moment.",
+      zh: "关键的你抓住了，但还有一些细节可能在真正的时刻起作用。",
+    },
+  },
+  partial: {
+    min: 40,
+    label: { en: "Partial preparation", zh: "部分准备" },
+    headline: {
+      en: "You've taken important first steps.",
+      zh: "你已经迈出了重要的一步。",
+    },
+    detail: {
+      en: "You've made some right choices but there are still areas to strengthen.",
+      zh: "你已经做出了一些关键选择，但仍有可以加强的地方。",
+    },
+  },
+  weak: {
+    min: 0,
+    label: { en: "Needs strengthening", zh: "需要加强" },
+    headline: {
+      en: "Knowing what to do makes all the difference.",
+      zh: "知道该怎么做，会带来完全不同的结果。",
+    },
+    detail: {
+      en: "These gaps are common — nobody teaches this. Reading through the debrief below is a real step forward.",
+      zh: "这些缺口很常见——没有人教过我们这些。看完下方复盘，就是真正的一步。"
+    },
+  },
+};
+
+/**
+ * 每个 flag 的人话短描述（用于结果卡片 "做对了/可以做更好" 的列表）。
+ * 保持每条 ≤ 24 个汉字，便于卡片排版。
+ */
+export const FLAG_SHORT_LABELS: Record<string, { en: string; zh: string }> = {
+  // good
+  "immediate-action": { en: "Acted within the 72-hour evidence window", zh: "在 72 小时证据窗口内行动" },
+  "called-friend": { en: "Reached out to someone you trust", zh: "向信任的人求助陪同" },
+  "kept-clothes": { en: "Preserved clothing in a paper bag", zh: "用纸袋保存了衣物" },
+  "medical-exam": { en: "Completed the forensic examination", zh: "完成了医院取证检查" },
+  "medical-certificate-only": { en: "Obtained a medical certificate", zh: "取得了《疾病证明书》" },
+  "reported": { en: "Reported while CCTV still existed", zh: "在监控还在时报案" },
+  "asked-receipt-sa": { en: "Obtained the Case Receipt", zh: "索要并保留了《受案回执》" },
+  "requested-cctv": { en: "Requested police to retrieve CCTV", zh: "请警方调取监控" },
+  "linked-samples": { en: "Linked sealed samples to the case file", zh: "请警方调入医院封存检材" },
+  "sought-review": { en: "Challenged the non-filing decision", zh: "对不予立案提出复议" },
+  "specific-grounds": { en: "Cited specific grounds in reconsideration", zh: "复议写明具体依据" },
+  "dual-channel": { en: "Used both review channels", zh: "同时走复议和立案监督" },
+  "actively-following": { en: "Actively followed the investigation", zh: "主动跟进侦查进展" },
+  "monitoring-dv": { en: "Kept the case visible with regular check-ins", zh: "定期跟进案件" },
+  "prosecutor-supervision": { en: "Applied for investigation supervision", zh: "申请检察院侦查监督" },
+  "refused-settlement": { en: "Refused the settlement offer", zh: "拒绝了私和" },
+  "has-lawyer": { en: "Appointed a lawyer as representative", zh: "委托律师作为代理人" },
+  "attended-trial": { en: "Attended the trial", zh: "出席了庭审" },
+  "civil-claim-material": { en: "Claimed material losses in the case", zh: "附带民事主张物质损失" },
+  "psych-support": { en: "Sought psychological support", zh: "拨打 12338 寻求心理支持" },
+  "reported-late-sa": { en: "Filed a late report — still valid", zh: "选择晚报案（依然有效）" },
+  // bad
+  "washed": { en: "Showered before evidence could be collected", zh: "在取证前洗澡（本能反应）" },
+  "destroyed-traces": { en: "Clothing was washed/discarded", zh: "衣物被清洗或丢弃" },
+  "no-exam": { en: "Skipped the forensic examination", zh: "未做取证检查" },
+  "no-record": { en: "No medical record was created", zh: "医院无就诊记录" },
+  "delayed-night": { en: "The night passed without action", zh: "当晚未采取行动" },
+  "confronted": { en: "Contacted the suspect before police did", zh: "警方介入前联系了嫌疑人" },
+  "alerted-him": { en: "Suspect was aware you might act", zh: "打草惊蛇" },
+  "private-settlement": { en: "Signed a forgiveness letter", zh: "签下了谅解书" },
+  "took-money-only": { en: "Accepted money without signing", zh: "只收下钱未签字" },
+  "long-delay": { en: "Time passed before you could speak", zh: "开口前时间已过去" },
+  "silence": { en: "Have not yet decided", zh: "尚未采取行动" },
+  "gave-up-sa": { en: "Missed the reconsideration window", zh: "错过 7 日复议窗口" },
+  "civil-claim-emotional": { en: "Claimed emotional damages in the case", zh: "附带民事主张精神抚慰金（常被驳回）" },
+};
+
+export function shortLabelFor(flag: string, language: "en" | "zh"): string {
+  const l = FLAG_SHORT_LABELS[flag];
+  if (!l) return flag;
+  return language === "zh" ? l.zh : l.en;
+}
+
+/**
+ * 从 breakdown 里选出 top-N 具体条目，用于结果卡上展示。
+ */
+export function pickTop(
+  breakdown: SimulationScoreResult["breakdown"],
+  kind: "good" | "bad",
+  n: number
+): Array<{ flag: string; delta: number }> {
+  return breakdown
+    .filter((b) => b.kind === kind)
+    .slice(0, n)
+    .map(({ flag, delta }) => ({ flag, delta }));
+}
+
+function bandFor(score: number): ScoreBand {
+  if (score >= BANDS.excellent.min) return "excellent";
+  if (score >= BANDS.good.min) return "good";
+  if (score >= BANDS.partial.min) return "partial";
+  return "weak";
 }
 
 export function computeSimulationScore(flags: Set<string>): SimulationScoreResult {
@@ -101,29 +231,19 @@ export function computeSimulationScore(flags: Set<string>): SimulationScoreResul
   const raw = BASE_SCORE + delta;
   const score = Math.max(0, Math.min(100, raw));
 
-  let band: SimulationScoreResult["band"];
-  let label: SimulationScoreResult["label"];
-  if (score >= 75) {
-    band = "high";
-    label = {
-      en: "Well-prepared — you covered the essentials",
-      zh: "准备充分——你抓住了关键步骤",
-    };
-  } else if (score >= 45) {
-    band = "medium";
-    label = {
-      en: "Partially prepared — key gaps remain",
-      zh: "部分准备——仍有关键缺口",
-    };
-  } else {
-    band = "low";
-    label = {
-      en: "Room to prepare — the knowledge gaps are common, not personal",
-      zh: "有很多可以准备的——这些缺口很常见，不是你个人的问题",
-    };
-  }
+  const band = bandFor(score);
+  const bandInfo = BANDS[band];
 
-  return { score, goodCount, badCount, breakdown, band, label };
+  return {
+    score,
+    goodCount,
+    badCount,
+    breakdown,
+    band,
+    label: bandInfo.label,
+    headline: bandInfo.headline,
+    detail: bandInfo.detail,
+  };
 }
 
 /**

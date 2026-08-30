@@ -319,6 +319,7 @@ function EndingView({
         language={language}
         score={score}
         scenarioTitle={simText(language, scenario.title)}
+        scenarioTagline={simText(language, scenario.tagline)}
         endingTitle={simText(language, ending.title)}
       />
 
@@ -576,11 +577,13 @@ function ScoreCard({
   language,
   score,
   scenarioTitle,
+  scenarioTagline,
   endingTitle,
 }: {
   language: AppLanguage;
   score: SimulationScoreResult;
   scenarioTitle: string;
+  scenarioTagline: string;
   endingTitle: string;
 }) {
   const [busy, setBusy] = useState(false);
@@ -604,7 +607,7 @@ function ScoreCard({
       setInlineImageUrl(null);
     }
     try {
-      const blob = await renderScoreCard({ language, scenarioTitle, endingTitle, score });
+      const blob = await renderScoreCard({ language, scenarioTitle, scenarioTagline, endingTitle, score });
       const filename = `feimo-simulation-${score.score}.png`;
       const result = await saveOrShareBlob(blob, filename);
       if (result.method === "share") {
