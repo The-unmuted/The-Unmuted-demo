@@ -131,8 +131,11 @@ describe("sexual-assault scenario", () => {
 
   it("filing routes by evidence strength", () => {
     const filing = sa.scenes["filing-auto"];
-    expect(resolveAuto(filing, new Set(["medical-exam"]))).toBe("trial-scene");
+    // Strongest: medical exam → filing-decision-strong (real timeline: DNA + wait)
+    expect(resolveAuto(filing, new Set(["medical-exam"]))).toBe("filing-decision-strong");
+    // Medium: clothing kept, no medical exam → hard investigation branch
     expect(resolveAuto(filing, new Set(["kept-clothes"]))).toBe("filed-hard-cont");
+    // Weakest: nothing → non-filing notice
     expect(resolveAuto(filing, new Set())).toBe("filing-weak");
   });
 
