@@ -10,7 +10,7 @@ import type { SimulationScoreResult } from "./simulationScore";
 
 const CARD_WIDTH = 1080;
 const CARD_HEIGHT = 1920;
-const BETA_URL = "https://the-unmuted-demo.vercel.app/";
+const BETA_URL = "https://the-unmuted-beta.pages.dev/";
 
 interface RenderOpts {
   language: "en" | "zh";
@@ -270,29 +270,33 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 }
 
 /**
- * 保存到设备。优先用 Web Share API（iOS/Android 上会弹出系统分享菜单，含「存到相册」），
- * 桌面浏览器降级到 <a download> 触发下载。
+ * 保存到设备。策略：
+ * 1. 桌面浏览器 → 直接触发下载（会保存到系统下载文件夹）
+ * 2. 移动端 → 优先弹出系统分享菜单（iOS 上包含「存储到照片」）；
+ *    如果分享不可用/失败/被取消，返回 blob 让 UI 层展示图片供长按保存
  */
 export async function saveOrShareBlob(blob: Blob, filename: string) {
   const file = new File([blob], filename, { type: "image/png" });
-
-  // Try Web Share API (best UX on mobile — includes "Save to Photos" on iOS)
   const nav = navigator as Navigator & { canShare?: (data: ShareData) => boolean };
-  if (nav.canShare?.({ files: [file] }) && nav.share) {
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+  // 移动端：先试 Web Share（含 iOS「存储到照片」）
+  if (isMobile && nav.canShare?.({ files: [file] }) && nav.share) {
     try {
       await nav.share({ files: [file] });
       return { method: "share" as const };
     } catch (e) {
-      // User cancelled or error — fall through to download
-      if ((e as DOMException).name !== "AbortError") {
-        console.warn("Web Share failed, falling back to download:", e);
-      } else {
-        return { method: "cancelled" as const };
+      if ((e as DOMException).name === "AbortError") {
+        // 用户取消 → 返回 blob 让 UI 展示图片
+        return { method: "cancelled" as const, blob };
       }
+      // 分享失败 → 降级到显示图片，让用户长按保存
+      console.warn("Web Share failed, falling back to inline image:", e);
+      return { method: "inline" as const, blob };
     }
   }
 
-  // Desktop / browsers without Web Share Files API — trigger download
+  // 桌面浏览器 → 直接下载
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;

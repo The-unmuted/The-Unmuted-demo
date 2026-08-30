@@ -585,6 +585,7 @@ function ScoreCard({
 }) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [inlineImageUrl, setInlineImageUrl] = useState<string | null>(null);
 
   const bandColor =
     score.band === "high" ? "text-emerald-500" :
@@ -598,6 +599,10 @@ function ScoreCard({
   const handleSave = async () => {
     setBusy(true);
     setMsg(null);
+    if (inlineImageUrl) {
+      URL.revokeObjectURL(inlineImageUrl);
+      setInlineImageUrl(null);
+    }
     try {
       const blob = await renderScoreCard({ language, scenarioTitle, endingTitle, score });
       const filename = `feimo-simulation-${score.score}.png`;
@@ -606,10 +611,13 @@ function ScoreCard({
         setMsg(copyFor(language, "Shared", "已分享"));
       } else if (result.method === "download") {
         setMsg(copyFor(language, "Image downloaded", "图片已下载"));
+      } else if (result.method === "inline" || result.method === "cancelled") {
+        // 展示图片，让用户长按保存到相册（iOS/Android 上都最可靠）
+        setInlineImageUrl(URL.createObjectURL(result.blob));
       }
     } catch (e) {
       console.error(e);
-      setMsg(copyFor(language, "Save failed — please try again", "保存失败，请重试"));
+      setMsg(copyFor(language, "Save failed — please try again", "生成失败，请重试"));
     } finally {
       setBusy(false);
       setTimeout(() => setMsg(null), 3000);
@@ -655,18 +663,48 @@ function ScoreCard({
         <Share2 className="h-4 w-4" />
         {busy
           ? copyFor(language, "Generating...", "生成中...")
-          : copyFor(language, "Save / share result card", "保存 / 分享结果卡片")}
+          : inlineImageUrl
+            ? copyFor(language, "Regenerate", "重新生成")
+            : copyFor(language, "Generate shareable card", "生成分享卡片")}
       </button>
       {msg && (
         <p className="mt-2 text-center text-[11px] text-muted-foreground">{msg}</p>
       )}
-      <p className="mt-2 text-center text-[10px] leading-4 text-muted-foreground/70">
-        {copyFor(
-          language,
-          "The card includes a QR code to invite others to try The Unmuted Beta.",
-          "卡片带有二维码，可邀请他人扫码体验非默内测版。"
-        )}
-      </p>
+
+      {inlineImageUrl && (
+        <div className="mt-4 flex flex-col gap-2">
+          <p className="text-center text-xs font-bold text-foreground">
+            {copyFor(
+              language,
+              "👇 Long-press the image to save to your album",
+              "👇 长按下方图片，保存到相册"
+            )}
+          </p>
+          <img
+            src={inlineImageUrl}
+            alt={copyFor(language, "Result card", "结果卡片")}
+            className="w-full rounded-xl border border-border"
+          />
+          <a
+            href={inlineImageUrl}
+            download={`feimo-simulation-${score.score}.png`}
+            className="flex items-center justify-center gap-2 rounded-xl border border-primary/40 bg-primary/5 px-4 py-2 text-xs font-bold text-primary"
+          >
+            <Download className="h-3.5 w-3.5" />
+            {copyFor(language, "Or download directly", "或直接下载")}
+          </a>
+        </div>
+      )}
+
+      {!inlineImageUrl && (
+        <p className="mt-2 text-center text-[10px] leading-4 text-muted-foreground/70">
+          {copyFor(
+            language,
+            "The card includes a QR code to invite others to try The Unmuted Beta.",
+            "卡片带有二维码，可邀请他人扫码体验非默内测版。"
+          )}
+        </p>
+      )}
     </div>
   );
 }
