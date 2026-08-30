@@ -335,38 +335,41 @@ function EndingView({
 
       {/* Good items — triggered */}
       {good.length > 0 && (
-        <div className="rounded-2xl border border-border/70 bg-card p-4">
-          <h3 className="mb-3 text-xs font-bold uppercase tracking-[0.12em] text-emerald-600">
-            {copyFor(language, "✅ What you did right", "✅ 你做对了")}
-          </h3>
+        <CollapsibleSection
+          label={copyFor(language, `What you did right (${good.length})`, `你做对了（${good.length}）`)}
+          accent="emerald"
+          defaultOpen={false}
+        >
           <div className="flex flex-col gap-3">
             {good.map((r) => <DebriefCard key={r.id} rule={r} language={language} />)}
           </div>
-        </div>
+        </CollapsibleSection>
       )}
 
       {/* Bad items — triggered (user made these mistakes) */}
       {triggeredBad.length > 0 && (
-        <div className="rounded-2xl border border-border/70 bg-card p-4">
-          <h3 className="mb-3 text-xs font-bold uppercase tracking-[0.12em] text-destructive">
-            {copyFor(language, "❌ What went wrong this run", "❌ 这次出了问题的环节")}
-          </h3>
+        <CollapsibleSection
+          label={copyFor(language, `Where things went wrong (${triggeredBad.length})`, `这次出了问题的环节（${triggeredBad.length}）`)}
+          accent="rose"
+          defaultOpen={false}
+        >
           <div className="flex flex-col gap-3">
             {triggeredBad.map((r) => <DebriefCard key={r.id} rule={r} language={language} />)}
           </div>
-        </div>
+        </CollapsibleSection>
       )}
 
       {/* Bad items — avoided (user didn't trigger, but should know about) */}
       {avoidedBad.length > 0 && (
-        <div className="rounded-2xl border border-border/70 bg-card p-4">
-          <h3 className="mb-3 text-xs font-bold uppercase tracking-[0.12em] text-amber-600">
-            {copyFor(language, "⚠️ Risks to know — you avoided these this time", "⚠️ 需要了解的风险——这次你避开了")}
-          </h3>
+        <CollapsibleSection
+          label={copyFor(language, `Risks you avoided this time (${avoidedBad.length})`, `这次你避开的风险（${avoidedBad.length}）`)}
+          accent="amber"
+          defaultOpen={false}
+        >
           <div className="flex flex-col gap-3">
             {avoidedBad.map((r) => <DebriefCard key={r.id} rule={r} language={language} avoided />)}
           </div>
-        </div>
+        </CollapsibleSection>
       )}
 
       {triggered.length === 0 && allBad.length === 0 && (
@@ -479,27 +482,29 @@ function DebriefCard({
   avoided?: boolean;
 }) {
   const isGood = rule.kind === "good";
+  // Darker, higher-contrast backgrounds — the previous /5 tints were nearly invisible
+  // against the dark-purple app background. Now: solid dark card + strong colored border.
   const cardClass = isGood
-    ? "border-emerald-500/30 bg-emerald-500/5"
+    ? "border-l-4 border-l-emerald-500 border-y border-r border-border/60 bg-secondary/50"
     : avoided
-    ? "border-amber-400/30 bg-amber-50/60 opacity-80"
-    : "border-destructive/30 bg-destructive/5";
+    ? "border-l-4 border-l-amber-500 border-y border-r border-border/60 bg-secondary/50 opacity-90"
+    : "border-l-4 border-l-rose-500 border-y border-r border-border/60 bg-secondary/50";
   const icon = isGood ? (
     <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
   ) : avoided ? (
     <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
   ) : (
-    <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+    <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-500" />
   );
   return (
-    <div className={`rounded-xl border p-3 ${cardClass}`}>
+    <div className={`rounded-xl p-3 ${cardClass}`}>
       <div className="flex items-start gap-2">
         {icon}
         <div>
           <p className="text-sm font-bold text-foreground">{simText(language, rule.title)}</p>
-          <p className="mt-1 text-xs leading-5 text-foreground/80">{simText(language, rule.detail)}</p>
+          <p className="mt-1 text-xs leading-5 text-foreground/85">{simText(language, rule.detail)}</p>
           {rule.basis && (
-            <p className="mt-1 text-[11px] leading-4 text-muted-foreground">
+            <p className="mt-1.5 text-[11px] leading-4 text-muted-foreground/90">
               {copyFor(language, "Basis: ", "依据：")}
               {simText(language, rule.basis)}
             </p>
@@ -747,6 +752,42 @@ function CoachHintsSection({
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+function CollapsibleSection({
+  label,
+  accent,
+  defaultOpen = false,
+  children,
+}: {
+  label: string;
+  accent: "emerald" | "rose" | "amber";
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  const accentText =
+    accent === "emerald" ? "text-emerald-500" :
+    accent === "rose" ? "text-rose-500" :
+    "text-amber-500";
+  return (
+    <div className="rounded-2xl border border-border/70 bg-card p-4">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between gap-2"
+      >
+        <span className={`text-xs font-bold uppercase tracking-[0.12em] ${accentText}`}>
+          {label}
+        </span>
+        {open ? (
+          <ChevronUp className={`h-4 w-4 ${accentText}`} />
+        ) : (
+          <ChevronDown className={`h-4 w-4 ${accentText}`} />
+        )}
+      </button>
+      {open && <div className="mt-3">{children}</div>}
     </div>
   );
 }
