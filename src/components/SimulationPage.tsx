@@ -32,6 +32,13 @@ import {
   resolveAuto,
   simText,
 } from "@/lib/simulation";
+import {
+  collectCoachHints,
+  computeSimulationScore,
+  type SimulationScoreResult,
+} from "@/lib/simulationScore";
+import { renderScoreCard, saveOrShareBlob } from "@/lib/simulationImage";
+import { Download, Share2 } from "lucide-react";
 
 interface SimulationPageProps {
   language: AppLanguage;
@@ -50,6 +57,7 @@ interface RunState {
   log: ChatItem[];
   sceneId: string | null;
   flags: Set<string>;
+  visitedSceneIds: string[];
   ending: SimEnding | null;
 }
 
@@ -62,6 +70,8 @@ export default function SimulationPage({ language, onGoToAid }: SimulationPagePr
     bottomRef.current?.scrollIntoView?.({ behavior: "smooth", block: "end" });
   }, [run?.log.length, run?.ending]);
 
+  // NOTE: coach hints are intentionally NOT shown during play — they would
+  // reveal the "correct" answer. Coach text is aggregated at the ending screen.
   const sceneItems = (scenario: SimScenario, sceneId: string): ChatItem[] => {
     const scene = scenario.scenes[sceneId];
     const items: ChatItem[] = [];
@@ -72,7 +82,6 @@ export default function SimulationPage({ language, onGoToAid }: SimulationPagePr
         speaker: scene.speaker ? simText(language, scene.speaker) : "",
         text: simText(language, scene.line),
       });
-    if (scene.coach) items.push({ kind: "coach", text: simText(language, scene.coach) });
     return items;
   };
 
@@ -81,24 +90,36 @@ export default function SimulationPage({ language, onGoToAid }: SimulationPagePr
     scenario: SimScenario,
     sceneId: string,
     log: ChatItem[],
-    flags: Set<string>
+    flags: Set<string>,
+    visited: string[]
   ): RunState => {
     let current = sceneId;
+    let visitedNext = [...visited, sceneId];
     for (;;) {
       const scene = scenario.scenes[current];
       log = [...log, ...sceneItems(scenario, current)];
-      if (!scene.auto) return { scenario, log, sceneId: current, flags, ending: null };
+      if (!scene.auto)
+        return { scenario, log, sceneId: current, flags, visitedSceneIds: visitedNext, ending: null };
       const next = resolveAuto(scene, flags);
-      if (!next) return { scenario, log, sceneId: current, flags, ending: null };
+      if (!next)
+        return { scenario, log, sceneId: current, flags, visitedSceneIds: visitedNext, ending: null };
       if (isEndingTarget(next))
-        return { scenario, log, sceneId: null, flags, ending: scenario.endings[endingIdOf(next)] };
+        return {
+          scenario,
+          log,
+          sceneId: null,
+          flags,
+          visitedSceneIds: visitedNext,
+          ending: scenario.endings[endingIdOf(next)],
+        };
       current = next;
+      visitedNext = [...visitedNext, current];
     }
   };
 
   const startScenario = (scenario: SimScenario) => {
     const log: ChatItem[] = [{ kind: "narration", text: simText(language, scenario.intro) }];
-    setRun(enterScene(scenario, scenario.entry, log, new Set()));
+    setRun(enterScene(scenario, scenario.entry, log, new Set(), []));
   };
 
   const choose = (choice: SimChoice) => {
@@ -116,7 +137,7 @@ export default function SimulationPage({ language, onGoToAid }: SimulationPagePr
         ending: run.scenario.endings[endingIdOf(choice.next)],
       });
     } else {
-      setRun(enterScene(run.scenario, choice.next, log, flags));
+      setRun(enterScene(run.scenario, choice.next, log, flags, run.visitedSceneIds));
     }
   };
 
@@ -204,6 +225,7 @@ export default function SimulationPage({ language, onGoToAid }: SimulationPagePr
           scenario={run.scenario}
           ending={run.ending}
           flags={run.flags}
+          visitedSceneIds={run.visitedSceneIds}
           onRetry={() => startScenario(run.scenario)}
           onExit={() => setRun(null)}
           onGoToAid={onGoToAid}
@@ -267,6 +289,7 @@ function EndingView({
   scenario,
   ending,
   flags,
+  visitedSceneIds,
   onRetry,
   onExit,
   onGoToAid,
@@ -275,6 +298,7 @@ function EndingView({
   scenario: SimScenario;
   ending: SimEnding;
   flags: Set<string>;
+  visitedSceneIds: string[];
   onRetry: () => void;
   onExit: () => void;
   onGoToAid: () => void;
@@ -286,8 +310,18 @@ function EndingView({
   const triggeredBad = allBad.filter((r) => triggeredBadIds.has(r.id));
   const avoidedBad = allBad.filter((r) => !triggeredBadIds.has(r.id));
 
+  const score = computeSimulationScore(flags);
+  const coachHints = collectCoachHints(scenario, visitedSceneIds);
+
   return (
     <div className="mt-2 flex flex-col gap-3">
+      <ScoreCard
+        language={language}
+        score={score}
+        scenarioTitle={simText(language, scenario.title)}
+        endingTitle={simText(language, ending.title)}
+      />
+
       <div className="rounded-2xl border border-border/70 bg-card p-4">
         <h2 className="text-base font-black text-foreground">{simText(language, ending.title)}</h2>
         <p className="mt-2 text-sm leading-6 text-foreground/85">{simText(language, ending.summary)}</p>
@@ -340,6 +374,10 @@ function EndingView({
             {copyFor(language, "No debrief entries for this run.", "这条路线没有产生复盘条目。")}
           </p>
         </div>
+      )}
+
+      {coachHints.length > 0 && (
+        <CoachHintsSection language={language} hints={coachHints} />
       )}
 
       <RealFlowSection language={language} steps={scenario.realFlow} />
@@ -530,6 +568,144 @@ function ScenarioPicker({
           "这是教育性模拟，不构成法律意见——每个真实案件都不同，可拨打 12348 获得免费法律咨询。场景只描述处境，不呈现暴力细节。你的选择不会被保存或上传。"
         )}
       </div>
+    </div>
+  );
+}
+
+function ScoreCard({
+  language,
+  score,
+  scenarioTitle,
+  endingTitle,
+}: {
+  language: AppLanguage;
+  score: SimulationScoreResult;
+  scenarioTitle: string;
+  endingTitle: string;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  const bandColor =
+    score.band === "high" ? "text-emerald-500" :
+    score.band === "medium" ? "text-amber-500" :
+    "text-rose-500";
+  const bandRing =
+    score.band === "high" ? "border-emerald-500/50 bg-emerald-500/5" :
+    score.band === "medium" ? "border-amber-500/50 bg-amber-500/5" :
+    "border-rose-500/50 bg-rose-500/5";
+
+  const handleSave = async () => {
+    setBusy(true);
+    setMsg(null);
+    try {
+      const blob = await renderScoreCard({ language, scenarioTitle, endingTitle, score });
+      const filename = `feimo-simulation-${score.score}.png`;
+      const result = await saveOrShareBlob(blob, filename);
+      if (result.method === "share") {
+        setMsg(copyFor(language, "Shared", "已分享"));
+      } else if (result.method === "download") {
+        setMsg(copyFor(language, "Image downloaded", "图片已下载"));
+      }
+    } catch (e) {
+      console.error(e);
+      setMsg(copyFor(language, "Save failed — please try again", "保存失败，请重试"));
+    } finally {
+      setBusy(false);
+      setTimeout(() => setMsg(null), 3000);
+    }
+  };
+
+  return (
+    <div className={`rounded-2xl border-2 p-5 ${bandRing}`}>
+      <div className="flex items-center gap-4">
+        <div className={`text-6xl font-black leading-none ${bandColor}`}>
+          {score.score}
+        </div>
+        <div className="flex-1">
+          <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+            {copyFor(language, "Your knowledge score", "本次知识准备分数")}
+          </div>
+          <div className={`mt-0.5 text-sm font-bold leading-5 ${bandColor}`}>
+            {language === "zh" ? score.label.zh : score.label.en}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+        <div className="rounded-xl bg-background/60 px-3 py-2">
+          <div className="text-[10px] text-muted-foreground">
+            {copyFor(language, "Right actions", "做对的关键动作")}
+          </div>
+          <div className="mt-0.5 text-lg font-bold text-emerald-600">✅ {score.goodCount}</div>
+        </div>
+        <div className="rounded-xl bg-background/60 px-3 py-2">
+          <div className="text-[10px] text-muted-foreground">
+            {copyFor(language, "Missed actions", "错过的关键动作")}
+          </div>
+          <div className="mt-0.5 text-lg font-bold text-rose-600">⚠️ {score.badCount}</div>
+        </div>
+      </div>
+
+      <button
+        onClick={handleSave}
+        disabled={busy}
+        className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-60"
+      >
+        <Share2 className="h-4 w-4" />
+        {busy
+          ? copyFor(language, "Generating...", "生成中...")
+          : copyFor(language, "Save / share result card", "保存 / 分享结果卡片")}
+      </button>
+      {msg && (
+        <p className="mt-2 text-center text-[11px] text-muted-foreground">{msg}</p>
+      )}
+      <p className="mt-2 text-center text-[10px] leading-4 text-muted-foreground/70">
+        {copyFor(
+          language,
+          "The card includes a QR code to invite others to try The Unmuted Beta.",
+          "卡片带有二维码，可邀请他人扫码体验非默内测版。"
+        )}
+      </p>
+    </div>
+  );
+}
+
+function CoachHintsSection({
+  language,
+  hints,
+}: {
+  language: AppLanguage;
+  hints: Array<{ sceneId: string; text: { en: string; zh: string } }>;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between"
+      >
+        <h3 className="text-xs font-bold uppercase tracking-[0.12em] text-primary">
+          💡 {copyFor(language, `Legal tips from your path (${hints.length})`, `本次流程中的法律提示（${hints.length} 条）`)}
+        </h3>
+        {open ? (
+          <ChevronUp className="h-4 w-4 text-primary" />
+        ) : (
+          <ChevronDown className="h-4 w-4 text-primary" />
+        )}
+      </button>
+      {open && (
+        <div className="mt-3 flex flex-col gap-2.5">
+          {hints.map((h, i) => (
+            <p
+              key={h.sceneId + i}
+              className="rounded-xl bg-card/60 px-3 py-2 text-xs leading-5 text-foreground/85"
+            >
+              {simText(language, h.text)}
+            </p>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
