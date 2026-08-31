@@ -70,37 +70,43 @@ describe("flagsMatch", () => {
   });
 });
 
-describe("domestic-violence debrief", () => {
+describe("domestic-violence scenario", () => {
   const dv = SIM_SCENARIOS.find((s) => s.id === "domestic-violence")!;
 
-  it("strong path yields good marks for receipt + warning letter", () => {
+  it("opening branches to three situation-specific paths", () => {
+    const opening = dv.scenes["opening"];
+    const nextIds = opening.choices!.map((c) => c.next);
+    expect(nextIds).toContain("emergency-open");
+    expect(nextIds).toContain("ongoing-open");
+    expect(nextIds).toContain("post-open");
+  });
+
+  it("strong path yields good debrief items for warning letter + receipt + applied-po", () => {
     const flags = new Set([
-      "reported-night",
-      "asked-receipt",
-      "injury-exam",
-      "warning-letter",
-      "kept-note",
+      "called-110",
+      "got-warning-letter",
+      "got-receipt",
+      "hospital-record",
       "applied-po",
     ]);
     const rules = evaluateDebrief(dv, flags);
     expect(rules.every((r) => r.kind === "good")).toBe(true);
-    expect(rules.map((r) => r.id)).toContain("warning-letter");
+    expect(rules.map((r) => r.id)).toContain("good-got-warning-letter");
   });
 
-  it("silent path flags the missing report", () => {
-    const flags = new Set(["frozen-night", "destroyed-note", "po-abandoned"]);
+  it("silent path flags the missing report and no-record", () => {
+    const flags = new Set(["no-report-emergency", "no-record"]);
     const ids = evaluateDebrief(dv, flags).map((r) => r.id);
-    expect(ids).toContain("never-reported");
-    expect(ids).toContain("destroyed-note");
-    expect(ids).toContain("po-abandoned");
+    expect(ids).toContain("bad-no-report-emergency");
+    expect(ids).toContain("bad-no-record");
   });
 
-  it("po-decision routes by evidence strength", () => {
-    const decision = dv.scenes["po-decision"];
-    expect(resolveAuto(decision, new Set(["warning-letter"]))).toBe("po-strong-cont");
-    expect(resolveAuto(decision, new Set(["asked-receipt"]))).toBe("po-granted-cont");
-    expect(resolveAuto(decision, new Set(["photo"]))).toBe("po-thin-cont");
-    expect(resolveAuto(decision, new Set())).toBe("end:po-denied");
+  it("po-application routes by evidence strength", () => {
+    const po = dv.scenes["po-application"];
+    expect(resolveAuto(po, new Set(["got-warning-letter"]))).toBe("po-granted");
+    expect(resolveAuto(po, new Set(["multi-reports"]))).toBe("po-granted");
+    expect(resolveAuto(po, new Set(["self-documented"]))).toBe("po-granted-partial");
+    expect(resolveAuto(po, new Set())).toBe("po-denied");
   });
 });
 

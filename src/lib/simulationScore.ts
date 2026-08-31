@@ -99,6 +99,40 @@ export const FLAG_WEIGHTS: Record<string, number> = {
   // 创伤反应类（低扣分 —— 复盘文本明确说「不是你的错」）
   "frozen": -2,                    // 僵住
   "forced-normalcy": -2,           // 强作镇定
+
+  // ─── 家暴情景（domestic-violence.json）─────────
+  // 高价值好行为
+  "reached-safety": 8,             // 先脱险
+  "called-120": 5,                 // 拨打 120（独立官方记录）
+  "neighbor-witness": 5,           // 邻居成为证人
+  "stayed-safe": 5,                // 当晚在安全地方
+  "used-shelter-system": 5,        // 使用庇护系统
+  "friend-notified": 5,            // 事发时通知信任的人
+  "building-record": 8,            // 持续留证
+  "audio-recorded": 5,             // 事发中录音
+  "multi-reports": 8,              // 反复报警
+  "digital-evidence": 5,           // 保留数字骚扰证据
+  "applied-po": 10,                // 申请保护令
+  "parallel-tracks": 8,            // 并行多路径
+  "full-claims": 10,               // 离婚案中一并主张全部赔偿
+  "forensic-exam": 5,              // 法医鉴定
+  "report-filed": 5,               // 正式报案笔录
+  // 差行为 / 系统性错误
+  "fought-back": -8,               // 还手（真实法律风险）
+  "no-report-emergency": -5,       // 紧急时未报警
+  "no-formal-report": -5,          // 未正式报案
+  "scene-altered": -5,             // 求助前改动现场
+  "stayed-home-unsafe": -3,        // 留在家（有时不可避免）
+  "no-hospital": -5,               // 没留下就医记录
+  "enduring": -5,                  // 继续忍
+  "family-mediation": -3,          // 找加害者家属调解
+  "evading": -3,                   // 试图躲避
+  "split-claims": -10,             // 离婚案中未一并主张（真实陷阱）
+  "gave-up-po": -3,                // 未再申请保护令
+  "late-application": -2,          // 证据有限时申请
+  "still-documenting": -2,         // 只留证不申请
+  "no-action": -3,                 // 不采取行动
+  "waiting": -2,                   // 选择等一等
 };
 
 const BASE_SCORE = 40;
@@ -256,6 +290,38 @@ export const FLAG_SHORT_LABELS: Record<string, { en: string; zh: string }> = {
   "let-go": { en: "Chose to let it go", zh: "选择放下这件事" },
   "frozen": { en: "Froze in the moment — normal trauma response", zh: "当下僵住——正常创伤反应" },
   "forced-normalcy": { en: "Forced a normal appearance to escape", zh: "强作镇定以便脱身" },
+
+  // ─── 家暴情景（domestic-violence.json）─────────
+  "reached-safety": { en: "Reached a safe location", zh: "先到达了安全的地方" },
+  "called-120": { en: "Also called emergency medical", zh: "同时拨打了 120" },
+  "neighbor-witness": { en: "A neighbor became a witness", zh: "邻居成为证人" },
+  "stayed-safe": { en: "Stayed somewhere safe that night", zh: "当晚在安全的地方过夜" },
+  "used-shelter-system": { en: "Used the emergency shelter system", zh: "使用了紧急庇护系统" },
+  "friend-notified": { en: "Notified a trusted person in real time", zh: "第一时间告知了信任的人" },
+  "building-record": { en: "Built an ongoing record", zh: "在持续留证" },
+  "audio-recorded": { en: "Recorded audio during the incident", zh: "事发中录了音" },
+  "multi-reports": { en: "Reported repeatedly", zh: "反复报警" },
+  "digital-evidence": { en: "Preserved digital harassment evidence", zh: "保留了数字骚扰证据" },
+  "applied-po": { en: "Applied for a Protection Order", zh: "申请了人身安全保护令" },
+  "parallel-tracks": { en: "Ran multiple legal tracks in parallel", zh: "并行推进多条法律路径" },
+  "full-claims": { en: "Claimed all damages in the divorce case", zh: "离婚案中一并主张全部损害" },
+  "forensic-exam": { en: "Had a legal-medical forensic exam", zh: "做了法医鉴定" },
+  "report-filed": { en: "Filed a formal police statement", zh: "做完正式询问笔录" },
+  "fought-back": { en: "Fought back — real legal risk", zh: "还手——存在真实法律风险" },
+  "no-report-emergency": { en: "Did not report during the emergency", zh: "紧急事件未报警" },
+  "no-formal-report": { en: "Police left without a formal report", zh: "警察离开时未正式报案" },
+  "scene-altered": { en: "Scene altered before help arrived", zh: "求助前场景被改动" },
+  "stayed-home-unsafe": { en: "Stayed home in the aftermath", zh: "事发后留在家" },
+  "no-hospital": { en: "No hospital record was created", zh: "没有留下就医记录" },
+  "enduring": { en: "Continuing to endure the situation", zh: "继续忍受这种情况" },
+  "family-mediation": { en: "Went through his family — didn't stop it", zh: "找他家人劝阻——未能阻止" },
+  "evading": { en: "Tried to disappear — temporary fix", zh: "试图消失——只是权宜之计" },
+  "split-claims": { en: "Split damages from the divorce case", zh: "损害赔偿未随离婚案一并主张" },
+  "gave-up-po": { en: "Did not reapply for protection order", zh: "没有再次申请保护令" },
+  "late-application": { en: "Applied with limited evidence", zh: "证据有限时申请" },
+  "still-documenting": { en: "Documented but did not file", zh: "只留证，未申请" },
+  "no-action": { en: "No action taken yet", zh: "尚未采取行动" },
+  "waiting": { en: "Chose to wait", zh: "选择先等一等" },
 };
 
 export function shortLabelFor(flag: string, language: "en" | "zh"): string {

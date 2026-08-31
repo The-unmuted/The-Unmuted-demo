@@ -1,1064 +1,1623 @@
 {
   "id": "domestic-violence",
-  "_comment": "模拟版本（草稿）— 全部文本待公益律师校对后才可对外宣称准确。依据：反家庭暴力法(2016)、最高法2022保护令规定、民法典1091条、公安机关办理刑事案件程序规定。",
+  "_comment": "模拟版本（草稿）— 全部文本待公益律师校对。基于 3 份真实法院文书重写（四川高院 2014 川刑终 86 号故意伤害/新疆巴音郭楞 2026 新 28 民终 984 号侵权驳回/内蒙古锡林浩特 2026 内 2502 民保令 6 号人身安全保护令）。依据：反家庭暴力法第 15/16/23/26-29/34/37 条、民法典第 1091 条（离婚损害赔偿）、治安管理处罚法第 43 条、刑法第 234/260 条。",
   "title": {
-    "en": "What to Do When Someone Is Being Abused",
-    "zh": "TA被家暴了该怎么做"
+    "en": "What to Do When Someone Is Being Abused at Home",
+    "zh": "TA正在被家暴该怎么做"
   },
   "tagline": {
-    "en": "From that night to a protection order — practice each decision safely, before it's real.",
-    "zh": "从案发当晚到人身安全保护令——在安全的环境里，把每一步先走一遍。"
+    "en": "Domestic violence law works — but only if the paper trail exists. Every step here is a real one that either builds that trail or doesn't.",
+    "zh": "反家暴法有真实用途——但前提是留下了「文书链」。这里的每一步都是真实的，要么在建立文书链，要么在放弃。"
   },
   "intro": {
-    "en": "You will walk through a realistic sequence of decisions. Every option exists in real life, and every consequence follows real legal rules. Nothing you choose here is recorded.",
-    "zh": "你将经历一连串真实存在的决策点。每个选项都是现实中真实的选择，每个后果都遵循真实的法律规则。你在这里的任何选择都不会被记录。"
+    "en": "You'll pick the situation you're walking through today, then face the decisions real survivors face — with real consequences from three real Chinese court judgments. Nothing you choose is recorded.",
+    "zh": "你先选择今天要走的情境，然后面对真实幸存者面对的抉择——每一步的后果都基于三份真实的中国法院文书。你的任何选择都不会被记录。"
   },
   "entry": "opening",
   "scenes": {
     "opening": {
       "narration": {
-        "en": "Late at night, during an argument, he hits you for the first time. Your arm and shoulder are bruised — not severe, but you are shaken. He storms out. You are alone in the apartment.",
-        "zh": "深夜，一次争吵中，他第一次动了手。伤在手臂和肩膀，不算重，但你吓坏了。他摔门出去，家里只剩你一个人。"
+        "en": "Domestic abuse looks different at different stages. Which situation are you in today?",
+        "zh": "家暴在不同阶段有不同的样子。你今天在哪一种情境里？"
       },
       "coach": {
-        "en": "What you do in the next hour affects whether you can ever prove what happened.",
-        "zh": "接下来一小时你做的每件事，都会影响以后能不能证明发生过什么。"
+        "en": "Three real paths, three different legal tools. Emergency response, long-term buildup, and post-separation stalking each have their own procedures under the Anti-Domestic Violence Law and Civil Code §1091.",
+        "zh": "三条真实路径，三套法律工具。突发暴力、长期积累、分手后被骚扰——反家庭暴力法和民法典 1091 条对每种情境都有独立程序。"
       },
       "choices": [
         {
           "text": {
-            "en": "Call 110 and report it",
-            "zh": "拨打 110 报警"
+            "en": "Emergency — it is happening right now, or just happened",
+            "zh": "紧急——现在正在发生，或刚刚发生"
           },
-          "feedback": {
-            "en": "The call is logged. From this moment an official record of tonight exists.",
-            "zh": "你拨通了110。从这一刻起，今晚这件事有了官方记录——接警记录本身就是证据。"
-          },
-          "flags": [
-            "reported-night"
-          ],
-          "next": "police-arrive"
+          "flags": ["path-emergency"],
+          "next": "emergency-open"
         },
         {
           "text": {
-            "en": "Photograph your injuries and the scene first",
-            "zh": "先拍下伤处和现场的照片"
+            "en": "Ongoing — this has been happening for months or years",
+            "zh": "长期——这样的事持续了几个月或几年"
           },
-          "feedback": {
-            "en": "You photograph the bruises and the broken things on the floor. The photos carry tonight's timestamp.",
-            "zh": "你拍下了手臂和肩膀的淤青，还有摔碎的东西。照片带着今晚的时间戳。"
-          },
-          "flags": [
-            "photo"
-          ],
-          "next": "after-photo"
+          "flags": ["path-ongoing"],
+          "next": "ongoing-open"
         },
         {
           "text": {
-            "en": "You're too frightened — you lock the bedroom door and wait for morning",
-            "zh": "太害怕了，锁上房门，等天亮"
+            "en": "Post-separation — I left, and they won't stop contacting me",
+            "zh": "分手后——我已经离开，对方还在纠缠"
           },
-          "feedback": {
-            "en": "The night passes and leaves no record. That is not your fault — and there are still chances ahead.",
-            "zh": "这一晚过去了，没有留下任何记录。这不是你的错——接下来还有机会。"
-          },
-          "flags": [
-            "frozen-night"
-          ],
-          "next": "morning-after"
+          "flags": ["path-post"],
+          "next": "post-open"
         }
       ]
     },
-    "after-photo": {
+
+    "emergency-open": {
       "narration": {
-        "en": "The photos are saved somewhere safe. What now?",
-        "zh": "照片已经存到了安全的地方。现在呢？"
-      },
-      "choices": [
-        {
-          "text": {
-            "en": "Call 110 as well",
-            "zh": "还是报警"
-          },
-          "feedback": {
-            "en": "Photos plus a police dispatch record — two kinds of evidence that corroborate each other.",
-            "zh": "伤照 + 出警记录，两类证据可以互相印证。"
-          },
-          "flags": [
-            "reported-night"
-          ],
-          "next": "police-arrive"
-        },
-        {
-          "text": {
-            "en": "Let it go this time — keep it inside the family",
-            "zh": "这次先算了，家丑不外扬"
-          },
-          "feedback": {
-            "en": "You decide not to call. The photos exist, but there is no official record of tonight.",
-            "zh": "你决定先不报警。照片还在，但今晚没有任何官方记录。"
-          },
-          "flags": [
-            "no-report"
-          ],
-          "next": "morning-after"
-        }
-      ]
-    },
-    "police-arrive": {
-      "narration": {
-        "en": "Two officers arrive at the door.",
-        "zh": "两位民警来到了家里。"
-      },
-      "speaker": {
-        "en": "Police officer",
-        "zh": "民警"
-      },
-      "line": {
-        "en": "\"A family matter, this late at night... How about we mediate a little, and everyone calms down?\"",
-        "zh": "“家务事嘛，大半夜的……要不我们给你们调解一下，都消消气？”"
+        "en": "You are locked in the apartment. He has hit you. You are bleeding — a lip, a scalp, your arm. He is between you and the door. A child is in the next room.",
+        "zh": "你被关在屋里。他打了你。你在流血——嘴唇、头皮、手臂某处。他站在你和门之间。孩子在隔壁房间。"
       },
       "coach": {
-        "en": "The dispatch record and the written statement (询问笔录) are the core official evidence for a future protection order or divorce case.",
-        "zh": "出警记录和询问笔录，是日后申请保护令、离婚诉讼最核心的官方证据。"
+        "en": "Priority order: (1) get safe, (2) call 110, (3) preserve injury evidence. Police must accept a domestic violence call (Anti-DV Law §15). CCTV, forensic exam records, and the officer's report will all serve as evidence later.",
+        "zh": "优先级：（1）先脱险，（2）拨打 110，（3）保留伤情证据。公安必须受理家暴警情（反家暴法第 15 条）。监控、法医检查记录、出警记录日后都是证据。"
       },
       "choices": [
         {
           "text": {
-            "en": "Ask them to take a written statement, and request the report receipt",
-            "zh": "要求做询问笔录，并索要报警回执"
+            "en": "Get to the bathroom, lock the door, call 110",
+            "zh": "冲进卫生间锁门，拨打 110"
           },
           "feedback": {
-            "en": "The officers take your statement and you receive the receipt. The paperwork now says the date, the place, and the word \"beaten\".",
-            "zh": "民警制作了笔录，你拿到了报警回执。这些材料上写着日期、地点，和“殴打”两个字。"
+            "en": "You lock the door. The dispatcher answers. You give your address. Sirens arrive in about 15 minutes.",
+            "zh": "你锁上门。接线员接听。你报了地址。约 15 分钟后警笛声到达。"
           },
-          "flags": [
-            "asked-receipt"
-          ],
-          "next": "injury-question"
+          "flags": ["called-110", "reached-safety"],
+          "next": "emergency-police-arrive"
         },
         {
           "text": {
-            "en": "Say it clearly: \"He hit me. I ask you to handle this according to law.\"",
-            "zh": "说清楚：“他打了我，我要求依法处理。”"
+            "en": "Run to a neighbor and call 110 from there",
+            "zh": "跑到邻居家，从那里拨打 110"
           },
           "feedback": {
-            "en": "Your firmness changes the tone: the officers begin a formal written record.",
-            "zh": "你的坚决让处理正式化了：民警开始制作笔录。"
+            "en": "You get to the neighbor's door. She opens it. You dial 110 from her phone. She stays with you.",
+            "zh": "你敲开邻居的门。她让你进去。你用她的电话拨了 110。她陪着你。"
           },
-          "flags": [
-            "asked-receipt"
-          ],
-          "next": "injury-question"
+          "flags": ["called-110", "reached-safety", "neighbor-witness"],
+          "next": "emergency-police-arrive"
         },
         {
           "text": {
-            "en": "Accept a quick verbal mediation and let them leave",
-            "zh": "接受口头调解，让他们走"
+            "en": "Fight back — grab something to defend yourself",
+            "zh": "反抗——抓一件东西自卫"
           },
           "feedback": {
-            "en": "The officers mediate and leave. No statement, no receipt — this visit survives only in your memory.",
-            "zh": "民警调解几句就走了。没有笔录、没有回执——这次出警只留在你自己的记忆里。"
+            "en": "You grab the closest object. He is bigger than you. Anything can happen next.",
+            "zh": "你抓起手边的东西。他比你力气大。接下来任何情况都可能发生。"
           },
-          "flags": [
-            "oral-mediation"
-          ],
-          "next": "morning-after"
+          "flags": ["fought-back"],
+          "next": "emergency-fight-warning"
+        },
+        {
+          "text": {
+            "en": "Do not call police — try to calm him down",
+            "zh": "不报警——试着让他冷静下来"
+          },
+          "feedback": {
+            "en": "You keep your voice low.",
+            "zh": "你压低声音。"
+          },
+          "flags": ["no-report-emergency"],
+          "next": "emergency-no-report"
         }
       ]
     },
-    "injury-question": {
-      "speaker": {
-        "en": "Police officer",
-        "zh": "民警"
-      },
-      "line": {
-        "en": "\"The injuries don't look serious. Do you want a forensic injury assessment? Your call.\"",
-        "zh": "“伤看着不重。要不要做伤情鉴定？你自己定。”"
+
+    "emergency-fight-warning": {
+      "narration": {
+        "en": "Later — hours or days — you will still be dealing with what happened tonight.",
+        "zh": "之后——几小时或几天——你仍要面对今晚的事。"
       },
       "coach": {
-        "en": "Injury assessment is time-sensitive — once bruises fade, they can no longer be certified. 轻微伤 can bring administrative punishment; 轻伤 or worse makes it a criminal case.",
-        "zh": "伤情鉴定有时限——淤青消退后就鉴定不出来了。轻微伤可治安处罚；轻伤及以上就是刑事案件。"
+        "en": "Real case (四川高院 2014): a woman who fought back against her abusive husband and caused his death was convicted of intentional injury (12 years), not self-defense. Courts set a very high bar for 「self-defense」 in domestic violence cases. If injury occurred to either side, calling 110 immediately AND preserving your own injury record is critical.",
+        "zh": "真实案件（四川高院 2014）：一位家暴幸存者反抗导致丈夫死亡，被判故意伤害罪 12 年，不认定正当防卫。法院对家暴中的「正当防卫」认定门槛极高。若一方有伤，立即拨打 110 并保留自己的伤情记录至关重要。"
       },
       "choices": [
         {
           "text": {
-            "en": "Request the assessment referral and go first thing tomorrow",
-            "zh": "要求开具鉴定委托，明天一早就去"
+            "en": "Call 110 and 120 immediately",
+            "zh": "立即拨打 110 和 120"
           },
           "feedback": {
-            "en": "Result: minor injury (轻微伤). This document turns the bruises into a legally recognized fact.",
-            "zh": "鉴定结论：轻微伤。这份文书把身上的伤变成了法律上认可的事实。"
+            "en": "Both call in. Police and ambulance arrive.",
+            "zh": "两个电话都拨了。警车和救护车到达。"
           },
-          "flags": [
-            "injury-exam"
-          ],
-          "next": "warning-letter-scene"
+          "flags": ["called-110", "called-120"],
+          "next": "emergency-police-arrive"
         },
         {
           "text": {
-            "en": "\"It's not that bad, no need.\"",
-            "zh": "“伤不重，不用了吧。”"
+            "en": "Call 110 only",
+            "zh": "只拨打 110"
           },
           "feedback": {
-            "en": "No assessment. Days later the bruises fade — in the eyes of the law, they never existed.",
-            "zh": "没有做鉴定。几天后淤青退了——在法律上，这两处伤从未存在过。"
+            "en": "Police arrive. Medical is not yet on scene.",
+            "zh": "警察到达。医疗还没到场。"
           },
-          "flags": [
-            "no-exam"
-          ],
-          "next": "warning-letter-scene"
+          "flags": ["called-110"],
+          "next": "emergency-police-arrive"
+        },
+        {
+          "text": {
+            "en": "Clean up before calling anyone",
+            "zh": "先收拾一下再说，暂不打电话"
+          },
+          "feedback": {
+            "en": "Time passes. The scene begins to change.",
+            "zh": "时间在过去。原本的现场状态开始消失。"
+          },
+          "flags": ["scene-altered"],
+          "next": "emergency-no-report"
         }
       ]
     },
-    "warning-letter-scene": {
+
+    "emergency-police-arrive": {
       "narration": {
-        "en": "At the police station, the handling officer concludes the matter is \"relatively minor\".",
-        "zh": "在派出所，办案民警认为情节较轻。"
-      },
-      "speaker": {
-        "en": "Police officer",
-        "zh": "民警"
-      },
-      "line": {
-        "en": "\"He admitted it and apologized. We'll criticize and educate him this time. You two go home and work it out.\"",
-        "zh": "“他也认错了，这次就先批评教育。你们回去好好过。”"
+        "en": "Officers arrive. Two of them come inside. One asks what happened. One takes photos.",
+        "zh": "警察到了。两位民警进屋。一位问经过。一位拍照。"
       },
       "coach": {
-        "en": "When the case is minor and no administrative punishment is given, the police SHALL issue a written warning letter (告诫书, Anti-DV Law art. 16) — you can ask for it.",
-        "zh": "情节较轻不予治安处罚的，公安应当出具《家庭暴力告诫书》（反家暴法第16条）——可以主动要求。"
+        "en": "Anti-DV Law §16: police can issue a Warning Letter (家庭暴力告诫书) on scene. This document is critical evidence — it establishes the abuse in writing from a state authority. Under §15, police can accompany the victim for injury forensic exam.",
+        "zh": "反家暴法第 16 条：民警可在现场出具《家庭暴力告诫书》。这份文书是关键证据——由国家机关书面确认家暴存在。第 15 条：民警应协助被害人验伤。"
       },
       "choices": [
         {
           "text": {
-            "en": "Ask them to issue a Domestic Violence Warning Letter (告诫书)",
-            "zh": "主动要求出具《家庭暴力告诫书》"
+            "en": "Ask them to issue a Warning Letter (家庭暴力告诫书)",
+            "zh": "请他们当场出具《家庭暴力告诫书》"
           },
           "feedback": {
-            "en": "The letter is issued: served on him, archived at the station. When a court later needs to find that violence occurred, this is official documentary proof.",
-            "zh": "告诫书出具了：送达给他，也在派出所存档。日后法院认定家暴时，这就是官方书证。"
+            "en": "The officer confers with his partner. They fill out the form. You get a copy.",
+            "zh": "民警和搭档商量了一下。他们填写文书。你拿到一份副本。"
           },
-          "flags": [
-            "warning-letter"
-          ],
-          "next": "morning-after"
+          "flags": ["got-warning-letter"],
+          "next": "emergency-medical"
         },
         {
           "text": {
-            "en": "You've never heard of such a letter — you leave",
-            "zh": "没听说过告诫书，就这样吧"
+            "en": "Give a full statement and sign the acceptance record",
+            "zh": "做完询问笔录，签字受案"
           },
           "feedback": {
-            "en": "You leave the station with no written result in hand.",
-            "zh": "你离开了派出所，手上没有任何书面处理结果。"
+            "en": "You describe what happened. The officer types it up. You read and sign each page.",
+            "zh": "你描述经过。民警打字。你逐页阅读并签字。"
           },
-          "flags": [
-            "no-warning-letter"
-          ],
-          "next": "morning-after"
+          "flags": ["report-filed", "signed-carefully"],
+          "next": "emergency-medical"
+        },
+        {
+          "text": {
+            "en": "Say \"it's nothing\"",
+            "zh": "说「没事」"
+          },
+          "feedback": {
+            "en": "The officer asks once more if you want to make a report. You say no. They leave a phone number and go.",
+            "zh": "民警再问一次是否要报案。你说不用。他们留了一个电话号码离开。"
+          },
+          "flags": ["no-formal-report"],
+          "next": "emergency-medical"
         }
       ]
     },
-    "morning-after": {
+
+    "emergency-medical": {
       "narration": {
-        "en": "The next day he apologizes, red-eyed, and hand-writes a pledge: \"I swear I will never raise my hand again.\"",
-        "zh": "第二天，他红着眼睛道歉，手写了一份保证书：“我保证再也不动手。”"
+        "en": "Your injuries: lip, arm, scalp. Some bleeding stopped, some hasn't.",
+        "zh": "你的伤：嘴唇、手臂、头皮。一些出血止住了，一些还没有。"
       },
       "coach": {
-        "en": "Written pledges and apologies are explicitly listed by the Supreme Court (2022) as admissible evidence of domestic violence.",
-        "zh": "悔过书、保证书是最高法2022年规定明确列举的家暴证据之一。"
+        "en": "Hospital visit within 24 hours creates a medical record dated to tonight, plus photos, plus a discharge summary. If police are involved, they can arrange a legal-medical forensic exam (法医鉴定). Injury classification (轻微伤/轻伤/重伤) affects whether the case becomes public order (§43) or criminal (§234).",
+        "zh": "24 小时内就医能形成当晚日期的病历、伤情照片和出院小结。若警方已介入，可安排法医鉴定。伤情等级（轻微伤/轻伤/重伤）决定案件是治安（第 43 条）还是刑事（第 234 条）。"
       },
       "choices": [
         {
           "text": {
-            "en": "Keep the pledge somewhere only you know",
-            "zh": "收下保证书，存到只有自己知道的地方"
+            "en": "Go to hospital tonight; request a legal-medical forensic exam",
+            "zh": "今晚就去医院，并要求做法医鉴定"
           },
           "feedback": {
-            "en": "The pledge admits, in his own handwriting, that he hit you.",
-            "zh": "这份保证书用他自己的笔迹承认了“动手”这个事实。"
+            "en": "You are seen at the ER. Photos are taken. A discharge summary is issued. Forensic exam scheduled for next morning.",
+            "zh": "你在急诊被接诊。伤情被拍照。出院小结开出。法医鉴定预约在次日上午。"
           },
-          "flags": [
-            "kept-note"
-          ],
-          "next": "weeks-later"
+          "flags": ["hospital-record", "forensic-exam"],
+          "next": "emergency-shelter"
         },
         {
           "text": {
-            "en": "Tear it up — you can't stand looking at it",
-            "zh": "撕掉，看到就难受"
+            "en": "Go to hospital tonight — treatment only, no forensic exam",
+            "zh": "今晚就去医院——只治疗，不做法医鉴定"
           },
           "feedback": {
-            "en": "The pledge is gone. It could have proven, in his own words, what he did.",
-            "zh": "保证书没有了。它本可以用他自己的话证明他做过什么。"
+            "en": "You are seen at the ER. A discharge summary is issued.",
+            "zh": "你在急诊被接诊。出院小结开出。"
           },
-          "flags": [
-            "destroyed-note"
-          ],
-          "next": "weeks-later"
+          "flags": ["hospital-record"],
+          "next": "emergency-shelter"
+        },
+        {
+          "text": {
+            "en": "Handle it at home",
+            "zh": "在家处理"
+          },
+          "feedback": {
+            "en": "You clean the wounds yourself.",
+            "zh": "你自己清洗伤口。"
+          },
+          "flags": ["no-hospital"],
+          "next": "emergency-shelter"
         }
       ]
     },
-    "weeks-later": {
+
+    "emergency-no-report": {
       "narration": {
-        "en": "Three weeks later, during another argument, he shoves you to the floor and says: \"Call the police, see if I care.\" You move to a friend's place. He waits downstairs every day.",
-        "zh": "三周后，又一次争吵中，他把你推倒在地，还说“你敢报警试试”。你搬去朋友家住，他每天在楼下等你。"
+        "en": "No report was made tonight. Time passes.",
+        "zh": "今晚没有报案。时间在过去。"
       },
       "coach": {
-        "en": "A Personal Safety Protection Order does not require filing for divorce, and does not require his presence or consent.",
-        "zh": "人身安全保护令：不需要先起诉离婚，也不需要他到场或同意。"
+        "en": "Anti-DV Law does not require a police report to file for a Personal Safety Protection Order later, but any documented record — hospital visit, message to a friend, photo of injury — meaningfully strengthens later applications.",
+        "zh": "反家暴法并不要求先报案才能申请人身安全保护令，但任何书面记录——就医、给朋友的消息、伤情照片——都能显著加强日后的申请。"
       },
       "choices": [
         {
           "text": {
-            "en": "Apply to the court for a Personal Safety Protection Order",
-            "zh": "向法院申请人身安全保护令"
+            "en": "Photograph your injuries and message a trusted person with today's date",
+            "zh": "给自己拍伤情照片，并给信任的人发消息，注明日期"
           },
-          "flags": [
-            "applied-po"
-          ],
-          "next": "po-court"
+          "feedback": {
+            "en": "The photos are on your phone with timestamps. A friend replies acknowledging what you sent.",
+            "zh": "照片带时间戳存在手机上。朋友回复确认收到。"
+          },
+          "flags": ["self-documented", "friend-notified"],
+          "next": "time-passes"
         },
         {
           "text": {
-            "en": "You believe you must sue for divorce first — start saving for a lawyer",
-            "zh": "以为要先起诉离婚才能申请，先攒钱找律师"
+            "en": "Do nothing",
+            "zh": "什么都不做"
           },
-          "feedback": {
-            "en": "A week passes while he keeps appearing downstairs.",
-            "zh": "一周过去了，他还是每天出现在楼下。"
-          },
-          "flags": [
-            "po-delayed"
-          ],
-          "next": "po-lawyer"
-        },
-        {
-          "text": {
-            "en": "Call 110 again — and this time firmly request written handling",
-            "zh": "再次拨打110，这次坚决要求书面处理"
-          },
-          "feedback": {
-            "en": "The officers take a formal statement this time.",
-            "zh": "民警这次做了正式笔录。"
-          },
-          "flags": [
-            "reported-again",
-            "asked-receipt"
-          ],
-          "next": "po-hint"
+          "flags": ["no-record"],
+          "next": "time-passes"
         }
       ]
     },
-    "po-lawyer": {
+
+    "emergency-shelter": {
       "narration": {
-        "en": "A week later you finally sit down with a legal-aid lawyer (12348).",
-        "zh": "一周后，你终于见到了法律援助律师（12348）。"
-      },
-      "speaker": {
-        "en": "Legal-aid lawyer",
-        "zh": "法律援助律师"
-      },
-      "line": {
-        "en": "\"Who told you divorce comes first? The protection order is independent — no divorce needed, he doesn't have to be present. You can apply to the court today.\"",
-        "zh": "“谁说要先离婚？保护令是独立的——不需要离婚，不需要他到场，今天就可以向法院申请。”"
-      },
-      "choices": [
-        {
-          "text": {
-            "en": "Apply right away",
-            "zh": "那现在就去申请"
-          },
-          "feedback": {
-            "en": "Fortunately this misconception only cost a week.",
-            "zh": "好在这个误区只耽误了一周。"
-          },
-          "flags": [
-            "applied-po"
-          ],
-          "next": "po-court"
-        },
-        {
-          "text": {
-            "en": "Hold off — you're afraid it will provoke him",
-            "zh": "再想想，怕激怒他"
-          },
-          "feedback": {
-            "en": "Many people stop here. The danger downstairs does not stop with them.",
-            "zh": "很多人停在了这一步。但楼下的危险不会跟着停下。"
-          },
-          "flags": [
-            "po-abandoned"
-          ],
-          "next": "end:no-po"
-        }
-      ]
-    },
-    "po-hint": {
-      "narration": {
-        "en": "As they leave, a young officer lowers his voice: \"For a situation like yours, you can apply to the court for a Personal Safety Protection Order. It's fast.\"",
-        "zh": "临走时，一位年轻民警压低声音说：“你这种情况，可以去法院申请人身安全保护令，很快的。”"
-      },
-      "choices": [
-        {
-          "text": {
-            "en": "Go to the court the next morning",
-            "zh": "第二天一早就去法院"
-          },
-          "flags": [
-            "applied-po"
-          ],
-          "next": "po-court"
-        },
-        {
-          "text": {
-            "en": "Not yet — you're afraid of escalating things",
-            "zh": "先不了，怕把事情闹大"
-          },
-          "feedback": {
-            "en": "You put the idea away. He is still downstairs tomorrow.",
-            "zh": "你把这个念头收了起来。明天，他还会在楼下。"
-          },
-          "flags": [
-            "po-abandoned"
-          ],
-          "next": "end:no-po"
-        }
-      ]
-    },
-    "po-court": {
-      "narration": {
-        "en": "At the court filing window, the clerk asks: \"What materials do you have showing domestic violence or a real risk of it?\"",
-        "zh": "在法院立案窗口，工作人员问：“有什么材料能证明存在家暴，或者存在现实危险？”"
+        "en": "The night is not over. You have to decide where to sleep.",
+        "zh": "今晚还没结束。你要决定去哪里睡。"
       },
       "coach": {
-        "en": "The standard of proof is \"a fairly high likelihood\" (较大可能性) — lower than an ordinary civil case. Dispatch records, warning letters, injury photos, written pledges, and witness accounts all count.",
-        "zh": "保护令的证明标准是“较大可能性”——低于一般民事案件。出警记录、告诫书、伤照、保证书、证人证言都算数。"
+        "en": "Anti-DV Law §18: local government must provide emergency shelter (临时庇护所). The Women's Federation (妇联, 12338) can help arrange it. Staying at the abuser's home tonight is legal but often unsafe.",
+        "zh": "反家暴法第 18 条：地方政府应提供临时庇护所。妇联（12338）可协助安排。今晚留在施暴者家中在法律上允许，但通常不安全。"
       },
       "choices": [
         {
           "text": {
-            "en": "Submit everything you have",
-            "zh": "把手上所有材料都交上去"
+            "en": "Go to a friend or family member's home",
+            "zh": "去朋友或亲人家"
           },
-          "flags": [
-            "submitted-all"
-          ],
-          "next": "po-decision"
+          "feedback": {
+            "en": "You pack essentials. A friend picks you up.",
+            "zh": "你收拾必需品。朋友来接你。"
+          },
+          "flags": ["stayed-safe"],
+          "next": "post-emergency-choice"
         },
         {
           "text": {
-            "en": "You feel your materials are too thin — you turn back",
-            "zh": "觉得材料太少拿不出手，回去了"
+            "en": "Call 12338 and ask about emergency shelter",
+            "zh": "拨打 12338 询问临时庇护所"
           },
           "feedback": {
-            "en": "Many people give up at this exact step — even though the threshold is much lower than they imagine.",
-            "zh": "很多人正是在这一步放弃的——其实“较大可能性”的门槛比想象中低得多。"
+            "en": "The line is answered. They give you a local address and stay on the line until you confirm you can get there safely.",
+            "zh": "电话接通。他们给你一个本地地址，并在线上陪你直到你确认能安全到达。"
           },
-          "flags": [
-            "po-abandoned"
-          ],
-          "next": "end:no-po"
+          "flags": ["used-shelter-system", "sought-support"],
+          "next": "post-emergency-choice"
+        },
+        {
+          "text": {
+            "en": "Stay home",
+            "zh": "留在家"
+          },
+          "feedback": {
+            "en": "You stay. You lock the bedroom door. You keep your phone charged.",
+            "zh": "你留下。你锁上卧室门。手机充上电。"
+          },
+          "flags": ["stayed-home-unsafe"],
+          "next": "post-emergency-choice"
         }
       ]
     },
-    "po-decision": {
+
+    "post-emergency-choice": {
+      "narration": {
+        "en": "Days later. You have to decide what comes next.",
+        "zh": "几天后。你要决定接下来怎么办。"
+      },
+      "coach": {
+        "en": "Three parallel tools: (1) Personal Safety Protection Order via family court under Anti-DV Law §23-29, valid up to 6 months; (2) Divorce citing domestic violence — under Civil Code §1091 the abuser owes damages; (3) Public-security administrative detention under §43. You can pursue all three.",
+        "zh": "三种可并行的工具：（1）人身安全保护令，家事法庭依反家暴法第 23-29 条核发，有效期至 6 个月；（2）以家暴为由起诉离婚——民法典 1091 条规定加害方赔偿；（3）依治安管理处罚法第 43 条行政拘留。三者可同时推进。"
+      },
+      "choices": [
+        {
+          "text": {
+            "en": "Apply for a Personal Safety Protection Order",
+            "zh": "申请人身安全保护令"
+          },
+          "flags": ["applied-po"],
+          "next": "po-application"
+        },
+        {
+          "text": {
+            "en": "Consult a lawyer about divorce with damages",
+            "zh": "咨询律师关于离婚 + 索赔"
+          },
+          "flags": ["consulted-lawyer"],
+          "next": "divorce-consultation"
+        },
+        {
+          "text": {
+            "en": "Apply for protection order AND consult about divorce",
+            "zh": "同时申请保护令 + 咨询离婚"
+          },
+          "flags": ["applied-po", "consulted-lawyer", "parallel-tracks"],
+          "next": "po-application"
+        },
+        {
+          "text": {
+            "en": "Wait and see",
+            "zh": "先等等"
+          },
+          "flags": ["waiting"],
+          "next": "time-passes"
+        }
+      ]
+    },
+
+    "ongoing-open": {
+      "narration": {
+        "en": "This has been going on. Months, maybe years. Sometimes it's a slap, sometimes worse. You have injuries you couldn't explain to the doctor.",
+        "zh": "这样的事持续了。几个月，或者几年。有时是一个耳光，有时更严重。有些伤你没法向医生解释。"
+      },
+      "coach": {
+        "en": "Real case (新疆巴音郭楞 2026): a 72-year-old woman endured 27 years of documented abuse. Her subsequent civil lawsuit for medical + emotional damages was DISMISSED because — even with a Warning Letter and injury records — she could not prove each medical bill was CAUSED by a specific incident. The lesson: build the causal chain in real time, not after.",
+        "zh": "真实案件（新疆巴音郭楞 2026）：72 岁女性忍受了 27 年家暴。她后来单独起诉索赔医疗费和精神抚慰金——即使有《告诫书》和医疗单据——被驳回，因为她无法证明每笔医疗费与具体家暴事件有对应关系。教训：因果链要在事发时建立，不是事后。"
+      },
+      "choices": [
+        {
+          "text": {
+            "en": "Start documenting: photos with dates, injury logs, hospital receipts",
+            "zh": "开始留证：日期照片、伤情日志、就医票据"
+          },
+          "feedback": {
+            "en": "You create a cloud folder he can't reach.",
+            "zh": "你在他碰不到的云端建了一个文件夹。"
+          },
+          "flags": ["building-record"],
+          "next": "ongoing-next-incident"
+        },
+        {
+          "text": {
+            "en": "Go to police about the most recent incident and request a Warning Letter",
+            "zh": "就最近一次事发去派出所，索要《告诫书》"
+          },
+          "flags": ["seeking-warning"],
+          "next": "police-warning-scene"
+        },
+        {
+          "text": {
+            "en": "Continue as is",
+            "zh": "继续这样过"
+          },
+          "feedback": {
+            "en": "The situation continues.",
+            "zh": "情况继续。"
+          },
+          "flags": ["enduring"],
+          "next": "time-passes"
+        }
+      ]
+    },
+
+    "ongoing-next-incident": {
+      "narration": {
+        "en": "It happens again a few weeks later. This time you have your phone, and a plan.",
+        "zh": "几周后又发生一次。这次你有手机，也有准备。"
+      },
+      "coach": {
+        "en": "Every documented incident builds toward the same tools: protection order, warning letter, divorce damages. Recording video/audio during an incident is legal if you're a participant (not third-party surveillance).",
+        "zh": "每一次记录都指向同样的工具：保护令、告诫书、离婚索赔。作为当事人在事发中录音录像是合法的（不同于第三方监控）。"
+      },
+      "choices": [
+        {
+          "text": {
+            "en": "Call 110 during or right after; ask for the Warning Letter",
+            "zh": "事发中或结束后立即拨 110，索要《告诫书》"
+          },
+          "feedback": {
+            "en": "Officers arrive. They issue the Warning Letter.",
+            "zh": "民警到场。他们出具《告诫书》。"
+          },
+          "flags": ["called-110", "got-warning-letter"],
+          "next": "post-emergency-choice"
+        },
+        {
+          "text": {
+            "en": "Record audio secretly; go to police the next day",
+            "zh": "偷偷录音，第二天去派出所"
+          },
+          "feedback": {
+            "en": "The audio is saved. Next day at the police station, you bring it and your documentation.",
+            "zh": "录音已保存。第二天你带着录音和记录到派出所。"
+          },
+          "flags": ["audio-recorded", "seeking-warning"],
+          "next": "police-warning-scene"
+        },
+        {
+          "text": {
+            "en": "Photograph injuries and go to hospital within 24 hours",
+            "zh": "拍伤情照片，24 小时内就医"
+          },
+          "feedback": {
+            "en": "Photos with timestamps. Hospital record with tonight's date.",
+            "zh": "带时间戳的照片。今晚日期的病历。"
+          },
+          "flags": ["self-documented", "hospital-record"],
+          "next": "post-emergency-choice"
+        }
+      ]
+    },
+
+    "police-warning-scene": {
+      "narration": {
+        "en": "At the station. You describe what's been happening. The officer takes down dates from your record.",
+        "zh": "在派出所。你说明情况。民警根据你的记录逐条记录日期。"
+      },
+      "coach": {
+        "en": "Warning Letter (家庭暴力告诫书) under Anti-DV Law §16: signed by police, given to both parties, and a copy stays in the police file. Not administrative punishment, but the single most-cited document in later domestic-violence cases.",
+        "zh": "《家庭暴力告诫书》（反家暴法第 16 条）：民警签发，双方各一份，公安存档一份。不是行政处罚，但在日后的家暴案件中是被引用最多的文书。"
+      },
+      "choices": [
+        {
+          "text": {
+            "en": "Ask for the Warning Letter and the Case Receipt",
+            "zh": "索要《告诫书》和《受案回执》"
+          },
+          "feedback": {
+            "en": "You leave with two documents: the Warning Letter and the Case Receipt with a case number.",
+            "zh": "你带着两份文书离开：《家庭暴力告诫书》和带编号的受案回执。"
+          },
+          "flags": ["got-warning-letter", "got-receipt"],
+          "next": "po-application"
+        },
+        {
+          "text": {
+            "en": "Only give the statement",
+            "zh": "只做笔录"
+          },
+          "feedback": {
+            "en": "The statement is filed. You leave without a copy of anything.",
+            "zh": "笔录归档。你没拿到任何副本就离开了。"
+          },
+          "flags": ["no-documents"],
+          "next": "po-application"
+        }
+      ]
+    },
+
+    "post-open": {
+      "narration": {
+        "en": "You left. But he hasn't accepted it. Calls at all hours. Showing up outside your building. Dozens of new numbers when you block one.",
+        "zh": "你已经离开。但他没有接受。电话不分昼夜。出现在你楼下。你拉黑一个号，几十个新号出现。"
+      },
+      "coach": {
+        "en": "Real case (内蒙古 2026): a woman applied for a Personal Safety Protection Order against her ex-boyfriend after post-breakup stalking. Court approved on the same day. Anti-DV Law §37 extends protection to non-married cohabiting or dating relationships, not just marriage.",
+        "zh": "真实案件（内蒙古 2026）：分手后被前男友持续跟踪，女方申请人身安全保护令。法院当天审查即核发。反家暴法第 37 条把保护令适用范围扩展到未婚同居和恋爱关系，不限于婚姻。"
+      },
+      "choices": [
+        {
+          "text": {
+            "en": "Report every incident to 110; save each acceptance receipt",
+            "zh": "每次事发都拨 110 报警，每次都保留接处警记录"
+          },
+          "feedback": {
+            "en": "You call three times over two weeks. Each time a Response Record is generated. You save each one.",
+            "zh": "两周内你打了三次。每次警方都生成接处警登记表。你都保留下来。"
+          },
+          "flags": ["multi-reports", "building-record"],
+          "next": "post-safety"
+        },
+        {
+          "text": {
+            "en": "Screenshot every message and call log; save everything",
+            "zh": "每条消息、每次通话都截图保存"
+          },
+          "feedback": {
+            "en": "The record grows fast. You back it up to the cloud.",
+            "zh": "记录很快堆积。你都备份到云端。"
+          },
+          "flags": ["digital-evidence"],
+          "next": "post-safety"
+        },
+        {
+          "text": {
+            "en": "Try to talk to him through his family",
+            "zh": "通过他的家人劝阻"
+          },
+          "feedback": {
+            "en": "You reach out to his father, his sister, a coworker. Each says they'll talk to him. The contact from him continues.",
+            "zh": "你联系了他父亲、姐姐、同事。每个人都说会劝他。他这边的联系还在继续。"
+          },
+          "flags": ["family-mediation"],
+          "next": "post-safety"
+        },
+        {
+          "text": {
+            "en": "Change your number and move",
+            "zh": "换号、搬家"
+          },
+          "feedback": {
+            "en": "You switch SIM cards, sublease a new place. Old friends and family still have your new number.",
+            "zh": "你换了手机卡，另租了地方。老朋友和家人还有你的新号。"
+          },
+          "flags": ["evading"],
+          "next": "post-safety"
+        }
+      ]
+    },
+
+    "post-safety": {
+      "narration": {
+        "en": "It continues. He shows up at your door. A message says he'll hurt you. Or a friend calls to say he was at their place asking about you.",
+        "zh": "还在继续。他到你门口。一条消息说要伤害你。或者朋友打来电话说他去过他们那里问你在哪。"
+      },
+      "coach": {
+        "en": "Personal Safety Protection Order: filed at the district family court. Standard content: no contact, no proximity, no online harassment, no visits to your workplace/home. Duration up to 6 months, renewable. Violation triggers Anti-DV Law §34 — fines, detention, potentially criminal.",
+        "zh": "人身安全保护令：向所在地基层法院家事法庭申请。标准内容：禁止联系、禁止接近、禁止线上骚扰、禁止到工作单位和住所。有效期至 6 个月，可延长。违反者依反家暴法第 34 条——罚款、拘留、可能构成犯罪。"
+      },
+      "choices": [
+        {
+          "text": {
+            "en": "Apply for a Personal Safety Protection Order at the local family court",
+            "zh": "向所在地家事法庭申请人身安全保护令"
+          },
+          "flags": ["applied-po"],
+          "next": "po-application"
+        },
+        {
+          "text": {
+            "en": "Consult a lawyer first",
+            "zh": "先咨询律师"
+          },
+          "flags": ["consulted-lawyer"],
+          "next": "po-consultation"
+        },
+        {
+          "text": {
+            "en": "Keep documenting; don't file yet",
+            "zh": "继续记录，暂不申请"
+          },
+          "flags": ["still-documenting"],
+          "next": "time-passes"
+        }
+      ]
+    },
+
+    "po-consultation": {
+      "narration": {
+        "en": "The lawyer reviews your evidence: reports, screenshots, dates.",
+        "zh": "律师检视你的证据：报警记录、截图、日期。"
+      },
+      "coach": {
+        "en": "Legal aid (法律援助) is free for those below local income threshold. 12338 or the local justice bureau can refer. Free protection-order consultations are often available at court legal-aid stations regardless of income.",
+        "zh": "法律援助（低于当地收入门槛者免费）。12338 或当地司法局可转介。法院内设法律援助工作站有时不受收入限制提供保护令的免费咨询。"
+      },
+      "choices": [
+        {
+          "text": {
+            "en": "File the application today",
+            "zh": "今天就提交申请"
+          },
+          "flags": ["applied-po", "consulted-lawyer"],
+          "next": "po-application"
+        },
+        {
+          "text": {
+            "en": "Take a week to gather more evidence",
+            "zh": "用一周时间补齐更多证据"
+          },
+          "flags": ["consulted-lawyer"],
+          "next": "po-application"
+        }
+      ]
+    },
+
+    "po-application": {
+      "narration": {
+        "en": "You file the application. Court accepts it. Under Anti-DV Law §28, the ruling should come within 72 hours (24 hours if urgent).",
+        "zh": "你提交申请。法院受理。依反家暴法第 28 条，一般情况下 72 小时内作出裁定，情况紧急的 24 小时内。"
+      },
+      "coach": {
+        "en": "Evidence sufficient for issuance in real cases includes: police acceptance records, medical records, message screenshots, neighbor witness statements, or the Warning Letter itself.",
+        "zh": "真实案件中足以核发的证据包括：公安接处警记录、就医病历、消息截图、邻居证言，或《告诫书》本身。"
+      },
       "auto": [
         {
-          "has": [
-            "warning-letter"
-          ],
-          "next": "po-strong-cont"
+          "has": ["got-warning-letter", "multi-reports"],
+          "next": "po-granted"
         },
         {
-          "has": [
-            "asked-receipt"
-          ],
-          "next": "po-granted-cont"
+          "has": ["got-warning-letter"],
+          "next": "po-granted"
         },
         {
-          "has": [
-            "photo"
-          ],
-          "next": "po-thin-cont"
+          "has": ["multi-reports"],
+          "next": "po-granted"
         },
         {
-          "has": [
-            "kept-note"
-          ],
-          "next": "po-thin-cont"
+          "has": ["called-110", "hospital-record"],
+          "next": "po-granted"
         },
         {
+          "has": ["called-110"],
+          "next": "po-granted"
+        },
+        {
+          "has": ["self-documented"],
+          "next": "po-granted-partial"
+        },
+        {
+          "next": "po-denied"
+        }
+      ]
+    },
+
+    "po-granted": {
+      "narration": {
+        "en": "The court issues the order. All four standard prohibitions: no contact, no proximity, no online harassment, no visits to your home or workplace. Duration: 6 months.",
+        "zh": "法院裁定核发。四项标准禁令全部包含：禁止联系、禁止接近、禁止线上骚扰、禁止到你的住所和工作单位。有效期：6 个月。"
+      },
+      "coach": {
+        "en": "You now have an active court order. If violated: call 110 immediately, cite the order number. Police must respond and can detain under §34. Order can be renewed before expiry.",
+        "zh": "你现在有一份生效的法院裁定。如遭违反：立即拨 110 并报出裁定号。公安必须回应并可依第 34 条采取强制措施。裁定到期前可申请延长。"
+      },
+      "choices": [
+        {
+          "text": {
+            "en": "Also file for divorce with damages under Civil Code §1091",
+            "zh": "同时依民法典 1091 条提起离婚 + 损害赔偿"
+          },
+          "flags": ["divorce-filed"],
+          "next": "divorce-scene"
+        },
+        {
+          "text": {
+            "en": "Do not file divorce yet",
+            "zh": "暂不起诉离婚"
+          },
+          "flags": ["po-only"],
+          "next": "end:po-only"
+        }
+      ]
+    },
+
+    "po-granted-partial": {
+      "narration": {
+        "en": "The court issues a limited order — some prohibitions granted, others denied for lack of evidence. Duration: 3 months.",
+        "zh": "法院核发有限裁定——部分禁令支持，部分因证据不足未支持。有效期：3 个月。"
+      },
+      "coach": {
+        "en": "A partial order is still enforceable and establishes court-recognized abuse. Additional evidence supports application for a fuller renewal.",
+        "zh": "有限裁定仍可执行，同时确立法院对家暴事实的认定。补充证据可支持申请更全面的延长。"
+      },
+      "choices": [
+        {
+          "text": {
+            "en": "Continue documenting and apply for renewal before expiry",
+            "zh": "继续留证，到期前申请延长"
+          },
+          "flags": ["continuing"],
+          "next": "end:po-partial"
+        },
+        {
+          "text": {
+            "en": "Also file for divorce with damages",
+            "zh": "同时提起离婚 + 损害赔偿"
+          },
+          "flags": ["divorce-filed"],
+          "next": "divorce-scene"
+        }
+      ]
+    },
+
+    "po-denied": {
+      "narration": {
+        "en": "Two days later, a written denial: insufficient evidence of imminent danger. The court lists what would be needed to reconsider — dated documentation, official reports, third-party witness statements.",
+        "zh": "两天后收到书面驳回：证据不足以证明紧迫危险。裁定书列出了重新审查所需的证据——带日期的记录、官方报告、第三方证人证言。"
+      },
+      "coach": {
+        "en": "Denial is not final. You can reapply after gathering more evidence. The very act of applying creates a court record.",
+        "zh": "驳回不是终点。补齐证据后可重新申请。申请本身也在法院留下记录。"
+      },
+      "choices": [
+        {
+          "text": {
+            "en": "Start fresh documentation and reapply in 2 weeks",
+            "zh": "从头开始留证，2 周后重新申请"
+          },
+          "flags": ["reapplying"],
+          "next": "end:po-denied-retry"
+        },
+        {
+          "text": {
+            "en": "Stop the protection-order path",
+            "zh": "不再走保护令这条路"
+          },
+          "flags": ["gave-up-po"],
           "next": "end:po-denied"
         }
       ]
     },
-    "po-strong-cont": {
+
+    "divorce-consultation": {
       "narration": {
-        "en": "The court issued the order within 72 hours. With the warning letter and police dispatch record on file, the judge had little hesitation: he is now legally barred from assaulting, threatening, stalking, or contacting you. Violating the order means detention; repeated violations can be prosecuted criminally.",
-        "zh": "法院在72小时内签发裁定。案卷里有告诫书和出警记录，法官几乎没有犹豫：裁定禁止他殴打、威胁、跟踪、接触你。违反保护令可被拘留，情节严重的可追刑责。"
+        "en": "The lawyer explains: under Civil Code §1091, domestic violence is a specific grounds for damages. First-instance divorce trials with abuse allegations often fail on the first filing; second filings within 6 months of first-trial rejection typically succeed.",
+        "zh": "律师解释：依民法典 1091 条，家庭暴力是可以主张损害赔偿的独立事由。有家暴主张的一审离婚，首次起诉往往被驳回；驳回后 6 个月内二次起诉通常获准。"
       },
       "coach": {
-        "en": "The protection order is a real legal barrier — but not the end of the road. Divorce proceedings (§1091 damages) and criminal prosecution can run in parallel or follow later.",
-        "zh": "保护令是真实的法律屏障——但不是终点。离婚诉讼（§1091损害赔偿）和刑事追诉可以同步走，也可以之后再决定。"
+        "en": "Real case (新疆巴音郭楞 2026): the wife obtained ¥40,000 in divorce damages under §1091 — but her separate follow-up lawsuit for medical + emotional damages was dismissed as duplicative. Lesson: file all damages claims WITHIN the divorce case, not after.",
+        "zh": "真实案件（新疆巴音郭楞 2026）：妻子在离婚诉讼中依 1091 条获判 40,000 元损害赔偿——但她事后另起诉主张医疗费+精神抚慰金被驳回（重复主张）。教训：所有赔偿请求都要在离婚案中一次性提出，不能事后追加。"
       },
       "choices": [
         {
           "text": {
-            "en": "File for divorce and claim damages",
-            "zh": "向法院起诉离婚，同时主张损害赔偿"
+            "en": "File for divorce + all damages claims together",
+            "zh": "起诉离婚 + 全部损害赔偿一并提出"
           },
-          "flags": [
-            "divorce-filed"
-          ],
+          "flags": ["divorce-filed", "full-claims"],
           "next": "divorce-scene"
         },
         {
           "text": {
-            "en": "Ask police to open a criminal case for intentional injury",
-            "zh": "要求公安以故意伤害罪对他立案"
+            "en": "File for divorce only; handle damages later",
+            "zh": "只起诉离婚；赔偿之后再说"
           },
-          "flags": [
-            "criminal-dv-requested"
-          ],
-          "next": "criminal-dv-scene"
-        },
-        {
-          "text": {
-            "en": "The order is enough for now — I'll decide later",
-            "zh": "先有保护令就够了，其他之后再决定"
+          "feedback": {
+            "en": "The lawyer notes she strongly advises against separating the claims — but proceeds as instructed.",
+            "zh": "律师提示她强烈建议一并主张——但按你的意思办理。"
           },
-          "next": "end:po-stable"
-        }
-      ]
-    },
-    "po-granted-cont": {
-      "narration": {
-        "en": "The court ruled within 72 hours. The police record and your written statement cleared the 'significant likelihood' threshold. He is legally barred from approaching or contacting you.",
-        "zh": "法院在72小时内作出裁定。出警记录和询问笔录越过了「较大可能性」的门槛。裁定禁止他接近、接触你。"
-      },
-      "coach": {
-        "en": "The protection order is in effect. Divorce proceedings and a criminal case can run alongside it — they use the same evidence you already have.",
-        "zh": "保护令已生效。离婚诉讼和刑事立案都可以并行推进——用的正是你已经有的证据。"
-      },
-      "choices": [
-        {
-          "text": {
-            "en": "File for divorce and claim damages",
-            "zh": "向法院起诉离婚，同时主张损害赔偿"
-          },
-          "flags": [
-            "divorce-filed"
-          ],
+          "flags": ["divorce-filed", "split-claims"],
           "next": "divorce-scene"
-        },
-        {
-          "text": {
-            "en": "Ask police to open a criminal case for intentional injury",
-            "zh": "要求公安以故意伤害罪对他立案"
-          },
-          "flags": [
-            "criminal-dv-requested"
-          ],
-          "next": "criminal-dv-scene"
-        },
-        {
-          "text": {
-            "en": "The order is enough for now",
-            "zh": "先有保护令就够了"
-          },
-          "next": "end:po-stable"
         }
       ]
     },
-    "po-thin-cont": {
-      "narration": {
-        "en": "The order was granted — although the process was much harder than it needed to be. No official records existed; the court eventually pulled in the women's federation's support records to cross-reference. The order stands.",
-        "zh": "保护令还是签发了——虽然过程比本可以的样子艰难得多。没有官方记录，法院最终向妇联调取了你的求助记录来印证。裁定有效。"
-      },
-      "coach": {
-        "en": "The order is in force. Divorce is still an option. From today, every police call and every piece of written documentation rebuilds your evidence chain.",
-        "zh": "保护令已生效。离婚诉讼随时可以走。从今天起，每一次报警、每一份书面材料都在重新积累证据链。"
-      },
-      "choices": [
-        {
-          "text": {
-            "en": "File for divorce",
-            "zh": "向法院起诉离婚"
-          },
-          "flags": [
-            "divorce-filed"
-          ],
-          "next": "divorce-scene"
-        },
-        {
-          "text": {
-            "en": "Stabilise first, decide later",
-            "zh": "先稳定下来，之后再决定"
-          },
-          "next": "end:po-stable"
-        }
-      ]
-    },
+
     "divorce-scene": {
       "narration": {
-        "en": "You submit your divorce petition to the local court, attaching all the evidence you have collected.",
-        "zh": "你向居住地基层法院提交了离婚诉状，附上了你收集到的全部证据材料。"
+        "en": "Trial. He denies everything. His lawyer argues: no serious violence, no direct causation between injuries and specific incidents, and the marriage should be preserved.",
+        "zh": "开庭。他全部否认。他的律师主张：不存在严重暴力，伤情与具体事件缺乏对应因果，且婚姻应当保留。"
       },
       "coach": {
-        "en": "Civil Code §1079: domestic violence is grounds for divorce when mediation fails — courts must grant it. §1091: as the innocent party you can claim damages. Note: if he contests and a first ruling denies the divorce, you can re-file 6 months later — courts almost always grant it the second time.",
-        "zh": "民法典第1079条：有家庭暴力、调解无效的，法院应当准予离婚。第1091条：家暴是无过错方主张损害赔偿的法定事由。注意：如果对方不同意、第一次被判不准离婚，6个月后可以再次起诉，届时基本会准。"
+        "en": "Defense playbook is uniform across real cases: (a) deny events, (b) blame minor incidents on \"mutual fights,\" (c) attack evidence chain, (d) argue the marriage is savable. Courts routinely reject (d) when a Warning Letter exists. Damages typically awarded: ¥20,000-¥60,000 emotional damages plus proven medical/lost-wages/lawyer fees.",
+        "zh": "各真实案件中辩方套路统一：（a）全部否认；（b）把小的事件说成「双方互殴」；（c）攻击证据链；（d）主张婚姻可挽回。有《告诫书》时法院通常不采纳（d）。损害赔偿常规判决：精神抚慰金 20,000-60,000 元，加已证明的医疗费/误工费/律师费。"
       },
       "auto": [
         {
-          "has": [
-            "warning-letter"
-          ],
-          "next": "end:divorce-strong"
+          "has": ["got-warning-letter", "hospital-record", "full-claims"],
+          "next": "end:divorce-full-win"
         },
         {
-          "has": [
-            "asked-receipt"
-          ],
-          "next": "end:divorce-first-rejection"
+          "has": ["got-warning-letter", "full-claims"],
+          "next": "end:divorce-standard-win"
         },
         {
-          "next": "end:divorce-first-rejection"
+          "has": ["got-warning-letter"],
+          "next": "end:divorce-limited-win"
+        },
+        {
+          "has": ["multi-reports", "full-claims"],
+          "next": "end:divorce-standard-win"
+        },
+        {
+          "has": ["hospital-record", "full-claims"],
+          "next": "end:divorce-limited-win"
+        },
+        {
+          "has": ["hospital-record"],
+          "next": "end:divorce-limited-win"
+        },
+        {
+          "next": "end:divorce-refused"
         }
       ]
     },
-    "criminal-dv-scene": {
+
+    "time-passes": {
       "narration": {
-        "en": "You formally request that police open a criminal case against him for intentional injury.",
-        "zh": "你正式要求公安以故意伤害罪对他立案侦查。"
+        "en": "Weeks, months. The situation neither improves nor ends cleanly. One day something makes you decide.",
+        "zh": "几周、几个月。情况没有好转，也没有干净地结束。某一天，某件事让你决定。"
       },
       "coach": {
-        "en": "Criminal Law §234: domestic violence causing minor injury or above constitutes intentional injury — a public-prosecution offence. Once opened, the case can continue even if you later withdraw your complaint. The injury assessment result is the key threshold.",
-        "zh": "刑法第234条：家庭暴力致人轻伤以上，构成故意伤害罪——公诉案件。案件一旦立案，即使你事后撤诉，检察院仍有权提起公诉。伤情鉴定结论是能否走刑事路径的关键门槛。"
+        "en": "Anti-DV Law paths remain open indefinitely — no statute of limitations for the protection order or Warning Letter routes. Civil damages: 3-year statute (Civil Code §188); must be filed within the divorce case if divorcing.",
+        "zh": "反家暴法各路径不受时效限制——保护令和告诫书渠道随时可用。民事赔偿：3 年时效（民法典第 188 条）；如要离婚，必须在离婚案中一并提出。"
       },
-      "auto": [
+      "choices": [
         {
-          "has": [
-            "injury-exam"
-          ],
-          "next": "end:criminal-dv-filed"
+          "text": {
+            "en": "Go to the police now",
+            "zh": "现在就去派出所"
+          },
+          "flags": ["seeking-warning"],
+          "next": "police-warning-scene"
         },
         {
-          "next": "end:criminal-dv-rejected"
+          "text": {
+            "en": "Apply for the protection order with current evidence",
+            "zh": "用现有证据申请保护令"
+          },
+          "flags": ["applied-po", "late-application"],
+          "next": "po-application"
+        },
+        {
+          "text": {
+            "en": "Call 12338",
+            "zh": "拨打 12338"
+          },
+          "flags": ["sought-support"],
+          "next": "support-scene"
+        },
+        {
+          "text": {
+            "en": "Take no action for now",
+            "zh": "暂时不采取行动"
+          },
+          "flags": ["no-action"],
+          "next": "end:silence"
+        }
+      ]
+    },
+
+    "support-scene": {
+      "narration": {
+        "en": "You call 12338. A trained counsellor listens. She explains the tools available and asks if you want a legal aid referral.",
+        "zh": "你拨打 12338。接线员认真听你说。她讲解可用的工具，并问你是否需要转介法律援助。"
+      },
+      "coach": {
+        "en": "12338 (All-China Women's Federation) is free and confidential. Legal aid referral is free for eligible applicants. The Women's Federation can also accompany protection-order applications in some cities.",
+        "zh": "12338（全国妇联维权公益服务热线）免费保密。符合条件者可转介法律援助（免费）。部分城市妇联可陪同申请保护令。"
+      },
+      "choices": [
+        {
+          "text": {
+            "en": "Accept the legal aid referral",
+            "zh": "接受法律援助转介"
+          },
+          "flags": ["sought-support", "legal-aid"],
+          "next": "po-application"
+        },
+        {
+          "text": {
+            "en": "Take only the support call for now",
+            "zh": "现在只接受心理支持通话"
+          },
+          "flags": ["sought-support"],
+          "next": "end:support-only"
         }
       ]
     }
   },
+
   "endings": {
+    "po-only": {
+      "title": {
+        "en": "Protection order in hand — six months to plan",
+        "zh": "拿到保护令——用六个月做规划"
+      },
+      "summary": {
+        "en": "The court has issued a full Personal Safety Protection Order for 6 months. If violated, call 110 and cite the order number — police must respond, and violators face fines, detention, or criminal charges under Anti-DV Law §34. You can renew before expiry, or file for divorce with damages during this window under Civil Code §1091.",
+        "zh": "法院核发了 6 个月的完整人身安全保护令。若遭违反，拨 110 并报出裁定号——公安必须回应，违反者依反家暴法第 34 条面临罚款、拘留或刑事追责。到期前可延长，也可在此期间依民法典 1091 条提离婚 + 损害赔偿。"
+      }
+    },
+    "po-partial": {
+      "title": {
+        "en": "Partial protection order — usable, expandable",
+        "zh": "有限保护令——可执行，可扩展"
+      },
+      "summary": {
+        "en": "The court granted some prohibitions, denied others for lack of evidence. Duration: 3 months. Still enforceable, still establishes court-recognized abuse. Continued documentation supports a fuller renewal — and the record itself supports future divorce damages under Civil Code §1091.",
+        "zh": "法院支持了部分禁令，其余因证据不足未支持。有效期：3 个月。仍可执行，也确立了法院对家暴事实的认定。继续留证，可支持申请更全面的延长——同时也支撑日后依民法典 1091 条主张离婚损害赔偿。"
+      }
+    },
+    "po-denied-retry": {
+      "title": {
+        "en": "Denied — but you're rebuilding the evidence",
+        "zh": "驳回——但你在重建证据"
+      },
+      "summary": {
+        "en": "The application was denied for lack of documentation. The written denial itself is now on court file. Next steps: build the evidence the court listed (police records, hospital records, third-party witnesses), then reapply. There's no cap on how many times you can file. The Anti-Domestic Violence Law does not have a limitation period.",
+        "zh": "申请因文书不足被驳回。这份书面驳回本身现在在法院立卷。下一步：按裁定书列出的要求补齐证据（报警记录、就医记录、第三方证人），然后重新申请。申请次数无上限。反家庭暴力法无时效限制。"
+      }
+    },
     "po-denied": {
       "title": {
-        "en": "Application denied — nothing on record",
-        "zh": "未获签发——什么记录都没有"
+        "en": "Application denied; no follow-up filed",
+        "zh": "申请被驳回；未继续"
       },
       "summary": {
-        "en": "No police record, no photos, no written pledge — the court finds the materials insufficient even for the lowered standard. Nothing here is your fault. And it is not the end: from today, every incident reported, every injury assessed, every paper kept, rebuilds the case.",
-        "zh": "没有出警记录、没有照片、没有保证书——即便是降低了的证明标准，现有材料也不足以支撑。这不是你的错。而且这不是终点：从今天起，每次报警、每次验伤、每份留下的书面材料，都在重新把证据链建起来。"
+        "en": "The application was denied and you chose not to reapply. Protection order applications are exhausting. If circumstances change or evidence accumulates, the door reopens: reapplication is unlimited, and 12338 can walk with you if that day comes.",
+        "zh": "申请被驳回，你选择不再申请。保护令申请很耗神。若情况变化或证据积累，随时可以重新申请，次数不限。12338 可以在那一天到来时陪你一起。"
       }
     },
-    "no-po": {
+    "divorce-full-win": {
       "title": {
-        "en": "The application never happened",
-        "zh": "申请停在了念头里"
+        "en": "Divorce granted; damages awarded in full",
+        "zh": "准予离婚；损害赔偿全额支持"
       },
       "summary": {
-        "en": "Without the order, there is no legal barrier between you and the person downstairs. The simulation ends here — but in real life, it is never too late to start keeping records and ask again. The 12338 hotline and legal aid (12348) exist exactly for this moment.",
-        "zh": "没有保护令，你和楼下那个人之间就没有任何法律屏障。模拟到这里结束——但在现实中，任何时候重新开始留证据、重新申请都不算晚。12338 和 12348 热线，正是为这一刻存在的。"
+        "en": "The court grants divorce, cites the Warning Letter and hospital records, and awards damages under Civil Code §1091: emotional damages typically ¥40,000-¥60,000, plus proven medical costs and lost wages. Because you filed all claims together, no follow-up lawsuit is needed — real case (新疆巴音郭楞 2026) shows separate lawsuits after divorce are dismissed as duplicative.",
+        "zh": "法院准予离婚，援引《告诫书》和医院病历，依民法典 1091 条判决损害赔偿：精神抚慰金通常 40,000-60,000 元，加已证明的医疗费和误工费。因所有请求一并提出，无需后续追加诉讼——真实案件（新疆巴音郭楞 2026）显示，离婚后单独起诉会被驳回（重复主张）。"
       }
     },
-    "po-stable": {
+    "divorce-standard-win": {
       "title": {
-        "en": "The order stands — you have time",
-        "zh": "保护令在手——你有时间"
+        "en": "Divorce granted; standard damages",
+        "zh": "准予离婚；常规损害赔偿"
       },
       "summary": {
-        "en": "The protection order is the most immediate legal barrier right now. Violating it means detention; repeated violations can be criminally prosecuted. The door to divorce proceedings and a criminal case stays open — there is no urgent deadline. 12338 / 12348 can help you think through the next step whenever you're ready.",
-        "zh": "保护令是现阶段最直接的法律屏障。违反保护令可被拘留，情节严重的可追刑责。离婚诉讼和刑事报案的路随时还开着——没有紧迫的时效压力。12338 / 12348 随时可以帮你评估下一步。"
+        "en": "Divorce granted, damages awarded but at the lower end of the range (typically ¥20,000-¥40,000) — medical/lost-wages claims that lack precise causation are reduced or denied. Written apology from Civil Code §1000 remedy may also be granted. The judgment establishes the abuse in an official record permanently.",
+        "zh": "准予离婚，损害赔偿获支持但在幅度低端（通常 20,000-40,000 元）——因果关系不明的医疗费/误工费被打折或驳回。民法典 1000 条的书面赔礼道歉也可能一并获支持。判决书永久确立了家暴事实的官方记录。"
       }
     },
-    "divorce-strong": {
+    "divorce-limited-win": {
       "title": {
-        "en": "Divorce granted — with damages",
-        "zh": "准予离婚——并获得损害赔偿"
+        "en": "Divorce granted; limited damages",
+        "zh": "准予离婚；有限损害赔偿"
       },
       "summary": {
-        "en": "With the warning letter and police records in the file, the court found domestic violence proven, granted the divorce under Civil Code §1079, and declared you the innocent party. In the property division the court took your circumstances into account; your §1091 damages claim was also recognised. This is the most complete civil remedy in a domestic-violence case.",
-        "zh": "有告诫书和出警记录在案，法院依据民法典第1079条第3款认定家庭暴力，准予离婚，认定他为有过错方。财产分割时法院照顾了你；你依据第1091条主张的损害赔偿也获得支持。这是家暴案件民事救济最完整的结果。"
+        "en": "Divorce granted. Emotional damages awarded modestly (typically ¥10,000-¥20,000). Medical costs, lost wages, and lawyer fees mostly denied for lack of specific evidence linking each expense to a specific act of violence. This is the typical outcome when documentation is partial. The paper trail remains permanent.",
+        "zh": "准予离婚。精神抚慰金支持金额有限（通常 10,000-20,000 元）。医疗费、误工费、律师费多因缺乏「具体开支对应具体施暴行为」的证据被驳回。这是文书链不完整时的典型结果。文书记录永久留存。"
       }
     },
-    "divorce-first-rejection": {
+    "divorce-refused": {
       "title": {
-        "en": "First petition denied — but the second almost always succeeds",
-        "zh": "第一次被驳回——但第二次通常会准"
+        "en": "First divorce petition denied — reconsider in six months",
+        "zh": "首次起诉离婚被驳回——六个月后可再诉"
       },
       "summary": {
-        "en": "He contested the divorce. The court ruled that 'the marriage bond has not completely broken down' and denied the petition — this is extremely common in domestic-violence divorces on the first attempt, and is not your fault. The law gives you a clear next step: 6 months after this judgment takes effect you can re-file; courts almost always grant the divorce the second time, and you can simultaneously claim damages under Civil Code §1091.",
-        "zh": "他不同意离婚，法院以「感情尚未完全破裂」为由判决不准离婚——这在家暴离婚案第一次起诉时极为常见，不是你的错。法律给了你明确的下一步：本次判决生效6个月后，你可以再次提起离婚诉讼；届时法院通常准予离婚，并可同时主张民法典第1091条的损害赔偿。"
+        "en": "Without a Warning Letter, without hospital records, without police report acceptance numbers, the court finds evidence of abuse insufficient — and typically denies first divorce petitions on grounds of \"marriage not yet irretrievably broken.\" You can file a second time 6 months after the ruling takes effect. Between now and then: gather the documentation.",
+        "zh": "没有《告诫书》、没有病历、没有报警受案回执，法院认定家暴证据不足——通常以「感情尚未完全破裂」驳回首次离婚起诉。判决生效 6 个月后可再次起诉。这段时间：补齐文书。"
       }
     },
-    "criminal-dv-filed": {
+    "silence": {
       "title": {
-        "en": "Criminal case opened — he faces state prosecution",
-        "zh": "刑事立案——他面对的是国家追诉"
+        "en": "You have not decided",
+        "zh": "尚未决定"
       },
       "summary": {
-        "en": "The injury assessment confirmed minor injury or above. Police opened a criminal case under Criminal Law §234 (intentional injury) and transferred it to the procuratorate for prosecution. This is a public-prosecution offence: the state pursues him, not you alone. Even if you later withdraw your complaint, the procuratorate can still proceed. The protection order and divorce petition remain valid in parallel.",
-        "zh": "伤情鉴定结论达到轻伤以上，公安以故意伤害罪（刑法第234条）立案，移送检察院提起公诉。这是公诉案件：是国家在追诉他，不是你一个人在扛。即使你事后撤诉，检察院仍有权继续起诉。保护令和离婚诉讼并行有效。"
+        "en": "Not taking action is a valid state — the Anti-Domestic Violence Law paths remain open indefinitely. Every documented incident, every hospital visit, every friend who saw a bruise becomes part of the record you may or may not use one day. 12338 costs nothing to call.",
+        "zh": "不采取行动是一种合理状态——反家庭暴力法的各条路径不受时效限制。每一次留有记录的事件、每一次就医、每一位见到伤痕的朋友，都可能成为你日后想或不想用的记录的一部分。12338 拨打不收费。"
       }
     },
-    "criminal-dv-rejected": {
+    "support-only": {
       "title": {
-        "en": "No criminal case — but the other paths stay open",
-        "zh": "刑事路径暂时关上——其他路还在"
+        "en": "Support first",
+        "zh": "先选择支持"
       },
       "summary": {
-        "en": "Without an injury assessment, police cannot confirm the injury grade and cannot treat this as a criminal matter — only an administrative penalty. The protection order remains in force. From today: report every incident, seek injury assessment immediately each time. The criminal path can reopen the moment the evidence is there.",
-        "zh": "没有伤情鉴定，公安无法确认伤势等级，无法以刑事案件处理，维持治安处罚。保护令仍然有效。从今天起：每次都报警，每次都立即去做伤情鉴定——证据到位，刑事路径随时可以重启。"
+        "en": "You called 12338 and accepted psychological support. This is a complete, valid path — it doesn't need to end in a lawsuit. The legal tools remain available: no statute of limitations for Anti-DV Law protections. When you're ready — or if things escalate — 12338 can walk with you into the next step.",
+        "zh": "你拨了 12338，接受了心理支持。这本身就是完整的一条路——不必以诉讼收场。法律工具随时可用：反家暴法保护无时效限制。你准备好时——或情况升级时——12338 可以陪你走下一步。"
       }
     }
   },
+
   "debrief": [
     {
-      "id": "reported-night",
+      "id": "good-called-110",
       "kind": "good",
-      "has": [
-        "reported-night"
-      ],
-      "title": {
-        "en": "You called the police the night it happened",
-        "zh": "案发当晚就报了警"
-      },
+      "has": ["called-110"],
+      "title": { "en": "You called the police", "zh": "你拨打了 110" },
       "detail": {
-        "en": "The dispatch record is the earliest official timestamp of the violence — the single most useful document in every later proceeding.",
-        "zh": "接警/出警记录是这起暴力最早的官方时间戳，也是之后每一个程序里最有用的一份材料。"
+        "en": "Under Anti-Domestic Violence Law §15, police must accept a DV call. Every accepted call generates a Response Record (接处警登记表) — even if no arrest follows, this document is admissible evidence.",
+        "zh": "反家暴法第 15 条规定，公安必须受理家暴警情。每次受理都会生成《接处警登记表》——即使没有采取强制措施，这份文书也是可采信的证据。"
       },
       "basis": {
-        "en": "Police dispatch records are listed by the Supreme Court (2022) as evidence for protection order cases.",
-        "zh": "最高法2022年保护令规定明确将出警记录列为可用证据。"
+        "en": "Anti-DV Law §15 (mandatory police response).",
+        "zh": "反家庭暴力法第 15 条（公安必须受理家暴警情）。"
       }
     },
     {
-      "id": "never-reported",
-      "kind": "bad",
-      "missing": [
-        "reported-night",
-        "reported-again"
-      ],
-      "title": {
-        "en": "The police were never called",
-        "zh": "自始至终没有报警"
-      },
-      "detail": {
-        "en": "Without any report, no official record of the violence exists anywhere. The correct move: call 110 every single time — even if nothing else follows, the record accumulates.",
-        "zh": "从未报警，暴力就在任何官方系统里都不存在。正确做法：每一次都拨打110——哪怕后续什么都不做，记录本身在累积。"
-      },
-      "basis": {
-        "en": "Anti-DV Law art. 15: police must respond, stop the violence, and make records.",
-        "zh": "反家暴法第15条：公安接警后应当出警、制止家暴并做好记录。"
-      }
-    },
-    {
-      "id": "photo",
+      "id": "good-reached-safety",
       "kind": "good",
-      "has": [
-        "photo"
-      ],
-      "title": {
-        "en": "You photographed the injuries immediately",
-        "zh": "第一时间拍下了伤照"
-      },
+      "has": ["reached-safety"],
+      "title": { "en": "You reached a safe location", "zh": "你先到达了安全的地方" },
       "detail": {
-        "en": "Timestamped injury photos corroborate every other piece of evidence.",
-        "zh": "带时间戳的伤照可以和其他所有证据互相印证。"
-      },
-      "basis": {
-        "en": "Injury photos are among the evidence types listed in the 2022 Supreme Court provisions.",
-        "zh": "伤照属于最高法2022年规定列举的证据类型。"
+        "en": "Getting to a locked room, a neighbor, or outside removes the ability for immediate further harm and creates space to call police, medical, or family.",
+        "zh": "先到锁着门的房间、邻居家或屋外，能阻止进一步的即时伤害，也为拨打 110/120 或联系家人创造空间。"
       }
     },
     {
-      "id": "asked-receipt",
+      "id": "good-neighbor-witness",
       "kind": "good",
-      "has": [
-        "asked-receipt"
-      ],
-      "title": {
-        "en": "You asked for the written statement and receipt",
-        "zh": "要求了笔录，拿到了回执"
-      },
+      "has": ["neighbor-witness"],
+      "title": { "en": "A neighbor became a witness", "zh": "邻居成为证人" },
       "detail": {
-        "en": "Most people don't know they can ask. The written statement is what turns a police visit into usable evidence.",
-        "zh": "多数人不知道可以主动要求。正是笔录和回执，把一次出警变成了能用的证据。"
+        "en": "A neighbor who saw or heard events becomes admissible witness testimony — one of the most powerful indirect evidence types in DV cases.",
+        "zh": "在场或听到经过的邻居可作为证人出庭——是家暴案件中最有力的间接证据类型之一。"
       },
       "basis": {
-        "en": "Under police case-handling rules, a receipt is issued on registering a report; statements become part of the case file.",
-        "zh": "按公安办案程序规定，受案登记应出具回执；询问笔录进入案卷。"
+        "en": "Civil Procedure Law Art. 66 (witness testimony as evidence).",
+        "zh": "民事诉讼法第 66 条（证人证言作为证据）。"
       }
     },
     {
-      "id": "oral-mediation",
-      "kind": "bad",
-      "has": [
-        "oral-mediation"
-      ],
-      "title": {
-        "en": "The visit ended in verbal mediation only",
-        "zh": "只接受了口头调解"
-      },
-      "detail": {
-        "en": "No statement, no receipt — the system step that failed here was leaving without anything in writing. The correct move: always request the written statement and the report receipt before officers leave.",
-        "zh": "没有笔录、没有回执——这一环节缺的是任何书面材料。正确做法：在民警离开前，要求制作询问笔录并索要报警回执。"
-      },
-      "basis": {
-        "en": "Dispatch records and statements are core protection-order evidence (Supreme Court 2022).",
-        "zh": "出警记录与笔录是保护令的核心证据（最高法2022年规定）。"
-      }
-    },
-    {
-      "id": "injury-exam",
+      "id": "good-got-warning-letter",
       "kind": "good",
-      "has": [
-        "injury-exam"
-      ],
-      "title": {
-        "en": "You had the injuries assessed in time",
-        "zh": "及时做了伤情鉴定"
-      },
+      "has": ["got-warning-letter"],
+      "title": { "en": "You obtained a Warning Letter (家庭暴力告诫书)", "zh": "你取得了《家庭暴力告诫书》" },
       "detail": {
-        "en": "The assessment fixes the injury as a legal fact before it fades, and determines whether the case is administrative or criminal.",
-        "zh": "鉴定在伤退之前把它固定为法律事实，并决定案件走治安处罚还是刑事立案。"
+        "en": "The Warning Letter is the single most-cited document in later DV cases — an official record from the police that domestic violence occurred. Real judgment (新疆巴音郭楞 2026): the wife obtained ¥40,000 in divorce damages largely because the Warning Letter established the pattern.",
+        "zh": "《告诫书》是日后家暴案件里被引用最多的文书——它是公安关于「家暴已发生」的官方记录。真实案件（新疆巴音郭楞 2026）：妻子获判 40,000 元离婚损害赔偿，主要就是因为《告诫书》确立了家暴模式。"
       },
       "basis": {
-        "en": "轻微伤 → administrative punishment; 轻伤 or above → criminal case (intentional injury).",
-        "zh": "轻微伤对应治安处罚；轻伤及以上对应刑事立案（故意伤害罪）。"
+        "en": "Anti-DV Law §16 (Warning Letter procedure).",
+        "zh": "反家庭暴力法第 16 条（《告诫书》制度）。"
       }
     },
     {
-      "id": "no-exam",
-      "kind": "bad",
-      "has": [
-        "no-exam"
-      ],
-      "title": {
-        "en": "The injury assessment window was missed",
-        "zh": "错过了伤情鉴定窗口"
-      },
-      "detail": {
-        "en": "Once bruises fade they can no longer be certified. The correct move: request the assessment referral at the scene and go as early as possible.",
-        "zh": "淤青消退后就无法鉴定了。正确做法：当场要求开具鉴定委托，尽早前往鉴定。"
-      },
-      "basis": {
-        "en": "Injury assessment is inherently time-sensitive; delay is one of the most common irreversible mistakes.",
-        "zh": "伤情鉴定天然有时限性，拖延是最常见且不可逆的失误之一。"
-      }
-    },
-    {
-      "id": "warning-letter",
+      "id": "good-got-receipt",
       "kind": "good",
-      "has": [
-        "warning-letter"
-      ],
-      "title": {
-        "en": "You asked for the warning letter (告诫书)",
-        "zh": "主动要到了《家庭暴力告诫书》"
-      },
+      "has": ["got-receipt"],
+      "title": { "en": "You obtained the Case Receipt (受案回执)", "zh": "你取得了《受案回执》" },
       "detail": {
-        "en": "The letter is official written proof that violence occurred — courts use it directly to find domestic violence.",
-        "zh": "告诫书是官方书面认定发生过家暴的证据——法院可以直接据此认定家暴事实。"
+        "en": "The Case Receipt records the report acceptance number. Every subsequent step — protection order application, divorce filing, civil damages — is easier to advance with this document.",
+        "zh": "《受案回执》记录报案编号。后续每一步——申请保护令、起诉离婚、民事索赔——有这份文书都会更顺畅。"
       },
       "basis": {
-        "en": "Anti-DV Law art. 16: where the case is minor and no punishment is imposed, police shall issue a warning letter.",
-        "zh": "反家暴法第16条：情节较轻依法不予治安处罚的，公安机关应当出具告诫书。"
+        "en": "Public Security Regulations on Handling Criminal Cases: acceptance requires issuing a receipt.",
+        "zh": "《公安机关办理刑事案件程序规定》：受案应当出具回执。"
       }
     },
     {
-      "id": "no-warning-letter",
-      "kind": "bad",
-      "has": [
-        "no-warning-letter"
-      ],
-      "title": {
-        "en": "No warning letter was requested",
-        "zh": "没有要求出具告诫书"
-      },
-      "detail": {
-        "en": "The step that failed: leaving the station without any written outcome. The correct move: when told the matter is \"minor\", ask for the Domestic Violence Warning Letter by name — the police are required to issue it.",
-        "zh": "缺失的环节：离开派出所时没有任何书面处理结果。正确做法：听到“情节较轻”时，点名要求出具《家庭暴力告诫书》——这是公安应当出具的。"
-      },
-      "basis": {
-        "en": "Anti-DV Law art. 16.",
-        "zh": "反家暴法第16条。"
-      }
-    },
-    {
-      "id": "kept-note",
+      "id": "good-signed-carefully",
       "kind": "good",
-      "has": [
-        "kept-note"
-      ],
-      "title": {
-        "en": "You kept his written pledge",
-        "zh": "保存了他写的保证书"
-      },
+      "has": ["signed-carefully"],
+      "title": { "en": "You reviewed the statement before signing", "zh": "签字前逐页核对了笔录" },
       "detail": {
-        "en": "An admission in his own handwriting — explicitly listed as admissible evidence.",
-        "zh": "他亲笔写下的承认——被明确列举为可用证据。"
-      },
-      "basis": {
-        "en": "Written pledges/apologies are listed in the Supreme Court 2022 provisions.",
-        "zh": "悔过书、保证书见于最高法2022年规定的证据列举。"
+        "en": "The transcript is what the court sees, not what you remember saying. Corrections before signing become part of the official record; after signing, it's the official record.",
+        "zh": "笔录是法院看到的内容，不是你记得说过的话。签字前的修改成为官方记录一部分；一旦签字，这就是官方记录。"
       }
     },
     {
-      "id": "destroyed-note",
-      "kind": "bad",
-      "has": [
-        "destroyed-note"
-      ],
-      "title": {
-        "en": "The written pledge was destroyed",
-        "zh": "保证书被扔掉了"
-      },
-      "detail": {
-        "en": "Understandable — and the missing method here is: papers where he admits what he did are evidence, however painful to keep. Store them somewhere he cannot reach (photograph them too).",
-        "zh": "完全可以理解——但这一环节缺失的方法是：凡是他承认动手的书面材料都是证据，再难受也值得保存。可以存放在他接触不到的地方（同时拍照备份）。"
-      },
-      "basis": {
-        "en": "Written pledges are listed evidence (Supreme Court 2022).",
-        "zh": "保证书属于明确列举的证据（最高法2022年规定）。"
-      }
-    },
-    {
-      "id": "po-delayed",
-      "kind": "bad",
-      "has": [
-        "po-delayed"
-      ],
-      "title": {
-        "en": "A misconception delayed the protection order",
-        "zh": "误区耽误了保护令"
-      },
-      "detail": {
-        "en": "The order does not require divorce proceedings, his consent, or his presence. The correct move: apply directly to the basic court where you or he lives — courts rule within 72 hours (24 in urgent cases).",
-        "zh": "保护令不需要先离婚、不需要他同意、不需要他到场。正确做法：直接向你或他居住地的基层法院申请——法院72小时内裁定，紧急情况24小时。"
-      },
-      "basis": {
-        "en": "Anti-DV Law arts. 23–32; Supreme Court 2022 provisions.",
-        "zh": "反家暴法第23-32条；最高法2022年规定。"
-      }
-    },
-    {
-      "id": "applied-po",
+      "id": "good-hospital-record",
       "kind": "good",
-      "has": [
-        "applied-po"
-      ],
-      "title": {
-        "en": "You applied for the protection order",
-        "zh": "申请了人身安全保护令"
-      },
+      "has": ["hospital-record"],
+      "title": { "en": "You created a same-day hospital record", "zh": "你留下了当天的病历" },
       "detail": {
-        "en": "The single most direct legal barrier available — independent of divorce, fast, and enforceable.",
-        "zh": "这是现有制度里最直接的法律屏障——独立于离婚程序，裁定快，且可强制执行。"
-      },
-      "basis": {
-        "en": "Anti-DV Law arts. 23–32: ruling within 72 hours (24 if urgent); violation can mean fines, detention, or criminal liability.",
-        "zh": "反家暴法第23-32条：72小时内裁定（紧急24小时）；违反可罚款、拘留，构成犯罪的追究刑责。"
+        "en": "A dated hospital record from the night of an incident is one of the strongest evidence types. It links a specific date to specific injuries — closing exactly the causation gap that defense arguments exploit.",
+        "zh": "事发当晚有日期的病历，是最强的证据类型之一。它把具体日期和具体伤情对应起来——恰好堵住辩方常用的「因果不明」这个缺口。"
       }
     },
     {
-      "id": "po-abandoned",
-      "kind": "bad",
-      "has": [
-        "po-abandoned"
-      ],
-      "title": {
-        "en": "The application was abandoned",
-        "zh": "保护令申请被放弃了"
-      },
+      "id": "good-forensic-exam",
+      "kind": "good",
+      "has": ["forensic-exam"],
+      "title": { "en": "You had a legal-medical forensic examination", "zh": "你做了法医鉴定" },
       "detail": {
-        "en": "Fear of provoking him is real and rational — the missing piece here is knowing the order is designed exactly for that fear: it legally forbids contact and retaliation, and violating it brings detention or criminal liability. Help lines (12338 / 12348) and the Women's Federation can accompany the application; in some situations they can even apply on your behalf.",
-        "zh": "怕激怒他，是真实而合理的恐惧——这一环节缺失的信息是：保护令正是为这种恐惧设计的，它在法律上禁止接触和报复，违反就面临拘留甚至刑责。12338 / 12348 和妇联可以陪同申请；特定情形下她们甚至可以代为申请。"
+        "en": "The forensic exam produces a classified injury level (轻微伤/轻伤/重伤). Classification determines whether the case can be pursued as public-order violation (§43) or as criminal intentional injury (§234). This document is decisive for criminal-track cases.",
+        "zh": "法医鉴定生成伤情等级（轻微伤/轻伤/重伤）。等级决定案件是治安（第 43 条）还是刑事（第 234 条）。这份文书对刑事路径案件是决定性的。"
       },
       "basis": {
-        "en": "Anti-DV Law art. 23: relatives, the Women's Federation, and others may apply on behalf of victims unable to do so.",
-        "zh": "反家暴法第23条：无法自行申请时，近亲属、妇联等可以代为申请。"
+        "en": "Public Security Punishment Law §43; Criminal Law §234.",
+        "zh": "治安管理处罚法第 43 条；刑法第 234 条。"
+      }
+    },
+    {
+      "id": "good-called-120",
+      "kind": "good",
+      "has": ["called-120"],
+      "title": { "en": "You also called emergency medical", "zh": "你同时拨打了 120" },
+      "detail": {
+        "en": "120 ambulance dispatch creates its own record independent of the police report. Two records from independent state services strengthen the case significantly.",
+        "zh": "120 出车会生成独立于警方的记录。两条来自不同国家服务的记录能显著加强案件。"
+      }
+    },
+    {
+      "id": "good-stayed-safe",
+      "kind": "good",
+      "has": ["stayed-safe"],
+      "title": { "en": "You stayed somewhere safe that night", "zh": "你当晚在安全的地方过夜" },
+      "detail": {
+        "en": "Physical separation between you and the abuser removes escalation risk during the highest-risk hours (the immediate aftermath).",
+        "zh": "在最高风险的时段（事发后立即）与施暴者物理分离，可移除升级风险。"
+      }
+    },
+    {
+      "id": "good-used-shelter-system",
+      "kind": "good",
+      "has": ["used-shelter-system"],
+      "title": { "en": "You used the emergency shelter system", "zh": "你使用了紧急庇护系统" },
+      "detail": {
+        "en": "Under Anti-DV Law §18, local government provides shelter. Using it (a) is safer than home for at least tonight, (b) creates a record that you sought emergency safety — supporting later protection-order applications.",
+        "zh": "反家暴法第 18 条规定地方政府提供庇护。使用它（a）至少今晚比家里安全；（b）留下你曾寻求紧急庇护的记录——支撑日后保护令申请。"
+      },
+      "basis": {
+        "en": "Anti-DV Law §18 (emergency shelter obligation).",
+        "zh": "反家庭暴力法第 18 条（临时庇护义务）。"
+      }
+    },
+    {
+      "id": "good-self-documented",
+      "kind": "good",
+      "has": ["self-documented"],
+      "title": { "en": "You documented injuries yourself", "zh": "你自己记录了伤情" },
+      "detail": {
+        "en": "Self-documented photos with timestamps have real evidentiary weight, especially when combined with a same-day message to a trusted person. Not as strong as hospital or police records, but genuinely usable.",
+        "zh": "带时间戳的自拍伤情照，配合同日发给信任的人的消息，有实际证据价值。不如医院或公安记录强，但确实可用。"
+      }
+    },
+    {
+      "id": "good-friend-notified",
+      "kind": "good",
+      "has": ["friend-notified"],
+      "title": { "en": "A trusted person was notified in real time", "zh": "信任的人被第一时间告知" },
+      "detail": {
+        "en": "A friend who received a same-day message can testify to your contemporaneous state and account. This is admissible corroborating evidence.",
+        "zh": "同日收到消息的朋友，可就你「事发即时状态和陈述」出庭作证。这是可采信的间接证据。"
+      }
+    },
+    {
+      "id": "good-building-record",
+      "kind": "good",
+      "has": ["building-record"],
+      "title": { "en": "You built an ongoing record", "zh": "你在持续留证" },
+      "detail": {
+        "en": "Real case (新疆巴音郭楞 2026): the wife lost a follow-up damages lawsuit precisely because she could not link each medical bill to a specific act of violence. An ongoing record with dates and incident-to-injury mapping is what wins the causation argument.",
+        "zh": "真实案件（新疆巴音郭楞 2026）：妻子事后单独起诉索赔失败，正是因为她无法把每笔医疗费和具体施暴行为对应起来。有日期、「事件→伤情」对应的持续记录，能赢下因果关系争议。"
+      }
+    },
+    {
+      "id": "good-audio-recorded",
+      "kind": "good",
+      "has": ["audio-recorded"],
+      "title": { "en": "You recorded audio during the incident", "zh": "事发中你录了音" },
+      "detail": {
+        "en": "As a participant in the conversation, recording is legal (different from third-party surveillance). The recording is admissible if authentic and unedited.",
+        "zh": "作为对话参与方，录音合法（区别于第三方监控）。若真实未剪辑，录音可作为证据。"
+      }
+    },
+    {
+      "id": "good-multi-reports",
+      "kind": "good",
+      "has": ["multi-reports"],
+      "title": { "en": "You reported repeatedly", "zh": "你反复报警" },
+      "detail": {
+        "en": "Multiple Response Records establish a pattern — the single most important factor in protection-order applications and post-separation stalking cases. Real case (内蒙古 2026): court issued protection order same-day based on multiple reports.",
+        "zh": "多份《接处警登记表》确立行为模式——这是保护令申请和分手后跟踪案件中最重要的因素。真实案件（内蒙古 2026）：法院基于多份报警记录当天核发保护令。"
+      }
+    },
+    {
+      "id": "good-digital-evidence",
+      "kind": "good",
+      "has": ["digital-evidence"],
+      "title": { "en": "You preserved digital harassment evidence", "zh": "你保留了数字骚扰证据" },
+      "detail": {
+        "en": "Screenshots of messages and call logs preserved to cloud storage cannot be deleted from your phone by the other party. In post-separation stalking cases, this is the primary evidence type.",
+        "zh": "存到云端的消息截图和通话记录，对方无法从你手机上删除。分手后跟踪案件中，这是核心证据类型。"
+      }
+    },
+    {
+      "id": "good-applied-po",
+      "kind": "good",
+      "has": ["applied-po"],
+      "title": { "en": "You applied for a Personal Safety Protection Order", "zh": "你申请了人身安全保护令" },
+      "detail": {
+        "en": "Under Anti-DV Law §23-29, the Personal Safety Protection Order is the fastest tool available. Rulings within 72 hours (24 in urgent cases), duration up to 6 months, renewable. Violation triggers §34 (fines, detention, potentially criminal).",
+        "zh": "依反家暴法第 23-29 条，人身安全保护令是最快的工具。72 小时内作出（紧急情况 24 小时内），有效期至 6 个月，可延长。违反者触发第 34 条（罚款、拘留、可能构成犯罪）。"
+      },
+      "basis": {
+        "en": "Anti-DV Law §23-29 (Personal Safety Protection Order); §34 (penalties for violation).",
+        "zh": "反家庭暴力法第 23-29 条（人身安全保护令）；第 34 条（违反后果）。"
+      }
+    },
+    {
+      "id": "good-consulted-lawyer",
+      "kind": "good",
+      "has": ["consulted-lawyer"],
+      "title": { "en": "You consulted a lawyer", "zh": "你咨询了律师" },
+      "detail": {
+        "en": "Legal aid stations at courts sometimes offer free protection-order consultations regardless of income. 12338 can refer to legal aid (free for income-eligible). A lawyer materially improves outcome and prevents the split-claims mistake shown in 新疆巴音郭楞 2026.",
+        "zh": "法院内设法律援助工作站有时不受收入限制提供保护令免费咨询。12338 可转介法律援助（低于收入门槛免费）。律师能显著改善结果，并避免新疆巴音郭楞 2026 案里那种「拆分主张」的错误。"
+      },
+      "basis": {
+        "en": "Legal Aid Law; 12338 hotline referral pathway.",
+        "zh": "《法律援助法》；12338 热线转介路径。"
+      }
+    },
+    {
+      "id": "good-parallel-tracks",
+      "kind": "good",
+      "has": ["parallel-tracks"],
+      "title": { "en": "You ran multiple legal tracks in parallel", "zh": "你并行推进多条法律路径" },
+      "detail": {
+        "en": "Protection order, divorce with damages, and administrative detention paths do not exclude each other. Running them in parallel is faster than sequential and creates redundancy — if one fails, others may succeed.",
+        "zh": "保护令、离婚+索赔、行政拘留三条路径互不排斥。并行推进比顺序推进更快，也形成冗余——一条失败时，其他仍可能成功。"
+      }
+    },
+    {
+      "id": "good-full-claims",
+      "kind": "good",
+      "has": ["full-claims"],
+      "title": { "en": "You claimed all damages in the divorce case", "zh": "你在离婚案中一并主张全部损害" },
+      "detail": {
+        "en": "Real case (新疆巴音郭楞 2026): wife obtained ¥40,000 in the divorce case but her follow-up separate lawsuit for medical + emotional damages was dismissed as duplicative. Filing all damages claims together in the divorce case avoids this trap.",
+        "zh": "真实案件（新疆巴音郭楞 2026）：妻子在离婚案中获判 40,000 元，但事后单独起诉主张医疗费+精神抚慰金被驳回（重复主张）。所有损害赔偿在离婚案中一并提出，可避免这一陷阱。"
+      },
+      "basis": {
+        "en": "Civil Code §1091 (divorce damages); res judicata principle; SPC Interpretation (Family) §86.",
+        "zh": "民法典第 1091 条（离婚损害赔偿）；一事不再理原则；最高法婚姻家庭编解释（一）第 86 条。"
+      }
+    },
+    {
+      "id": "good-sought-support",
+      "kind": "good",
+      "has": ["sought-support"],
+      "title": { "en": "You called 12338 for support", "zh": "你拨打了 12338 寻求支持" },
+      "detail": {
+        "en": "12338 (All-China Women's Federation) is free, confidential, and provides both psychological support and direct legal aid referral. Nothing said in the call is binding.",
+        "zh": "12338（全国妇联维权公益服务热线）免费保密，同时提供心理支持和法律援助转介。通话内容不构成任何形式的约束。"
+      },
+      "basis": {
+        "en": "12338 hotline (All-China Women's Federation).",
+        "zh": "12338 全国妇联维权公益服务热线。"
+      }
+    },
+    {
+      "id": "good-legal-aid",
+      "kind": "good",
+      "has": ["legal-aid"],
+      "title": { "en": "You used legal aid", "zh": "你使用了法律援助" },
+      "detail": {
+        "en": "Under the Legal Aid Law, individuals below local income threshold get free lawyer representation. Some courts offer free protection-order consultations regardless of income at in-court legal aid stations.",
+        "zh": "《法律援助法》：低于当地收入门槛可获得免费律师代理。部分法院内设法律援助工作站不受收入限制提供保护令免费咨询。"
+      },
+      "basis": {
+        "en": "Legal Aid Law; court-based legal aid stations.",
+        "zh": "《法律援助法》；法院法律援助工作站。"
+      }
+    },
+    {
+      "id": "bad-fought-back",
+      "kind": "bad",
+      "has": ["fought-back"],
+      "title": { "en": "Fighting back — a real dilemma with real legal risk", "zh": "还手——现实困境和真实的法律风险" },
+      "detail": {
+        "en": "Fighting back to survive is understandable. But real case (四川高院 2014): a woman who fought back and caused her husband's death was convicted of intentional injury (12 years), not self-defense — despite prior injuries, neighbor witnesses, and self-reporting. Chinese courts set a high bar for domestic-violence self-defense. If harm occurred, call 110 and 120 immediately AND preserve your own injury record.",
+        "zh": "为生存而还手是可以理解的。但真实案件（四川高院 2014）：一位家暴幸存者反抗致丈夫死亡被判故意伤害罪 12 年，未认定正当防卫——尽管她此前有伤、有邻居证言、并自首。中国法院对家暴中的正当防卫认定门槛很高。若已发生伤害，立即拨 110 和 120 并保留自己的伤情记录。"
+      },
+      "basis": {
+        "en": "Criminal Law §20 (self-defense); §234 (intentional injury). Practice: high bar for §20 in DV context.",
+        "zh": "刑法第 20 条（正当防卫）；第 234 条（故意伤害）。实务：家暴情境中第 20 条门槛高。"
+      }
+    },
+    {
+      "id": "bad-no-report-emergency",
+      "kind": "bad",
+      "has": ["no-report-emergency"],
+      "title": { "en": "No emergency report was made", "zh": "紧急事件未报警" },
+      "detail": {
+        "en": "Trying to defuse instead of calling police is a common survival strategy. The cost is that no official record of tonight exists. If you're safe now, documenting through photos and a message to a friend can create a partial record even after the moment has passed.",
+        "zh": "试图安抚而不是报警，是常见的生存策略。代价是今晚没有留下官方记录。若现在安全，事后补拍伤情照、给朋友发消息也能形成部分记录。"
+      }
+    },
+    {
+      "id": "bad-no-formal-report",
+      "kind": "bad",
+      "has": ["no-formal-report"],
+      "title": { "en": "Police left without a formal report filed", "zh": "警察离开时没有正式报案" },
+      "detail": {
+        "en": "Saying \"it's nothing\" when police are on scene is understandable. But the legal cost is high: no acceptance number is generated, no Warning Letter is issued, no formal record of tonight exists in the police system.",
+        "zh": "民警在场时说「没事」是可以理解的。但法律代价很高：没有受案编号、没有《告诫书》、公安系统里也没有今晚的正式记录。"
+      }
+    },
+    {
+      "id": "bad-scene-altered",
+      "kind": "bad",
+      "has": ["scene-altered"],
+      "title": { "en": "The scene was altered before help arrived", "zh": "求助前场景被改动了" },
+      "detail": {
+        "en": "Cleaning up before calling 110 or 120 removes physical evidence — broken items, blood traces, disturbed furniture — that would otherwise support your account. Not a personal failing, just information many people don't have in the moment.",
+        "zh": "拨打 110 或 120 之前先清理会消除物证——破损物品、血迹、家具位置——这些原本能支撑你的陈述。这不是个人过失，只是许多人当下没有的信息。"
+      }
+    },
+    {
+      "id": "bad-stayed-home-unsafe",
+      "kind": "bad",
+      "has": ["stayed-home-unsafe"],
+      "title": { "en": "Staying home tonight — often the only option, but the risk is real", "zh": "今晚只能留在家——常常是唯一选择，但风险确实存在" },
+      "detail": {
+        "en": "The immediate aftermath is the highest-risk window for escalation. Staying home is sometimes unavoidable (no money, no relatives nearby, small children). If it can't be avoided, keep your phone charged, keep the bedroom door locked from the inside, and have 110 and 12338 as first two entries in your recent calls.",
+        "zh": "事发后立即的窗口是升级风险最高的时段。留在家有时不可避免（没钱、没近亲、有小孩）。若无法避免：保持手机充电、卧室门反锁、把 110 和 12338 放在通讯录最前面。"
+      }
+    },
+    {
+      "id": "bad-no-hospital",
+      "kind": "bad",
+      "has": ["no-hospital"],
+      "title": { "en": "No hospital record was created", "zh": "没有留下就医记录" },
+      "detail": {
+        "en": "Real case (新疆巴音郭楞 2026): a wife's separate damages lawsuit was dismissed largely because she could not tie each hospital visit to a specific act of violence. A same-day hospital record with the date of the incident is what breaks the causation gap defense arguments exploit.",
+        "zh": "真实案件（新疆巴音郭楞 2026）：妻子事后另案索赔失败，主要就是因为她无法把每次就医与具体施暴行为对应起来。事发当天有日期的病历，正是能堵住辩方「因果不明」抗辩的关键。"
+      }
+    },
+    {
+      "id": "bad-no-record",
+      "kind": "bad",
+      "has": ["no-record"],
+      "title": { "en": "No record was made at all", "zh": "完全没有留下记录" },
+      "detail": {
+        "en": "This is the most common state — most survivors don't think about paper trail during or after an incident. The legal impact is real: without documentation, later protection orders / divorce damages / civil claims are much harder. It's never too late to start documenting future incidents.",
+        "zh": "这是最常见的状态——多数幸存者在事发中或事后不会想到文书链。法律影响真实存在：没有记录，日后申请保护令 / 主张离婚损害 / 民事索赔都会大幅困难。但从下一次开始留证也不算晚。"
+      }
+    },
+    {
+      "id": "bad-enduring",
+      "kind": "bad",
+      "has": ["enduring"],
+      "title": { "en": "Continuing to endure — a common state, not a failure", "zh": "继续忍——常见状态，不是失败" },
+      "detail": {
+        "en": "Real case (新疆巴音郭楞 2026): a 72-year-old woman endured 27 years. When she finally sought damages, the court denied most of them because the evidence trail had not been built. Endurance is a survival response; it's not moral failure. The cost, when it comes, is legal — not personal.",
+        "zh": "真实案件（新疆巴音郭楞 2026）：72 岁的女性忍了 27 年。她最终起诉索赔时，法院驳回了大部分——因为文书链没有建立起来。忍受是生存反应，不是道德失败。若代价到来，那是法律层面的，不是个人层面的。"
+      }
+    },
+    {
+      "id": "bad-family-mediation",
+      "kind": "bad",
+      "has": ["family-mediation"],
+      "title": { "en": "Going through his family — usually doesn't stop it", "zh": "找他家人劝阻——通常无法阻止" },
+      "detail": {
+        "en": "Real case (内蒙古 2026): the woman tried this before applying for a protection order. His family said they would talk to him. The stalking continued. The court accepted this attempted-mediation as evidence that the danger was real and ongoing — but it did not stop the behavior.",
+        "zh": "真实案件（内蒙古 2026）：申请人在申请保护令前尝试过这条路。他家人说会劝他。跟踪继续。法院采信这段调解尝试作为「危险确实存在且持续」的证据——但并未让骚扰停止。"
+      }
+    },
+    {
+      "id": "bad-evading",
+      "kind": "bad",
+      "has": ["evading"],
+      "title": { "en": "Trying to disappear — usually a temporary fix", "zh": "试图彻底消失——通常只是权宜之计" },
+      "detail": {
+        "en": "Changing numbers and moving buys time but rarely solves stalking. Old contacts leak. Social media metadata leaks. A protection order legally shifts the burden onto the stalker to stay away, backed by state enforcement.",
+        "zh": "换号搬家能争取时间，但通常无法解决跟踪。老熟人会泄露信息。社交媒体元数据会泄露。人身安全保护令能在法律上把「远离」的义务转到对方身上，并由国家强制执行。"
+      }
+    },
+    {
+      "id": "bad-no-documents",
+      "kind": "bad",
+      "has": ["no-documents"],
+      "title": { "en": "You didn't ask for the Warning Letter or Case Receipt", "zh": "你没有索要《告诫书》或《受案回执》" },
+      "detail": {
+        "en": "Police statements are useful, but without a copy of the Warning Letter and Case Receipt in your hand, later applications (protection order, divorce damages) can't reference specific documents. The statement is in the system, but you can't cite it easily.",
+        "zh": "笔录有用，但没有《告诫书》和《受案回执》副本，日后申请（保护令、离婚索赔）就无法引用具体文书。笔录在系统里，但你自己不好援引。"
+      }
+    },
+    {
+      "id": "bad-split-claims",
+      "kind": "bad",
+      "has": ["split-claims"],
+      "title": { "en": "You separated the damages from the divorce case", "zh": "你把损害赔偿和离婚案分开处理" },
+      "detail": {
+        "en": "Real case (新疆巴音郭楞 2026): a wife obtained ¥40,000 in the divorce case, then filed a separate lawsuit for medical + emotional damages. Both lower and appeal courts dismissed her separate lawsuit as duplicative under \"一事不再理\" (res judicata). All damages must be claimed within the divorce case itself.",
+        "zh": "真实案件（新疆巴音郭楞 2026）：妻子在离婚案获判 40,000 元，事后另起诉主张医疗费+精神抚慰金。一审、二审均以「一事不再理」驳回单独诉讼。所有损害赔偿必须在离婚案中一并提出。"
+      },
+      "basis": {
+        "en": "SPC Interpretation (Family) §86; res judicata principle.",
+        "zh": "最高法婚姻家庭编解释（一）第 86 条；一事不再理原则。"
+      }
+    },
+    {
+      "id": "bad-gave-up-po",
+      "kind": "bad",
+      "has": ["gave-up-po"],
+      "title": { "en": "You didn't reapply for the protection order", "zh": "你没有再次申请保护令" },
+      "detail": {
+        "en": "Denials are exhausting. Not reapplying is a valid stopping point. But: there's no cap on how many times you can file. The written denial itself lists exactly what evidence would tip the next application.",
+        "zh": "被驳回令人精疲力尽。不再申请是合理的停顿点。但：申请次数无上限。书面驳回本身列出了下一次申请需要补齐的证据。"
+      }
+    },
+    {
+      "id": "bad-late-application",
+      "kind": "bad",
+      "has": ["late-application"],
+      "title": { "en": "You applied with limited evidence — the outcome depended on what you had", "zh": "你在证据有限时申请——结果取决于手上的东西" },
+      "detail": {
+        "en": "Applying with what you have is often the right call — waiting for \"enough\" evidence can leave you unprotected for months. If denied, you know exactly what to gather for a stronger reapplication.",
+        "zh": "带着现有证据申请通常是对的——等「够了」再申请可能让自己无保护地过几个月。若被驳回，也能明确知道下一次要补什么。"
+      }
+    },
+    {
+      "id": "bad-still-documenting",
+      "kind": "bad",
+      "has": ["still-documenting"],
+      "title": { "en": "You kept documenting but didn't file", "zh": "你在继续留证，但没有申请" },
+      "detail": {
+        "en": "Documentation with no filing is a common holding pattern. If it feels like the right pace right now, that's valid. When ready, all the documentation goes to work immediately.",
+        "zh": "只留证不申请，是常见的观望状态。若目前的节奏感觉合适，也是正当选择。当你准备好时，这些记录会立即发挥作用。"
+      }
+    },
+    {
+      "id": "bad-no-action",
+      "kind": "bad",
+      "has": ["no-action"],
+      "title": { "en": "You are not moving forward — this is a state, not a verdict", "zh": "你没有向前推进——这是一种状态，不是定论" },
+      "detail": {
+        "en": "Many survivors stay here for years. The Anti-Domestic Violence Law has no limitation period; the tools remain available whenever you decide. If the immediate cost of documenting or filing feels too high right now, that's a real reason. 12338 remains available at no cost.",
+        "zh": "很多幸存者在此停留多年。反家庭暴力法没有时效限制；这些工具在你决定时随时可用。若「留证或申请」当下的代价感觉太高，那是真实的理由。12338 随时可用，不收费。"
+      }
+    },
+    {
+      "id": "bad-waiting",
+      "kind": "bad",
+      "has": ["waiting"],
+      "title": { "en": "You chose to wait", "zh": "你选择先等一等" },
+      "detail": {
+        "en": "Waiting is a legitimate choice — sometimes the safest one. Whatever you decide next: 12338 is free, protection order can be filed any time, and every incident from now on is documentable if you have your phone and 30 seconds to send yourself a photo.",
+        "zh": "先等一等是合理的选择——有时是最安全的。无论下一步怎么选：12338 免费；保护令随时可申请；从今天起每次事发只要拿到手机、有 30 秒时间给自己发一张照片，就都能留下记录。"
       }
     }
   ],
+
   "realFlow": [
     {
-      "en": "Call 110 immediately — even if you're unsure. The police dispatch record is the most important official timestamp of the violence.",
-      "zh": "第一时间拨打110报案——哪怕还没想好要怎么处理。接警记录是暴力最重要的官方时间戳。"
+      "en": "In the moment — Priority order: (1) get safe, (2) call 110, (3) if injured, call 120 or go to ER same day. Chinese Anti-DV Law §15 requires police to accept DV calls.",
+      "zh": "事发中——优先级：（1）先脱险；（2）拨打 110；（3）若受伤，拨 120 或当天去急诊。反家暴法第 15 条要求公安必须受理家暴警情。"
     },
     {
-      "en": "Photograph injuries right away (with timestamp on), both close-up and full body.",
-      "zh": "立即拍摄伤照，开启时间戳，近景和全身各一组。"
+      "en": "When police arrive — Ask for two specific documents: a Warning Letter (家庭暴力告诫书, Anti-DV Law §16) and the Case Receipt (受案回执).",
+      "zh": "警察到场时——索要两份具体文书：《家庭暴力告诫书》（反家暴法第 16 条）和《受案回执》。"
     },
     {
-      "en": "Before police leave: request a written statement (询问笔录) and ask for the police receipt (报警回执) — you are entitled to both.",
-      "zh": "民警离开前：要求制作询问笔录，并索要报警回执——这两样都是你有权要求的。"
+      "en": "Within 24 hours — Go to hospital for a same-day medical record. If a criminal path is possible, request a legal-medical forensic examination (法医鉴定).",
+      "zh": "24 小时内——去医院留下当天的病历。若可能走刑事路径，要求做法医鉴定。"
     },
     {
-      "en": "Go to a hospital or judicial appraisal center for an injury assessment (伤情鉴定) as soon as possible — bruises fade quickly.",
-      "zh": "尽快前往医院或司法鉴定机构做伤情鉴定——淤青消退后就无法鉴定了。"
+      "en": "Same night if unsafe — Anti-DV Law §18 requires local government to provide emergency shelter. 12338 can help arrange it. Free, confidential, 24/7.",
+      "zh": "当晚若不安全——反家暴法第 18 条要求地方政府提供临时庇护所。12338 可协助安排。免费、保密、24 小时。"
     },
     {
-      "en": "Ask the police station to issue a Domestic Violence Warning Letter (家庭暴力告诫书). Say those exact words — police are required to issue one.",
-      "zh": "要求派出所出具《家庭暴力告诫书》，直接说这个名字——公安有义务出具。"
+      "en": "Days 2-7 — Apply for a Personal Safety Protection Order at the local family court. Anti-DV Law §28: court decides within 72 hours (24 hours if urgent). Valid up to 6 months, renewable.",
+      "zh": "第 2-7 天——向所在地基层法院家事法庭申请人身安全保护令。反家暴法第 28 条：法院 72 小时内作出（紧急情况 24 小时内）。有效期至 6 个月，可延长。"
     },
     {
-      "en": "Apply to the local court for a Personal Safety Protection Order (人身安全保护令). Court must rule within 72 hours (24 hours in emergencies). No divorce required; his consent is not needed.",
-      "zh": "向居住地基层法院申请人身安全保护令。法院72小时内裁定，紧急时24小时。不需要先离婚，不需要他同意。"
+      "en": "Ongoing — Build the record: photos with dates, injury log with incident-to-injury mapping, hospital receipts, message screenshots. Real case (新疆巴音郭楞 2026) shows damages claims fail without this incident-to-cost linkage.",
+      "zh": "持续——建立文书链：带日期的照片、「事件→伤情」对应的伤情日志、就医票据、消息截图。真实案件（新疆巴音郭楞 2026）显示：没有这种事件-费用对应，赔偿主张会失败。"
     },
     {
-      "en": "Keep all documents (警方回执, 告诫书, 保护令, 他写的任何承认) in a place he cannot access — and photograph each one as a backup.",
-      "zh": "将所有书面材料（回执、告诫书、保护令、他写的任何承认）存放在他接触不到的地方，并逐一拍照备份。"
+      "en": "When ready — File for divorce citing domestic violence, and claim ALL damages within the divorce case: emotional damages under Civil Code §1091, medical costs, lost wages, lawyer fees. Do NOT save damages claims for a follow-up lawsuit.",
+      "zh": "准备好时——起诉离婚（家暴事由），并在离婚案中一并主张全部损害赔偿：民法典 1091 条精神抚慰金、医疗费、误工费、律师费。不要把赔偿留到事后单独诉讼。"
+    },
+    {
+      "en": "If first divorce petition denied — File a second petition 6 months after the first ruling takes effect. Second filings with new documented incidents typically succeed; second filings on the same evidence typically fail.",
+      "zh": "如首次起诉被驳回——判决生效 6 个月后再次起诉。若有新的、有记录的事件，二次起诉通常获准；若证据与首次基本相同，通常仍被驳回。"
+    },
+    {
+      "en": "Post-separation stalking — Apply for Personal Safety Protection Order under Anti-DV Law §37 (covers non-married cohabiting or dating relationships). Real case (内蒙古 2026): court issued same-day protection order based on multiple police response records.",
+      "zh": "分手后被跟踪——依反家暴法第 37 条申请人身安全保护令（覆盖未婚同居和恋爱关系）。真实案件（内蒙古 2026）：法院基于多份接处警登记表当天核发保护令。"
+    },
+    {
+      "en": "At every stage — 12338 (national women's-rights hotline) provides free psychological support and direct referral to legal aid (free for income-eligible). Calling costs nothing. Nothing said is binding.",
+      "zh": "全程——12338（全国妇联维权公益服务热线）提供免费心理支持并可直接转介法律援助（低收入者免费）。拨打不收费。通话内容不构成约束。"
     }
   ],
+
   "glossary": [
     {
-      "term": {
-        "en": "Personal Safety Protection Order (人身安全保护令)",
-        "zh": "人身安全保护令"
-      },
+      "term": { "en": "Domestic Violence (家庭暴力)", "zh": "家庭暴力" },
       "note": {
-        "en": "A court order that legally prohibits the abuser from contacting, approaching, or harming you. Applied to the local court; ruled within 72 hours (24 in emergencies). You don't need to divorce first, and his consent is not required. Violating it can lead to detention or criminal charges.",
-        "zh": "法院出具的法律文书，正式禁止施暴者接触、靠近或伤害你。向居住地基层法院申请，72小时内裁定，紧急情况24小时。不需要先离婚，不需要他同意。违反保护令可被拘留，情节严重的追刑责。"
+        "en": "Under Anti-Domestic Violence Law §2, includes bodily, mental, and other harm inflicted between family members through beating, restraint, injury, restriction of personal freedom, and frequent verbal abuse. §37 extends coverage to non-married cohabiting relationships.",
+        "zh": "反家庭暴力法第 2 条：家庭成员之间以殴打、捆绑、残害、限制人身自由以及经常性谩骂、恐吓等方式实施的身体、精神等侵害行为。第 37 条把覆盖范围扩展到未婚同居等家庭成员以外的共同生活关系。"
       }
     },
     {
-      "term": {
-        "en": "Domestic Violence Warning Letter (家庭暴力告诫书)",
-        "zh": "家庭暴力告诫书"
-      },
+      "term": { "en": "Warning Letter (家庭暴力告诫书)", "zh": "家庭暴力告诫书" },
       "note": {
-        "en": "An official document issued by the police station that formally acknowledges domestic violence occurred. Courts can use it directly as evidence of abuse — you don't need to prove the violence all over again.",
-        "zh": "派出所出具的官方文书，正式认定发生了家暴。法院可以直接凭告诫书认定家暴事实，无需你再重新举证。"
+        "en": "Under Anti-DV Law §16, police may issue a Warning Letter on scene documenting that domestic violence occurred. Both parties get a copy; the police keep one on file. Not a formal penalty, but is the single most-cited evidence in later DV cases.",
+        "zh": "反家暴法第 16 条：民警可在现场出具《家庭暴力告诫书》，书面确认家暴已发生。双方各一份，公安存档一份。虽非行政处罚，但在日后家暴案件中是被引用最多的证据。"
       }
     },
     {
-      "term": {
-        "en": "Injury Assessment (伤情鉴定)",
-        "zh": "伤情鉴定"
-      },
+      "term": { "en": "Personal Safety Protection Order (人身安全保护令)", "zh": "人身安全保护令" },
       "note": {
-        "en": "A formal medical-legal evaluation of your injuries, done by a certified judicial appraisal center. The grade determines whether the case goes through administrative penalty (治安处罚) or criminal prosecution (刑事立案). Do it as soon as possible — bruising disappears.",
-        "zh": "由司法鉴定机构对伤势进行专业评级。评级结果决定案件走《治安处罚》还是《刑事立案》路径。越早做越好——淤青会消退。"
+        "en": "Court order under Anti-DV Law §23-29 prohibiting the abuser from violence, contact, proximity, or entering specific locations. Standard duration up to 6 months, renewable. Ruling within 72 hours of application (24 hours if urgent). Violation triggers §34 penalties.",
+        "zh": "依反家暴法第 23-29 条核发的法院裁定，禁止加害人施暴、联系、接近或进入特定场所。标准有效期至 6 个月，可延长。申请后 72 小时内作出（紧急情况 24 小时内）。违反者触发第 34 条。"
       }
     },
     {
-      "term": {
-        "en": "Police Receipt (报警回执)",
-        "zh": "报警回执"
-      },
+      "term": { "en": "Emergency Shelter (临时庇护所)", "zh": "临时庇护所" },
       "note": {
-        "en": "A slip given by police confirming they received your report. Keep it — every later step (injury assessment referral, protection order, divorce proceeding) may ask for it.",
-        "zh": "民警确认受理报案后给你的凭条。一定要保留——后续伤情鉴定委托、保护令申请、离婚诉讼都可能用到它。"
+        "en": "Under Anti-DV Law §18, local government must provide emergency shelter for domestic violence survivors. 12338 or the local Women's Federation can help arrange access.",
+        "zh": "反家暴法第 18 条：地方政府应为家暴受害人提供临时庇护。12338 或当地妇联可协助对接。"
+      }
+    },
+    {
+      "term": { "en": "Case Receipt (受案回执)", "zh": "受案回执" },
+      "note": {
+        "en": "Written proof that police accepted the report, with a case number. Required for every subsequent step (protection order application, divorce filing, civil damages).",
+        "zh": "警方受案的书面凭证，带案件编号。后续所有步骤（申请保护令、起诉离婚、民事索赔）都需要。"
+      }
+    },
+    {
+      "term": { "en": "Divorce Damages under §1091 (离婚损害赔偿)", "zh": "离婚损害赔偿" },
+      "note": {
+        "en": "Civil Code §1091: in divorce cases, the non-abusing spouse can claim damages if domestic violence, abuse, abandonment, bigamy, or cohabitation with another party is proven. Damages include material and emotional. Typical DV award: ¥20,000-¥60,000.",
+        "zh": "民法典 1091 条：离婚时，若存在家暴、虐待、遗弃、重婚、与他人同居的情形，无过错方可主张损害赔偿。包括物质和精神损害。家暴案件常规判决：20,000-60,000 元。"
+      }
+    },
+    {
+      "term": { "en": "One-Suit-Only Rule (一事不再理)", "zh": "一事不再理" },
+      "note": {
+        "en": "Same facts, same parties, same claim cannot be sued twice. Real case (新疆巴音郭楞 2026) showed a wife's follow-up lawsuit for medical + emotional damages after divorce was dismissed as duplicative. All damages must be claimed within the divorce case itself.",
+        "zh": "同一事实、同一当事人、同一诉讼请求不得二次起诉。真实案件（新疆巴音郭楞 2026）：妻子离婚后另诉主张医疗费+精神抚慰金被驳回。所有赔偿须在离婚案中一并提出。"
+      }
+    },
+    {
+      "term": { "en": "Legal-Medical Forensic Exam (法医鉴定)", "zh": "法医鉴定" },
+      "note": {
+        "en": "State-authorized medical examination producing an injury classification: 轻微伤 (minor), 轻伤 (light injury), 重伤 (serious). Classification determines the legal track: minor → public order (§43); light/serious → criminal (§234).",
+        "zh": "由国家授权机构进行的医学鉴定，出具伤情等级：轻微伤、轻伤、重伤。等级决定法律路径：轻微伤→治安路径（第 43 条）；轻伤/重伤→刑事路径（第 234 条）。"
+      }
+    },
+    {
+      "term": { "en": "Self-Defense (正当防卫)", "zh": "正当防卫" },
+      "note": {
+        "en": "Criminal Law §20: not criminal if force is used to stop an ongoing unlawful attack, within necessary limits. In practice, courts set a very high bar for §20 in DV contexts. Real case (四川高院 2014): survivor who fought back and caused abuser's death was convicted of intentional injury (12 years), not self-defense.",
+        "zh": "刑法第 20 条：为制止正在进行的不法侵害而采取必要限度内的行为，不构成犯罪。实务中，家暴情境下法院对第 20 条认定门槛极高。真实案件（四川高院 2014）：反抗致死被判故意伤害罪 12 年，未认定正当防卫。"
+      }
+    },
+    {
+      "term": { "en": "Public Security Punishment Law §43 (治安管理处罚法第 43 条)", "zh": "治安管理处罚法第 43 条" },
+      "note": {
+        "en": "For beating causing minor injury (轻微伤): 5-10 days administrative detention plus ¥200-¥500 fine; if aggravating factors: 10-15 days detention plus ¥500-¥1,000 fine.",
+        "zh": "殴打他人致轻微伤：拘留 5-10 日并处 200-500 元罚款；有加重情节的：拘留 10-15 日并处 500-1000 元罚款。"
+      }
+    },
+    {
+      "term": { "en": "Criminal Intentional Injury §234 (刑法故意伤害罪)", "zh": "刑法故意伤害罪（第 234 条）" },
+      "note": {
+        "en": "Criminal Law §234: intentional injury causing light injury (轻伤) → up to 3 years imprisonment; serious injury (重伤) → 3-10 years; death → 10 years to death penalty.",
+        "zh": "刑法第 234 条：故意伤害致轻伤——3 年以下有期徒刑；致重伤——3-10 年；致人死亡——10 年以上至死刑。"
+      }
+    },
+    {
+      "term": { "en": "12338 Hotline (12338 妇女维权公益服务热线)", "zh": "12338 妇女维权公益服务热线" },
+      "note": {
+        "en": "National hotline operated by the All-China Women's Federation. Free, confidential, 24/7. Provides psychological support, legal advice, and direct referral to legal aid.",
+        "zh": "全国妇联开通的公益服务热线。免费、保密、24 小时。提供心理支持、法律咨询、直接转介法律援助。"
+      }
+    },
+    {
+      "term": { "en": "Legal Aid (法律援助)", "zh": "法律援助" },
+      "note": {
+        "en": "Under the Legal Aid Law, individuals below local income threshold receive free lawyer representation, including for DV cases, protection order applications, and divorce with damages. Apply via 12338, local justice bureau (司法局), or in-court legal aid stations.",
+        "zh": "《法律援助法》：低于当地收入门槛可获得免费律师代理，包括家暴案件、保护令申请、离婚+索赔。可通过 12338、当地司法局或法院法律援助工作站申请。"
+      }
+    },
+    {
+      "term": { "en": "Marriage-Not-Broken Rejection (感情尚未破裂驳回)", "zh": "「感情尚未完全破裂」驳回" },
+      "note": {
+        "en": "First divorce petitions with insufficient DV evidence are typically denied on grounds \"marital affection has not irretrievably broken down.\" Second petition can be filed 6 months after the first ruling takes effect.",
+        "zh": "家暴证据不足的首次离婚起诉，通常以「夫妻感情尚未完全破裂」被驳回。首次判决生效 6 个月后可再次起诉。"
       }
     }
   ]
