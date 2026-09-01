@@ -11,9 +11,9 @@ interface BottomNavProps {
 
 const tabs = [
   { id: "sos"        as const, english: "Help",     chinese: "求助", icon: Shield         },
+  { id: "simulation" as const, english: "Practice", chinese: "模拟", icon: Compass        },
   { id: "evidence"   as const, english: "Evidence", chinese: "存证", icon: Archive        },
   { id: "aid"        as const, english: "Aid",      chinese: "援助", icon: HeartHandshake },
-  { id: "simulation" as const, english: "Practice", chinese: "模拟", icon: Compass        },
 ];
 
 export default function BottomNav({ activeTab, onTabChange, language }: BottomNavProps) {
