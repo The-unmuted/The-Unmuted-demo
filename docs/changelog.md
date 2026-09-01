@@ -1,5 +1,16 @@
 # Changelog — The Unmuted (非默)
 
+## 2026-09-01 — Retired blockchain implementation cleanup
+
+### Maintenance
+- Deleted the unused Solana Devnet program, deployment constants, Solidity evidence contract, and ChainMaker REST/simulation service. None had runtime callers.
+- Removed stale Solana browser shims from Vite, unused wallet color tokens, retired ChainMaker environment declarations, and its CSP network permission.
+- Replaced the obsolete Web3 PWA description and clarified that encrypted hashes are used for integrity verification.
+- Preserved browser Web Crypto encryption, current IndexedDB/Supabase evidence storage, and read-only rendering of records created by older app versions.
+
+### Verification
+- Cleanup was gated by production build, unit test, and ESLint comparisons against the pre-cleanup baseline.
+
 ## 2026-08-12 — OTP anti-brute-force: client-side attempt cap + expiry countdown (D-041)
 
 ### Security

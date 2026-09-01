@@ -17,17 +17,7 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      // Solana web3.js needs the Node.js buffer in browser
-      buffer: "buffer",
     },
     dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime"],
-  },
-  define: {
-    // Required by @solana/web3.js in browser
-    "process.env": {},
-    global: "globalThis",
-  },
-  optimizeDeps: {
-    include: ["buffer", "@solana/web3.js"],
   },
 }));

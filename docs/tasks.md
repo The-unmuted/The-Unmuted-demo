@@ -1,6 +1,6 @@
 # Tasks & Roadmap — The Unmuted (非默)
 
-_Last updated: 2026-08-03_
+_Last updated: 2026-09-01_
 
 ---
 
@@ -53,7 +53,6 @@ _Last updated: 2026-08-03_
 - [ ] **Rotate Resend API key** — the key was pasted in a chat session (chat logs are not private). Go to resend.com → API Keys → delete the old key and generate a new one. Update the Supabase Edge Function secret if you re-enable the Hook later.
 
 ### Security / Production Hardiness
-- [ ] **ChainMaker API proxy** — Move ChainMaker REST call to Vercel Serverless Function to fix CORS and protect API key (currently `VITE_` prefix exposes it to browser)
 - [x] ~~Replace Gun.js with real E2E encryption~~ — moot 2026-07-09: chat feature removed entirely (Phase 4b); no chat will be rebuilt (product scope)
 - [x] ~~Password reset flow~~ — solved 2026-07-06: email OTP resets account access, paper recovery code resets data access (D-017/D-018)
 
@@ -99,7 +98,6 @@ _Last updated: 2026-08-03_
 - [ ] **Tencent SMS signature filing** — prerequisite for phone OTP
 - [ ] **Phone OTP login** — real-name compliance + Chinese user habit; phone stored encrypted/isolated, evidence stays client-side ("实名的是账号，加密的是内容")
 - [ ] **WeChat login (optional entry, never the only one)** — binds identity to WeChat account, a concern for some survivors
-- [ ] **ChainMaker mainnet** — Upgrade from testnet to ChainMaker production chain when ready
 - [ ] **SMS via China carrier API** — Replace `sms:` URI with server-side SMS API (e.g., Tencent SMS) for more reliable delivery on iOS/Android
 
 ---
@@ -116,7 +114,7 @@ _Last updated: 2026-08-03_
 - [ ] **True ZKP circuit** — Replace SHA-256 commitment scheme with a proper ZKP (snarkjs/Groth16) if Sybil resistance is needed
 - [ ] **Test coverage** — `src/test/` has only a placeholder; add unit tests for crypto, locale, and evidence pipeline
 - [ ] **Playwright E2E tests** — `playwright.config.ts` + `playwright-fixture.ts` exist but no test files written
-- [ ] **Solana program cleanup** — `programs/the_unmuted_program/` is unused dead code; remove or document as archived
+- [x] **Retired blockchain code cleanup** — removed the unused Solana program/constants, Solidity contract, ChainMaker service, Web3 Vite/CSP/env configuration, and unused wallet design tokens (2026-09-01)
 
 ---
 

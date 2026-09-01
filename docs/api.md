@@ -2,7 +2,7 @@
 
 External services, environment-variable-driven integrations, and key internal APIs.
 
-_Last full revision: 2026-07-30 (post-D-029 — wallet/Privy/Gun/Arweave sections removed with the code)._
+_Last full revision: 2026-09-01 (retired blockchain integration code removed)._
 
 ---
 
@@ -30,17 +30,6 @@ Email OTP (6-digit, template `{{ .Token }}`). Accounts exist for cross-device re
 #### Storage
 
 Bucket `evidence-vault` — **private**, per-user paths `{uid}/{txId}`, RLS-gated download. All blobs are AES-256-GCM ciphertext; the bucket never sees plaintext.
-
----
-
-### ChainMaker (长安链) — legacy path
-
-**Status:** retired from UI copy (Phase 4a, 2026-07-08); the code path survives only for legacy records and runs in deterministic simulation without credentials. Any productionisation must move the call server-side (`VITE_CHAINMAKER_API_KEY` is browser-visible — see CLAUDE.md rule 3).
-
-**Endpoint:** `https://baas.chainmaker.org.cn/v1/contract/invoke` (`VITE_CHAINMAKER_ENDPOINT`, `VITE_CHAINMAKER_API_KEY`)  
-`code !== 0` or any fetch error → `simulateAnchor()` (deterministic, `isSimulated: true`).
-
-The real timestamping plan is RFC 3161 TSA after entity registration; `original_hash` + dual timestamps are stored plaintext precisely so old records can be anchored retroactively.
 
 ---
 

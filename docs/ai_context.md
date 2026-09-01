@@ -97,12 +97,12 @@ Key files: `src/lib/keyVault.ts` (pure crypto), `src/lib/keyVaultService.ts` (Su
 ## Known Issues
 
 ### Security / Production Gaps
-1. **ChainMaker API key exposed in browser** — `VITE_CHAINMAKER_API_KEY` still browser-bundled. Legacy path only now; retire or proxy before production (Phase 4).
+1. ~~**ChainMaker API key exposed in browser**~~ — resolved 2026-09-01 by deleting the unused integration, environment variables, and BaaS CSP permission.
 2. ~~Gun.js chat is not E2E~~ — resolved 2026-07-09 (Phase 4b): all P2P chat / support-network / 预警地图 code deleted, `gun` dependency removed. SOSPage now contains only the validated SOS button + contacts + message template.
 
 ### Technical
 4. ~~`MapPage.tsx` orphaned~~ — deleted 2026-07-09 (Phase 4b) along with useGeoAlert; `geoAlert.ts` lib kept (SOSButton imports it).
-5. **`programs/the_unmuted_program/`** — Solana dead code from v1.0.
+5. ~~**`programs/the_unmuted_program/`**~~ — resolved 2026-09-01; the unused program and remaining Web3 implementation files were deleted.
 6. **Test coverage thin** — 23 unit tests (keyVault, captureMetadata grading, evidenceExport); no tests for evidenceVaultService, locale, or E2E (Playwright configured, no test files).
 7. **SOS broadcast not wired to `useOfflineBuffer`** — evidence upload queue is done; SOS path still isn't.
 
@@ -128,9 +128,6 @@ Key files: `src/lib/keyVault.ts` (pure crypto), `src/lib/keyVaultService.ts` (Su
 |----------|----------|---------|
 | `VITE_SUPABASE_URL` | **Yes (production track)** | Auth OTP, key vault, evidence storage + index, NGO directory, feedback. |
 | `VITE_SUPABASE_ANON_KEY` | **Yes (production track)** | Required with Supabase URL. |
-| `VITE_PRIVY_APP_ID` | No | Legacy optional Privy OTP. Superseded by Supabase auth. |
-| `VITE_CHAINMAKER_API_KEY` | No | Legacy path only. Without it, deterministic simulation runs. |
-| `VITE_CHAINMAKER_ENDPOINT` | No | Custom ChainMaker BaaS endpoint. |
 | `VITE_BETA_CODE` | No (local dev) | Internal access gate. Set to `V3IOG0G7` on Vercel + CloudBase until ICP filing. Unset locally — no gate in dev. |
 | `TENCENT_SECRET_ID` / `KEY` | CI only | CloudBase deployment (v2 repo GitHub Secrets only). |
 

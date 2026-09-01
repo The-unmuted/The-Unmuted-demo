@@ -18,14 +18,9 @@ export interface VaultRecord {
   originalSize: number;
   originalHash: string;
   encryptedHash: string;
-  arweaveTxId: string;
-  arweaveUrl: string;
-  chainTxHash: string;
   chainExplorerUrl: string;
-  blockTimestamp: number;
   isSimulated: boolean;
   createdAt: number; // Date.now()
-  status: "anchored" | "local_only";
 }
 
 export function loadVaultRecords(): VaultRecord[] {
@@ -42,7 +37,6 @@ export interface SOSHistoryRecord {
   latitude: number;
   longitude: number;
   timestamp: number;
-  txHash?: string;
   status: "success" | "offline" | "pending";
 }
 

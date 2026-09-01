@@ -56,10 +56,6 @@ export default {
           success: "hsl(var(--sos-success))",
           offline: "hsl(var(--sos-offline))",
         },
-        wallet: {
-          connected: "hsl(var(--wallet-connected))",
-          warning: "hsl(var(--wallet-warning))",
-        },
         nav: {
           active: "hsl(var(--nav-active))",
           inactive: "hsl(var(--nav-inactive))",

@@ -8,7 +8,7 @@ export interface EncryptionResult {
   ivHex: string;
   exportedKey: JsonWebKey;
   originalHash: string;   // SHA-256 of the original plaintext file
-  encryptedHash: string;  // SHA-256 of the encrypted blob → this goes on-chain
+  encryptedHash: string;  // SHA-256 of the encrypted blob for integrity verification
   mimeType: string;
   originalSize: number;
 }

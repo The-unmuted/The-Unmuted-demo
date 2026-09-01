@@ -25,16 +25,13 @@ import { copyFor, AppLanguage } from "@/lib/locale";
 copyFor(language, "Save", "保存")
 ```
 
-### 3. ChainMaker API key must not go to production as `VITE_` prefix
-`VITE_CHAINMAKER_API_KEY` is currently a browser-visible env var. Any work that productionises ChainMaker must move the call to a Vercel Serverless Function with a server-side env var.
+### 3. Evidence encryption is non-negotiable
+Evidence files must always be encrypted with AES-256-GCM **before** any network call. The server must never see plaintext evidence.
 
-### 4. Evidence encryption is non-negotiable
-Files uploaded to Arweave must always be encrypted with AES-256-GCM **before** any network call. The server must never see plaintext evidence.
-
-### 5. Coordinate privacy
+### 4. Coordinate privacy
 Do not add any feature that transmits precise GPS coordinates to any shared or public channel. If a broadcast-style feature is ever proposed, coordinates must be rounded to ~0.1° (≈11km grid). Precise GPS is only allowed in the SOS SMS to the user's own emergency contacts and in client-side-sealed evidence metadata.
 
-### 6. No wallet features
+### 5. No wallet features
 All crypto-wallet functionality was deliberately removed in v2.0. Do not re-introduce Phantom, MetaMask, Solana, Ethereum wallet connections, or any token/NFT features.
 
 ---
@@ -71,10 +68,7 @@ Create `.env.local` for local development:
 ```bash
 VITE_SUPABASE_URL=https://iisjendxxmxpgwohckiq.supabase.co
 VITE_SUPABASE_ANON_KEY=     # get from Supabase dashboard
-VITE_CHAINMAKER_API_KEY=    # optional — leave blank for simulation
 ```
-
-Without `VITE_CHAINMAKER_API_KEY`, evidence anchoring runs in deterministic simulation mode.
 
 ---
 
@@ -92,7 +86,6 @@ Without `VITE_CHAINMAKER_API_KEY`, evidence anchoring runs in deterministic simu
 | Bottom navigation tabs | `src/components/BottomNav.tsx` |
 | EN/ZH copy utility | `src/lib/locale.tsx` |
 | Evidence encryption | `src/lib/evidenceCrypto.ts` |
-| ChainMaker anchoring | `src/lib/chainmakerService.ts` |
 | Auth (bcrypt + ZKP identity) | `src/lib/userCredentials.ts`, `src/lib/zkpIdentity.ts` |
 | Security headers / CSP (Vercel) | `vercel.json` |
 | Auto-lock timing | `src/hooks/useAutoLock.ts` |
@@ -106,7 +99,7 @@ Without `VITE_CHAINMAKER_API_KEY`, evidence anchoring runs in deterministic simu
 - Provider tree: QueryClient → Locale → Tooltip → BrowserRouter (Privy removed 2026-07-30 with all wallet-era deps)
 - 4 main tabs: Help (SOS button) / Evidence / Mental Health / Legal Aid
 - Auth: email → local bcrypt hash → ZKP commitment stored in localStorage
-- Evidence pipeline: AES-256-GCM → Arweave demo → ChainMaker testnet (or sim)
+- Evidence pipeline: AES-256-GCM → browser IndexedDB (beta) or private Supabase bucket (production); no blockchain dependency
 - No P2P/chat: Gun.js chat removed 2026-07-09 (Phase 4b); no chat feature by product scope
 - Dual deploy: Vercel (primary) + Tencent CloudBase (China mirror)
 

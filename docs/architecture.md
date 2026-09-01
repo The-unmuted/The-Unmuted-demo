@@ -158,7 +158,6 @@ src/
     ├── keyVaultService.ts  — cloud key vault ops + in-memory session master key
     ├── evidenceVaultService.ts — private bucket + encrypted index + pending queue
     ├── evidenceCrypto.ts   — AES-256-GCM encrypt/decrypt + hashes
-    ├── chainmakerService.ts — ChainMaker REST + simulation fallback (legacy path)
     ├── localStorage.ts     — legacy vault record persistence (read-only)
     ├── aidDirectory.ts     — typed loader/filters for src/data/aidDirectory.json (D-026)
     ├── simulation.ts       — 模拟 scenario types/loader/validation for src/data/simulations/*.json (D-030)

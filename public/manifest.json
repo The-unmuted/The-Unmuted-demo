@@ -1,7 +1,7 @@
 {
   "name": "The Unmuted",
   "short_name": "The Unmuted",
-  "description": "Web3 匿名举报与女性互助系统",
+  "description": "双语个人安全、加密存证与法律援助工具",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
