@@ -165,7 +165,7 @@ function AdminLogin({ onBack }: { onBack: () => void }) {
             {signingIn ? "登录中..." : "登录"}
           </button>
           <p className="mt-2 text-[10px] leading-4 text-muted-foreground">
-            所有团队成员共用一个密码 — 请从 Katie / Wendy 处获取。请勿在公共设备保存或截图分享。
+            密码在飞书。
           </p>
         </form>
 
