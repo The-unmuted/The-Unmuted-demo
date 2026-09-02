@@ -1,26 +1,36 @@
 /**
  * /admin route — team-only feedback panel.
  *
- * Auth model:
- * 1. User enters their email → we call supabase.auth.signInWithOtp.
- *    Supabase emails BOTH a 6-digit code AND a magic link. Whichever the
- *    user's email template renders will work.
- * 2. User enters the 6-digit code → verifyOtp({type:"email"}) sets the
- *    session. (Alternatively, clicking the magic link in the email lands
- *    them back here with a valid session already set.)
- * 3. RLS in Supabase (migration 0002) checks the JWT email against the
- *    unmuted_admins allow-list. If not on the list, the feedback SELECT
- *    query silently returns nothing.
+ * Auth model (shared team password, replaces per-user magic link):
+ * 1. The team shares one Supabase account. The email is hardcoded
+ *    (TEAM_ADMIN_EMAIL below); the password is set in the Supabase
+ *    dashboard and shared with the 5 team members out-of-band
+ *    (WeChat / Signal).
+ * 2. User visits /admin → enters the shared password → we call
+ *    supabase.auth.signInWithPassword({email: TEAM_ADMIN_EMAIL, password}).
+ * 3. RLS in Supabase (migration 0002 + 0003) checks the JWT email against
+ *    the unmuted_admins allow-list. If the shared account's email is on
+ *    the list, the feedback SELECT query returns rows; otherwise nothing.
  *
- * We deliberately do NOT enforce the allow-list on the client — the RLS
- * policy is the real gate. This page just does UI.
+ * Why not the built-in Supabase email OTP: the free tier caps outgoing
+ * mail at ~4/hour across the whole project. A five-person team hit that
+ * limit within one login attempt round. Custom SMTP would fix it but is
+ * out of scope for the beta.
+ *
+ * We deliberately do NOT rely on any client-side password check — the
+ * password IS the shared credential and Supabase verifies it server-side.
  */
 
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabaseClient";
-import { Loader2, LogOut, Mail, RefreshCw, Search } from "lucide-react";
+import { Eye, EyeOff, KeyRound, Loader2, LogOut, RefreshCw, Search } from "lucide-react";
+
+// The shared team account. Change here + in Supabase dashboard + in
+// migration 0003 if you ever rotate the identity. The email does not
+// need to receive mail; Supabase only uses it as a login identifier.
+const TEAM_ADMIN_EMAIL = "admin@theunmuted.demo";
 
 type FeedbackRow = {
   id: number;
@@ -38,7 +48,6 @@ export default function AdminPage() {
   const [session, setSession] = useState<Session | null>(null);
   const [checkingSession, setCheckingSession] = useState(true);
 
-  // On mount: check for existing session and subscribe to changes.
   useEffect(() => {
     if (!supabase) {
       setCheckingSession(false);
@@ -85,49 +94,32 @@ export default function AdminPage() {
 // ─── Login ─────────────────────────────────────────────────────────
 
 function AdminLogin({ onBack }: { onBack: () => void }) {
-  const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
-  const [sending, setSending] = useState(false);
-  const [verifying, setVerifying] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [signingIn, setSigningIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSend = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setSending(true);
+    setSigningIn(true);
     try {
-      const { error } = await supabase!.auth.signInWithOtp({
-        email: email.trim(),
-        options: {
-          emailRedirectTo: `${window.location.origin}/admin`,
-        },
+      const { error } = await supabase!.auth.signInWithPassword({
+        email: TEAM_ADMIN_EMAIL,
+        password: password.trim(),
       });
       if (error) throw error;
-      setSent(true);
+      // onAuthStateChange picks up the new session.
     } catch (e) {
-      setError((e as Error).message || "Failed to send login email");
+      const msg = (e as Error).message || "";
+      // Translate Supabase's stock error into something friendlier.
+      if (/invalid.*credentials|password/i.test(msg)) {
+        setError("密码不对，请找团队核对最新的共享密码。");
+      } else {
+        setError(msg || "登录失败");
+      }
     } finally {
-      setSending(false);
-    }
-  };
-
-  const handleVerify = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setVerifying(true);
-    try {
-      const { error } = await supabase!.auth.verifyOtp({
-        email: email.trim(),
-        token: code.trim(),
-        type: "email",
-      });
-      if (error) throw error;
-      // onAuthStateChange in the parent will pick up the new session.
-    } catch (e) {
-      setError((e as Error).message || "验证码无效或已过期");
-    } finally {
-      setVerifying(false);
+      setSigningIn(false);
     }
   };
 
@@ -139,95 +131,43 @@ function AdminLogin({ onBack }: { onBack: () => void }) {
           The Unmuted · Admin Panel
         </p>
 
-        {sent ? (
-          <form onSubmit={handleVerify} className="mt-6 flex flex-col gap-3">
-            <div className="flex flex-col items-center gap-2 text-center">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                <Mail className="h-5 w-5 text-primary" />
-              </div>
-              <p className="text-sm text-foreground">
-                验证码已发送到 <span className="font-mono text-primary">{email}</span>
-              </p>
-              <p className="text-[11px] text-muted-foreground">
-                在邮件里找 6 位数字验证码，填到下方。（也可能在垃圾邮件里）
-              </p>
-            </div>
-            <label className="mt-2 text-xs font-semibold text-muted-foreground">
-              6 位验证码
-            </label>
+        <form onSubmit={handleLogin} className="mt-6 flex flex-col gap-3">
+          <label className="text-xs font-semibold text-muted-foreground">
+            团队共享密码
+          </label>
+          <div className="relative">
             <input
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              maxLength={6}
+              type={showPassword ? "text" : "password"}
               required
               autoFocus
-              value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-              placeholder="123456"
-              className="rounded-xl border border-border bg-background px-3 py-2 text-center font-mono text-lg tracking-[0.4em] text-foreground placeholder:text-muted-foreground/40 focus:border-primary focus:outline-none"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="团队共享密码"
+              className="w-full rounded-xl border border-border bg-background px-3 py-2 pr-10 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none"
             />
-            {error && <p className="text-xs text-rose-400">{error}</p>}
             <button
-              type="submit"
-              disabled={verifying || code.length !== 6}
-              className="flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-60"
+              type="button"
+              onClick={() => setShowPassword((s) => !s)}
+              tabIndex={-1}
+              aria-label={showPassword ? "隐藏密码" : "显示密码"}
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:text-foreground"
             >
-              {verifying && <Loader2 className="h-4 w-4 animate-spin" />}
-              {verifying ? "验证中..." : "登录"}
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
-            <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
-              <button
-                type="button"
-                onClick={() => {
-                  setSent(false);
-                  setCode("");
-                  setError(null);
-                }}
-                className="underline"
-              >
-                ← 换一个邮箱
-              </button>
-              <button
-                type="button"
-                onClick={(ev) => handleSend(ev as unknown as React.FormEvent)}
-                disabled={sending}
-                className="underline disabled:opacity-50"
-              >
-                {sending ? "重新发送中..." : "重新发送"}
-              </button>
-            </div>
-          </form>
-        ) : (
-          <form onSubmit={handleSend} className="mt-6 flex flex-col gap-3">
-            <label className="text-xs font-semibold text-muted-foreground">
-              团队成员邮箱
-            </label>
-            <input
-              type="email"
-              required
-              autoFocus
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="your@email.com"
-              className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none"
-            />
-            {error && (
-              <p className="text-xs text-rose-400">{error}</p>
-            )}
-            <button
-              type="submit"
-              disabled={sending || !email.trim()}
-              className="flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-60"
-            >
-              {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-              {sending ? "发送中..." : "发送验证码"}
-            </button>
-            <p className="mt-2 text-[10px] leading-4 text-muted-foreground">
-              只有 5 位团队成员的邮箱能进入。其他邮箱可以完成登录，但看不到任何反馈内容。
-            </p>
-          </form>
-        )}
+          </div>
+          {error && <p className="text-xs text-rose-400">{error}</p>}
+          <button
+            type="submit"
+            disabled={signingIn || !password.trim()}
+            className="flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-60"
+          >
+            {signingIn ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
+            {signingIn ? "登录中..." : "登录"}
+          </button>
+          <p className="mt-2 text-[10px] leading-4 text-muted-foreground">
+            所有团队成员共用一个密码 — 请从 Katie / Wendy 处获取。请勿在公共设备保存或截图分享。
+          </p>
+        </form>
 
         <button
           onClick={onBack}
@@ -367,7 +307,7 @@ function AdminPanel({ session }: { session: Session }) {
           <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-4 text-sm text-amber-400">
             <p className="font-bold">没有可见的反馈</p>
             <p className="mt-1 text-xs text-amber-400/80">
-              可能是：（1）当前没有任何反馈；（2）这个邮箱不在管理员白名单里 —— 白名单在 Supabase 的 unmuted_admins 表里。
+              可能是：（1）当前没有任何反馈；（2）这个账号不在管理员白名单里 — 白名单在 Supabase 的 unmuted_admins 表里。
             </p>
           </div>
         )}
@@ -412,6 +352,7 @@ function FeedbackCard({
 }) {
   const [editing, setEditing] = useState(false);
   const [notes, setNotes] = useState(row.admin_notes ?? "");
+  const [byName, setByName] = useState(row.admin_notes_by ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -431,7 +372,10 @@ function FeedbackCard({
         .from("unmuted_feedback")
         .update({
           admin_notes: notes.trim() || null,
-          admin_notes_by: adminEmail,
+          // Shared login means session.user.email is the team account, not
+          // the individual — so we let the editor tag their own name for
+          // audit clarity. Falls back to the account email if left blank.
+          admin_notes_by: byName.trim() || adminEmail,
           admin_notes_at: nowIso,
         })
         .eq("id", row.id)
@@ -484,8 +428,14 @@ function FeedbackCard({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              placeholder="内部记录 —— 只有管理员可见（例：已跟进 / 已修复 / 需要讨论）"
+              placeholder="内部记录 — 只有管理员可见（例：已跟进 / 已修复 / 需要讨论）"
               className="w-full rounded-lg border border-border bg-background px-2.5 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none"
+            />
+            <input
+              value={byName}
+              onChange={(e) => setByName(e.target.value)}
+              placeholder="你的名字（选填，例：Katie / Wendy）"
+              className="w-full rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none"
             />
             {error && <p className="text-xs text-rose-400">{error}</p>}
             <div className="flex justify-end gap-2">
@@ -493,6 +443,7 @@ function FeedbackCard({
                 onClick={() => {
                   setEditing(false);
                   setNotes(row.admin_notes ?? "");
+                  setByName(row.admin_notes_by ?? "");
                   setError(null);
                 }}
                 className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-foreground/80"
