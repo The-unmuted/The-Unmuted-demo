@@ -17,6 +17,9 @@ import {
   ChevronDown,
   ChevronUp,
   BookOpen,
+  Share2,
+  ShieldCheck,
+  Sparkles,
 } from "lucide-react";
 import { AppLanguage, copyFor } from "@/lib/locale";
 import {
@@ -35,6 +38,8 @@ import {
 import {
   collectCoachHints,
   computeSimulationScore,
+  pickTop,
+  shortLabelFor,
   type SimulationScoreResult,
 } from "@/lib/simulationScore";
 import { renderScoreCard } from "@/lib/simulationImage";
@@ -64,10 +69,15 @@ export default function SimulationPage({ language, onGoToAid }: SimulationPagePr
   const [run, setRun] = useState<RunState | null>(null);
   const [helpOpen, setHelpOpen] = useState(false);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const resultTopRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    if (run?.ending && run.scenario.id === "domestic-violence") {
+      resultTopRef.current?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+      return;
+    }
     bottomRef.current?.scrollIntoView?.({ behavior: "smooth", block: "end" });
-  }, [run?.log.length, run?.ending]);
+  }, [run?.log.length, run?.ending, run?.scenario.id]);
 
   // NOTE: coach hints are intentionally NOT shown during play — they would
   // reveal the "correct" answer. Coach text is aggregated at the ending screen.
@@ -145,6 +155,7 @@ export default function SimulationPage({ language, onGoToAid }: SimulationPagePr
   }
 
   const currentScene = run.sceneId ? run.scenario.scenes[run.sceneId] : null;
+  const isDomesticViolenceResult = run.ending !== null && run.scenario.id === "domestic-violence";
 
   return (
     <div className="flex flex-col gap-3 px-4 py-4">
@@ -195,12 +206,16 @@ export default function SimulationPage({ language, onGoToAid }: SimulationPagePr
         </div>
       )}
 
-      {/* Chat log */}
-      <div className="flex flex-col gap-2.5">
-        {run.log.map((item, i) => (
-          <ChatBubble key={i} item={item} />
-        ))}
-      </div>
+      {/* The domestic-violence ending becomes a focused report instead of
+          appearing beneath the entire chat transcript. Other scenarios retain
+          the existing result flow until their redesign is approved. */}
+      {!isDomesticViolenceResult && (
+        <div className="flex flex-col gap-2.5">
+          {run.log.map((item, i) => (
+            <ChatBubble key={i} item={item} />
+          ))}
+        </div>
+      )}
 
       {/* Choices */}
       {currentScene?.choices && !run.ending && (
@@ -219,16 +234,18 @@ export default function SimulationPage({ language, onGoToAid }: SimulationPagePr
 
       {/* Ending + debrief */}
       {run.ending && (
-        <EndingView
-          language={language}
-          scenario={run.scenario}
-          ending={run.ending}
-          flags={run.flags}
-          visitedSceneIds={run.visitedSceneIds}
-          onRetry={() => startScenario(run.scenario)}
-          onExit={() => setRun(null)}
-          onGoToAid={onGoToAid}
-        />
+        <div ref={resultTopRef}>
+          <EndingView
+            language={language}
+            scenario={run.scenario}
+            ending={run.ending}
+            flags={run.flags}
+            visitedSceneIds={run.visitedSceneIds}
+            onRetry={() => startScenario(run.scenario)}
+            onExit={() => setRun(null)}
+            onGoToAid={onGoToAid}
+          />
+        </div>
       )}
 
       <p className="pb-2 text-center text-[10px] leading-4 text-muted-foreground/70">
@@ -311,6 +328,7 @@ function EndingView({
 
   const score = computeSimulationScore(flags);
   const coachHints = collectCoachHints(scenario, visitedSceneIds);
+  const isDomesticViolence = scenario.id === "domestic-violence";
 
   const [showAnalysis, setShowAnalysis] = useState(false);
   const analysisRef = useRef<HTMLDivElement | null>(null);
@@ -325,13 +343,26 @@ function EndingView({
 
   return (
     <div className="mt-2 flex flex-col gap-3">
-      <ScoreCard
-        language={language}
-        score={score}
-        scenarioTitle={simText(language, scenario.title)}
-        scenarioTagline={simText(language, scenario.tagline)}
-        endingTitle={simText(language, ending.title)}
-      />
+      {isDomesticViolence ? (
+        <DomesticViolenceResultReport
+          language={language}
+          score={score}
+          scenarioTitle={simText(language, scenario.title)}
+          endingTitle={simText(language, ending.title)}
+          endingSummary={simText(language, ending.summary)}
+          good={good}
+          triggeredBad={triggeredBad}
+          avoidedBad={avoidedBad}
+        />
+      ) : (
+        <ScoreCard
+          language={language}
+          score={score}
+          scenarioTitle={simText(language, scenario.title)}
+          scenarioTagline={simText(language, scenario.tagline)}
+          endingTitle={simText(language, ending.title)}
+        />
+      )}
 
       {!showAnalysis && (
         <button
@@ -345,13 +376,15 @@ function EndingView({
 
       {showAnalysis && (
         <div ref={analysisRef} className="flex flex-col gap-3">
-          <div className="rounded-2xl border border-border/70 bg-card p-4">
-            <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-              {copyFor(language, "This run's ending", "本次结局")}
+          {!isDomesticViolence && (
+            <div className="rounded-2xl border border-border/70 bg-card p-4">
+              <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                {copyFor(language, "This run's ending", "本次结局")}
+              </div>
+              <h2 className="text-base font-black text-foreground">{simText(language, ending.title)}</h2>
+              <p className="mt-2 text-sm leading-6 text-foreground/85">{simText(language, ending.summary)}</p>
             </div>
-            <h2 className="text-base font-black text-foreground">{simText(language, ending.title)}</h2>
-            <p className="mt-2 text-sm leading-6 text-foreground/85">{simText(language, ending.summary)}</p>
-          </div>
+          )}
 
           {/* Debrief section heading */}
           <h2 className="text-sm font-bold text-foreground px-1">
@@ -417,6 +450,16 @@ function EndingView({
         </div>
       )}
 
+      {isDomesticViolence && (
+        <DomesticResultImageSection
+          language={language}
+          score={score}
+          scenarioTitle={simText(language, scenario.title)}
+          scenarioTagline={simText(language, scenario.tagline)}
+          endingTitle={simText(language, ending.title)}
+        />
+      )}
+
       <div className="flex flex-col gap-2">
         <button
           onClick={onRetry}
@@ -439,6 +482,323 @@ function EndingView({
         </button>
       </div>
     </div>
+  );
+}
+
+const RESULT_BANDS: Array<{
+  id: SimulationScoreResult["band"];
+  range: string;
+  label: { en: string; zh: string };
+}> = [
+  { id: "excellent", range: "80–100", label: { en: "Well-prepared", zh: "准备充分" } },
+  { id: "good", range: "60–79", label: { en: "Basic preparation", zh: "基本准备" } },
+  { id: "partial", range: "40–59", label: { en: "Partial preparation", zh: "部分准备" } },
+  { id: "weak", range: "0–39", label: { en: "Needs strengthening", zh: "需要加强" } },
+];
+
+function DomesticViolenceResultReport({
+  language,
+  score,
+  scenarioTitle,
+  endingTitle,
+  endingSummary,
+  good,
+  triggeredBad,
+  avoidedBad,
+}: {
+  language: AppLanguage;
+  score: SimulationScoreResult;
+  scenarioTitle: string;
+  endingTitle: string;
+  endingSummary: string;
+  good: SimDebriefRule[];
+  triggeredBad: SimDebriefRule[];
+  avoidedBad: SimDebriefRule[];
+}) {
+  const topGood = pickTop(score.breakdown, "good", 2).map((item) => ({
+    id: item.flag,
+    label: shortLabelFor(item.flag, language),
+  }));
+  const topBad = pickTop(score.breakdown, "bad", 2).map((item) => ({
+    id: item.flag,
+    label: shortLabelFor(item.flag, language),
+  }));
+
+  const rightActions = topGood.length > 0
+    ? topGood
+    : good.slice(0, 2).map((rule) => ({ id: rule.id, label: simText(language, rule.title) }));
+
+  const improvementActions = topBad.length > 0
+    ? topBad
+    : triggeredBad.slice(0, 2).map((rule) => ({ id: rule.id, label: simText(language, rule.title) }));
+
+  const avoidedActions = avoidedBad
+    .slice(0, 2)
+    .map((rule) => ({ id: rule.id, label: simText(language, rule.title) }));
+
+  const secondaryActions = improvementActions.length > 0 ? improvementActions : avoidedActions;
+  const secondaryIsAvoided = improvementActions.length === 0;
+  const circumference = 2 * Math.PI * 52;
+  const scoreOffset = circumference * (1 - score.score / 100);
+
+  const bandAccent =
+    score.band === "excellent"
+      ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-300"
+      : score.band === "good"
+      ? "border-primary/60 bg-primary/10 text-primary"
+      : score.band === "partial"
+      ? "border-amber-400/60 bg-amber-400/10 text-amber-300"
+      : "border-rose-400/60 bg-rose-400/10 text-rose-300";
+
+  return (
+    <div data-testid="domestic-result-report" className="flex flex-col gap-3">
+      <section className="relative overflow-hidden rounded-2xl border border-primary/25 bg-card p-5">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-primary/10 blur-3xl"
+        />
+        <div className="relative">
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-primary">
+            <Sparkles className="h-4 w-4" aria-hidden="true" />
+            {copyFor(language, "Scenario simulation · result report", "情景模拟 · 结果报告")}
+          </div>
+          <h1 className="mt-5 max-w-sm text-2xl font-black leading-tight tracking-tight text-foreground">
+            {simText(language, score.headline)}
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-foreground/75">
+            {simText(language, score.detail)}
+          </p>
+
+          <div className="mt-5 border-t border-border/70 pt-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full border border-primary/35 bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
+                {scenarioTitle}
+              </span>
+              <span className="text-xs font-semibold text-muted-foreground">
+                {copyFor(language, "This run's ending", "本次结局")}
+              </span>
+            </div>
+            <h2 className="mt-3 text-lg font-black leading-6 text-foreground">{endingTitle}</h2>
+            <p className="mt-2 text-sm leading-6 text-foreground/80">{endingSummary}</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-border/80 bg-card p-4">
+        <div className="flex items-center gap-2 text-sm font-bold text-foreground">
+          <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />
+          {copyFor(language, "Your overall score", "你的综合得分")}
+        </div>
+
+        <div className="mt-3 flex items-baseline gap-2">
+          <span className="bg-gradient-to-br from-ring via-primary to-sos-offline bg-clip-text font-mono text-6xl font-black tabular-nums text-transparent">
+            {score.score}
+          </span>
+          <span className="font-mono text-lg font-semibold tabular-nums text-muted-foreground">/ 100</span>
+        </div>
+        <span className={`mt-2 inline-flex rounded-full border px-3 py-1 text-sm font-bold ${bandAccent}`}>
+          {simText(language, score.label)}
+        </span>
+
+        <div className="mt-5 grid grid-cols-[minmax(0,1fr)_6.75rem] items-center gap-3">
+          <div className="relative mx-auto flex h-36 w-36 items-center justify-center min-[390px]:h-44 min-[390px]:w-44">
+            <svg
+              viewBox="0 0 120 120"
+              className="h-full w-full -rotate-90"
+              role="img"
+              aria-label={copyFor(language, `Score ${score.score} out of 100`, `得分 ${score.score}，满分 100`)}
+            >
+              <defs>
+                <linearGradient id="domestic-score-gradient" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="hsl(var(--ring))" />
+                  <stop offset="52%" stopColor="hsl(var(--primary))" />
+                  <stop offset="100%" stopColor="hsl(var(--sos-offline))" />
+                </linearGradient>
+              </defs>
+              <circle cx="60" cy="60" r="52" fill="none" stroke="hsl(var(--border))" strokeWidth="6" />
+              <circle
+                cx="60"
+                cy="60"
+                r="52"
+                fill="none"
+                stroke="url(#domestic-score-gradient)"
+                strokeWidth="7"
+                strokeLinecap="round"
+                strokeDasharray={circumference}
+                strokeDashoffset={scoreOffset}
+              />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <img
+                src="/the-unmuted-mark.png"
+                alt=""
+                aria-hidden="true"
+                width="72"
+                height="72"
+                className="h-16 w-16 object-contain drop-shadow-[0_0_18px_hsl(var(--primary)/0.3)]"
+              />
+            </div>
+          </div>
+
+          <ol className="flex flex-col gap-2">
+            {RESULT_BANDS.map((band) => {
+              const active = band.id === score.band;
+              return (
+                <li
+                  key={band.id}
+                  className={`border-l pl-3 text-xs leading-4 ${
+                    active ? "border-primary text-foreground" : "border-border text-muted-foreground"
+                  }`}
+                >
+                  <span className="block font-mono tabular-nums">{band.range}</span>
+                  <span className={`mt-0.5 block font-bold ${active ? "text-primary" : ""}`}>
+                    {simText(language, band.label)}
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      </section>
+
+      <div className="grid grid-cols-1 gap-3">
+        <ResultActionSummary
+          language={language}
+          title={copyFor(language, `What you did right (${good.length})`, `你做对了（${good.length}）`)}
+          items={rightActions}
+          tone="good"
+        />
+        <ResultActionSummary
+          language={language}
+          title={
+            secondaryIsAvoided
+              ? copyFor(
+                  language,
+                  `Risks you avoided this time (${avoidedBad.length})`,
+                  `这次你避开的风险（${avoidedBad.length}）`
+                )
+              : copyFor(
+                  language,
+                  `Where things went wrong (${triggeredBad.length})`,
+                  `这次出了问题的环节（${triggeredBad.length}）`
+                )
+          }
+          items={secondaryActions}
+          tone={secondaryIsAvoided ? "avoided" : "improve"}
+        />
+      </div>
+    </div>
+  );
+}
+
+function ResultActionSummary({
+  language,
+  title,
+  items,
+  tone,
+}: {
+  language: AppLanguage;
+  title: string;
+  items: Array<{ id: string; label: string }>;
+  tone: "good" | "improve" | "avoided";
+}) {
+  const toneClass =
+    tone === "good"
+      ? "border-primary/25 bg-primary/5 text-primary"
+      : tone === "improve"
+      ? "border-rose-400/25 bg-rose-400/5 text-rose-300"
+      : "border-amber-400/25 bg-amber-400/5 text-amber-300";
+
+  const Icon = tone === "good" ? CheckCircle2 : tone === "improve" ? AlertTriangle : ShieldCheck;
+
+  return (
+    <section className={`rounded-2xl border p-4 ${toneClass}`}>
+      <div className="flex items-start gap-3">
+        <Icon className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
+        <div>
+          <h2 className="text-sm font-black text-foreground">{title}</h2>
+        </div>
+      </div>
+
+      {items.length > 0 ? (
+        <ol className="mt-4 divide-y divide-border/60">
+          {items.map((item, index) => (
+            <li key={item.id} className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-background/45 font-mono text-xs font-black tabular-nums">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <span className="pt-1 text-sm font-semibold leading-5 text-foreground/90">{item.label}</span>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <p className="mt-4 rounded-xl bg-background/35 px-3 py-3 text-sm leading-5 text-foreground/75">
+          {copyFor(
+            language,
+            "No scored action appeared in this category on this path.",
+            "本次路径在这一类别中没有产生计分动作。"
+          )}
+        </p>
+      )}
+    </section>
+  );
+}
+
+function DomesticResultImageSection({
+  language,
+  score,
+  scenarioTitle,
+  scenarioTagline,
+  endingTitle,
+}: {
+  language: AppLanguage;
+  score: SimulationScoreResult;
+  scenarioTitle: string;
+  scenarioTagline: string;
+  endingTitle: string;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <section className="rounded-2xl border border-border/70 bg-card p-4">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-3 rounded-xl text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
+      >
+        <span className="flex items-center gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <Share2 className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <span>
+            <span className="block text-sm font-bold text-foreground">
+              {copyFor(language, "Save the shareable result card", "保存可分享的结果卡片")}
+            </span>
+            <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">
+              {copyFor(language, "Open the image, then long-press to save.", "展开图片后，长按即可保存。")}
+            </span>
+          </span>
+        </span>
+        {open ? (
+          <ChevronUp className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+        ) : (
+          <ChevronDown className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+        )}
+      </button>
+
+      {open && (
+        <div className="mt-4 border-t border-border/70 pt-4">
+          <ScoreCard
+            language={language}
+            score={score}
+            scenarioTitle={scenarioTitle}
+            scenarioTagline={scenarioTagline}
+            endingTitle={endingTitle}
+          />
+        </div>
+      )}
+    </section>
   );
 }
 

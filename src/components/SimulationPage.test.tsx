@@ -43,19 +43,39 @@ describe("SimulationPage", () => {
     // po-granted scene
     fireEvent.click(screen.getByText("暂不起诉离婚"));
 
-    // Ending: result card renders asynchronously (canvas → blob → inline image).
+    // Ending: domestic-violence now opens as a focused, live result report.
+    expect(screen.getByTestId("domestic-result-report")).toBeTruthy();
+    expect(screen.getByText("你的综合得分")).toBeTruthy();
+    expect(screen.getByText("拿到保护令——用六个月做规划")).toBeTruthy();
+    expect(screen.queryByText("每次事发都拨 110 报警，每次都保留接处警记录")).toBeNull();
+
+    // The existing shareable canvas remains available without dominating the report.
+    fireEvent.click(screen.getByText("保存可分享的结果卡片"));
     expect(await screen.findByText(/长按下方图片/)).toBeTruthy();
     fireEvent.click(screen.getByText("查看具体分析"));
 
     // Now the ending summary + debrief are visible
-    expect(screen.getByText("拿到保护令——用六个月做规划")).toBeTruthy();
     expect(screen.getByText(/复盘/)).toBeTruthy();
     // Debrief blocks are collapsed by default; expand "你做对了" to reach specific items
-    fireEvent.click(screen.getByText(/你做对了/));
-    expect(screen.getByText(/申请了人身安全保护令/)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /你做对了/ }));
+    expect(screen.getAllByText(/申请了人身安全保护令/).length).toBeGreaterThan(0);
     // Real flow section (collapsible) is present
     expect(screen.getByText(/真实流程/)).toBeTruthy();
     expect(screen.getByText("换一条路再走一遍")).toBeTruthy();
+  });
+
+  it("keeps the existing result UI for non-domestic scenarios", async () => {
+    render(<SimulationPage language="zh" onGoToAid={() => {}} />);
+    fireEvent.click(screen.getByText("TA被性骚扰了该怎么做"));
+    fireEvent.click(screen.getByText(/文字骚扰/));
+    fireEvent.click(screen.getByText("删除全部聊天记录"));
+    fireEvent.click(screen.getByText("不回复也不拉黑——聊天窗口留着"));
+    fireEvent.click(screen.getByText("暂时不处理"));
+    fireEvent.click(screen.getByText("不再采取行动"));
+
+    expect(screen.queryByTestId("domestic-result-report")).toBeNull();
+    expect(screen.getByText("删除全部聊天记录")).toBeTruthy();
+    expect(await screen.findByText(/长按下方图片/)).toBeTruthy();
   });
 
   it("real-help panel opens and routes to the aid tab", () => {
