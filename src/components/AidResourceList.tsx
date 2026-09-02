@@ -1,17 +1,31 @@
-import { useState } from "react";
-import { Phone, Globe, MapPin, Clock, ExternalLink, ShieldCheck, AlertTriangle } from "lucide-react";
+import { useMemo, useState } from "react";
+import {
+  Phone,
+  Globe,
+  MapPin,
+  Clock,
+  ExternalLink,
+  ShieldCheck,
+  AlertTriangle,
+  ChevronDown,
+  Check,
+  Search,
+  Mail,
+} from "lucide-react";
 import { AppLanguage, copyFor } from "@/lib/locale";
 import {
   AidCategory,
   AidResource,
   KIND_LABEL,
   TAG_LABEL,
-  citiesFor,
   filterByCity,
+  hasCityEntries,
   isStale,
   resourcesFor,
   verifiedLabel,
 } from "@/lib/aidDirectory";
+import { CHINA_CITIES, ChinaCity, cityMatchesQuery } from "@/data/chinaCities";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 export default function AidResourceList({
   category,
@@ -20,69 +34,350 @@ export default function AidResourceList({
   category: AidCategory;
   language: AppLanguage;
 }) {
-  const [city, setCity] = useState<string | null>(null);
-  const cities = citiesFor(category);
-  const resources = filterByCity(resourcesFor(category), city);
+  const [city, setCity] = useState<ChinaCity | null>(null);
+
+  const nationwide = useMemo(
+    () => resourcesFor(category).filter((r) => r.city === null),
+    [category],
+  );
+  const cityResources = useMemo(
+    () => (city ? filterByCity(resourcesFor(category), city.name).filter((r) => r.city === city.name) : []),
+    [category, city],
+  );
+
+  const cityIsCovered = city ? hasCityEntries(category, city.name) : false;
 
   return (
-    <div className="space-y-3">
-      {/* City filter — only cities that have entries are offered */}
-      {cities.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          <CityChip
-            label={copyFor(language, "All", "全部")}
-            active={city === null}
-            onClick={() => setCity(null)}
+    <div className="space-y-4">
+      {/* City picker */}
+      <CityPicker
+        category={category}
+        selected={city}
+        onChange={setCity}
+        language={language}
+      />
+
+      {/* When a city is selected but not yet in our directory */}
+      {city && !cityIsCovered && (
+        <PlaceholderCard city={city} language={language} category={category} />
+      )}
+
+      {/* City-specific entries */}
+      {cityResources.length > 0 && (
+        <div className="space-y-3">
+          <SectionLabel
+            label={copyFor(
+              language,
+              `In ${city!.nameEn}`,
+              `${city!.name} · 本地资源`,
+            )}
           />
-          {cities.map((c) => (
-            <CityChip
-              key={c.city}
-              label={copyFor(language, c.cityEn, c.city)}
-              active={city === c.city}
-              onClick={() => setCity(c.city)}
-            />
+          {cityResources.map((r) => (
+            <ResourceCard key={r.id} resource={r} category={category} language={language} />
           ))}
         </div>
       )}
-      {city && (
-        <p className="text-[11px] leading-4 text-muted-foreground">
-          {copyFor(
-            language,
-            "Nationwide hotlines are always shown alongside your city.",
-            "全国热线始终显示，不受城市筛选影响。"
-          )}
-        </p>
+
+      {/* Nationwide entries — always shown */}
+      {nationwide.length > 0 && (
+        <div className="space-y-3">
+          <SectionLabel
+            label={copyFor(language, "Nationwide", "全国通用")}
+            hint={
+              city
+                ? copyFor(
+                    language,
+                    "These work anywhere in mainland China.",
+                    "以下热线在全国范围内均可拨打。",
+                  )
+                : undefined
+            }
+          />
+          {nationwide.map((r) => (
+            <ResourceCard key={r.id} resource={r} category={category} language={language} />
+          ))}
+        </div>
       )}
 
-      {resources.map((r) => (
-        <ResourceCard key={r.id} resource={r} category={category} language={language} />
-      ))}
+      {/* Submit-a-local-resource CTA */}
+      <SubmitLocalCTA language={language} city={city} category={category} />
     </div>
   );
 }
 
-function CityChip({
+// ─── City picker (searchable) ─────────────────────────────────────
+
+function CityPicker({
+  category,
+  selected,
+  onChange,
+  language,
+}: {
+  category: AidCategory;
+  selected: ChinaCity | null;
+  onChange: (c: ChinaCity | null) => void;
+  language: AppLanguage;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+
+  const filtered = useMemo(
+    () => CHINA_CITIES.filter((c) => cityMatchesQuery(c, query)),
+    [query],
+  );
+
+  // Sort: cities we have local entries for float to the top.
+  const sorted = useMemo(() => {
+    const withData: ChinaCity[] = [];
+    const withoutData: ChinaCity[] = [];
+    for (const c of filtered) {
+      (hasCityEntries(category, c.name) ? withData : withoutData).push(c);
+    }
+    return { withData, withoutData };
+  }, [filtered, category]);
+
+  const placeholder = copyFor(
+    language,
+    "Select your city",
+    "选择你所在的城市",
+  );
+
+  return (
+    <Popover
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) setQuery("");
+      }}
+    >
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="flex w-full items-center justify-between gap-2 rounded-2xl border border-border bg-card px-4 py-3 text-left text-sm font-semibold text-foreground shadow-sm active:scale-[0.99]"
+        >
+          <span className="flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-primary" />
+            {selected ? copyFor(language, selected.nameEn, selected.name) : placeholder}
+          </span>
+          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="start"
+        sideOffset={6}
+        className="w-[min(92vw,22rem)] p-0"
+      >
+        <div className="flex items-center gap-2 border-b border-border px-3 py-2">
+          <Search className="h-4 w-4 text-muted-foreground" />
+          <input
+            autoFocus
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={copyFor(
+              language,
+              "City name / pinyin / initials",
+              "输入城市名或拼音（如 shanghai / sh）",
+            )}
+            className="w-full bg-transparent py-1 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+          />
+        </div>
+
+        <div className="max-h-72 overflow-y-auto py-1">
+          {/* "All" reset row */}
+          <CityRow
+            label={copyFor(language, "All (nationwide only)", "全部（仅显示全国热线）")}
+            active={selected === null}
+            hasData={false}
+            onSelect={() => {
+              onChange(null);
+              setOpen(false);
+            }}
+          />
+
+          {sorted.withData.length > 0 && (
+            <>
+              <div className="mt-1 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-primary/80">
+                {copyFor(language, "Covered cities", "已收录城市")}
+              </div>
+              {sorted.withData.map((c) => (
+                <CityRow
+                  key={c.name}
+                  label={copyFor(language, c.nameEn, c.name)}
+                  active={selected?.name === c.name}
+                  hasData
+                  onSelect={() => {
+                    onChange(c);
+                    setOpen(false);
+                  }}
+                />
+              ))}
+            </>
+          )}
+
+          {sorted.withoutData.length > 0 && (
+            <>
+              <div className="mt-1 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                {copyFor(language, "Other cities", "其他城市")}
+              </div>
+              {sorted.withoutData.map((c) => (
+                <CityRow
+                  key={c.name}
+                  label={copyFor(language, c.nameEn, c.name)}
+                  active={selected?.name === c.name}
+                  hasData={false}
+                  onSelect={() => {
+                    onChange(c);
+                    setOpen(false);
+                  }}
+                />
+              ))}
+            </>
+          )}
+
+          {filtered.length === 0 && (
+            <p className="px-3 py-6 text-center text-xs text-muted-foreground">
+              {copyFor(language, "No matching city.", "没有匹配的城市。")}
+            </p>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function CityRow({
   label,
   active,
-  onClick,
+  hasData,
+  onSelect,
 }: {
   label: string;
   active: boolean;
-  onClick: () => void;
+  hasData: boolean;
+  onSelect: () => void;
 }) {
   return (
     <button
-      onClick={onClick}
-      className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
-        active
-          ? "bg-primary text-primary-foreground"
-          : "border border-border bg-card text-muted-foreground"
+      type="button"
+      onClick={onSelect}
+      className={`flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm ${
+        active ? "bg-primary/10 text-primary" : "text-foreground hover:bg-secondary/60"
       }`}
     >
-      {label}
+      <span className="flex items-center gap-2">
+        {label}
+        {hasData && (
+          <span className="rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[9px] font-bold text-emerald-400">
+            ●
+          </span>
+        )}
+      </span>
+      {active && <Check className="h-4 w-4" />}
     </button>
   );
 }
+
+function SectionLabel({ label, hint }: { label: string; hint?: string }) {
+  return (
+    <div>
+      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+        {label}
+      </p>
+      {hint && <p className="mt-0.5 text-[11px] leading-4 text-muted-foreground/80">{hint}</p>}
+    </div>
+  );
+}
+
+// ─── Placeholder for un-covered cities ────────────────────────────
+
+function PlaceholderCard({
+  city,
+  language,
+  category,
+}: {
+  city: ChinaCity;
+  language: AppLanguage;
+  category: AidCategory;
+}) {
+  const kindLabel = category === "psych"
+    ? copyFor(language, "mental health", "心理")
+    : copyFor(language, "legal aid", "法律援助");
+
+  return (
+    <div className="rounded-2xl border border-dashed border-amber-500/40 bg-amber-500/5 p-4">
+      <div className="flex items-start gap-2">
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+        <div className="flex-1">
+          <p className="text-sm font-bold text-amber-300">
+            {copyFor(
+              language,
+              `${city.nameEn} — not yet verified, pending collection`,
+              `${city.name} · 还未核查，待收录`,
+            )}
+          </p>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">
+            {copyFor(
+              language,
+              `We have not yet verified local ${kindLabel} resources for ${city.nameEn}. Please use the nationwide hotlines below — they cover all of mainland China.`,
+              `我们尚未核实 ${city.name} 本地的${kindLabel}资源。请优先拨打下方全国热线，它们覆盖全国范围。`,
+            )}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Submit-a-local-resource CTA ──────────────────────────────────
+
+function SubmitLocalCTA({
+  language,
+  city,
+  category,
+}: {
+  language: AppLanguage;
+  city: ChinaCity | null;
+  category: AidCategory;
+}) {
+  const subject = copyFor(
+    language,
+    `The Unmuted · Local resource submission${city ? ` — ${city.nameEn}` : ""}`,
+    `非默 · 本地资源提交${city ? ` — ${city.name}` : ""}`,
+  );
+  const bodyLines = [
+    copyFor(language, "City:", "城市："),
+    copyFor(
+      language,
+      `Category: ${category === "psych" ? "mental health" : "legal aid"}`,
+      `类别：${category === "psych" ? "心理" : "法律援助"}`,
+    ),
+    copyFor(language, "Name of the service:", "机构/热线名称："),
+    copyFor(language, "Phone / hotline:", "电话："),
+    copyFor(language, "Hours:", "服务时间："),
+    copyFor(language, "How to reach / address:", "联系方式或地址："),
+    copyFor(language, "Source (official website or news article):", "来源（官网或新闻链接）："),
+    copyFor(language, "Any notes for us:", "备注："),
+  ];
+  const mailto = `mailto:katielin0207@gmail.com?subject=${encodeURIComponent(
+    subject,
+  )}&body=${encodeURIComponent(bodyLines.join("\n\n"))}`;
+
+  return (
+    <a
+      href={mailto}
+      className="flex items-center justify-center gap-2 rounded-2xl border border-dashed border-border/70 bg-secondary/30 px-4 py-3 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
+    >
+      <Mail className="h-3.5 w-3.5" />
+      {copyFor(
+        language,
+        "Know a verified local hotline? Send it to us.",
+        "你知道本市可用的热线？告诉我们",
+      )}
+    </a>
+  );
+}
+
+// ─── Resource card ────────────────────────────────────────────────
 
 function ResourceCard({
   resource: r,
@@ -95,7 +390,6 @@ function ResourceCard({
 }) {
   const kind = KIND_LABEL[r.kind];
   const stale = isStale(r);
-  // The tag matching the page itself carries no information there.
   const tags = r.tags.filter((t) => t !== category);
 
   return (
@@ -177,7 +471,7 @@ function ResourceCard({
             {copyFor(
               language,
               `${verifiedLabel(r, language)} — may be outdated; if unreachable call 12338 / 12348.`,
-              `${verifiedLabel(r, language)} — 信息可能过期，若打不通请优先拨 12338 / 12348。`
+              `${verifiedLabel(r, language)} — 信息可能过期，若打不通请优先拨 12338 / 12348。`,
             )}
           </>
         ) : (

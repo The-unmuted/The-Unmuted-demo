@@ -76,6 +76,11 @@ export function filterByCity(resources: AidResource[], city: string | null): Aid
   return resources.filter((r) => r.city === null || r.city === city);
 }
 
+/** True if this category has at least one entry for the given city name (中文). */
+export function hasCityEntries(category: AidCategory, city: string): boolean {
+  return resourcesFor(category).some((r) => r.city === city);
+}
+
 const STALE_MONTHS = 12;
 
 export function isStale(resource: AidResource, now = new Date()): boolean {

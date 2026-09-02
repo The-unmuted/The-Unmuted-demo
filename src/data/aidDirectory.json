@@ -284,29 +284,6 @@
           "verifiedAt": "2026-08"
     },
     {
-          "id": "cn-psych-chongqing",
-          "category": "psych",
-          "kind": "hotline",
-          "tags": [
-                "psych"
-          ],
-          "country": "CN",
-          "city": "重庆",
-          "cityEn": "Chongqing",
-          "name": "重庆市心理危机干预中心热线",
-          "nameEn": "Chongqing Psychological Crisis Intervention Hotline",
-          "phone": "023-66644499",
-          "hours": "24小时",
-          "hoursEn": "24 / 7",
-          "description": "重庆市官方心理危机干预热线，提供24小时免费心理咨询与危机干预",
-          "descriptionEn": "Chongqing's official psychological crisis intervention hotline, free 24/7 counseling and crisis support",
-          "location": "重庆",
-          "locationEn": "Chongqing",
-          "websiteUrl": null,
-          "sourceUrl": "https://hbasstu.net/xgc/info/1023/3550.htm",
-          "verifiedAt": "2026-08"
-    },
-    {
           "id": "cn-psych-hangzhou",
           "category": "psych",
           "kind": "hotline",
