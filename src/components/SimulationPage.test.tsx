@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import SimulationPage from "@/components/SimulationPage";
+import { renderScoreCard } from "@/lib/simulationImage";
 
 // jsdom does not implement HTMLCanvasElement.getContext or URL.createObjectURL,
 // which the result-card renderer needs. Stub them so ScoreCard resolves to a
@@ -49,16 +50,34 @@ describe("SimulationPage", () => {
     expect(screen.getByText("拿到保护令——用六个月做规划")).toBeTruthy();
     expect(screen.queryByText("每次事发都拨 110 报警，每次都保留接处警记录")).toBeNull();
 
-    // The existing shareable canvas remains available without dominating the report.
-    fireEvent.click(screen.getByText("保存可分享的结果卡片"));
+    // The same-line result summaries are the only disclosure point for action details.
+    const goodSummary = screen.getByRole("button", { name: /你做对了/ });
+    fireEvent.click(goodSummary);
+    expect(screen.getByTestId("domestic-action-details")).toBeTruthy();
+    expect(screen.getByText(/你申请了人身安全保护令/)).toBeTruthy();
+    fireEvent.click(goodSummary);
+    const secondarySummary = screen.getByRole("button", { name: /这次你避开的风险|这次出了问题的环节/ });
+    fireEvent.click(secondarySummary);
+    expect(screen.getByTestId("domestic-action-details")).toBeTruthy();
+    fireEvent.click(secondarySummary);
+
+    // The shareable canvas uses the same domestic-report variant and exact score.
+    await act(async () => {
+      fireEvent.click(screen.getByText("保存可分享的结果卡片"));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
     expect(await screen.findByText(/长按下方图片/)).toBeTruthy();
+    expect(vi.mocked(renderScoreCard)).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        variant: "domestic-report",
+        score: expect.objectContaining({ score: 66 }),
+      })
+    );
     fireEvent.click(screen.getByText("查看具体分析"));
 
-    // Now the ending summary + debrief are visible
-    expect(screen.getByText(/复盘/)).toBeTruthy();
-    // Debrief blocks are collapsed by default; expand "你做对了" to reach specific items
-    fireEvent.click(screen.getByRole("button", { name: /你做对了/ }));
-    expect(screen.getAllByText(/申请了人身安全保护令/).length).toBeGreaterThan(0);
+    // The lower analysis now contains only legal/practical guidance, without duplicates.
+    expect(screen.getByText("法律提示与实用指引")).toBeTruthy();
+    expect(screen.getAllByRole("button", { name: /你做对了/ })).toHaveLength(1);
     // Real flow section (collapsible) is present
     expect(screen.getByText(/真实流程/)).toBeTruthy();
     expect(screen.getByText("换一条路再走一遍")).toBeTruthy();

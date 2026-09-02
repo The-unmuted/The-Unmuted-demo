@@ -24,6 +24,18 @@ interface RenderOpts {
   scenarioTagline: string;
   endingTitle: string;
   score: SimulationScoreResult;
+  variant?: "default" | "domestic-report";
+  summary?: DomesticScoreCardSummary;
+}
+
+export interface DomesticScoreCardSummary {
+  primaryTitle: string;
+  primaryCount: number;
+  primaryItems: string[];
+  secondaryTitle: string;
+  secondaryCount: number;
+  secondaryItems: string[];
+  secondaryTone: "improve" | "avoided";
 }
 
 // 深紫渐变主色
@@ -47,6 +59,10 @@ const FONT_ZH = "'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-seri
 const FONT_LATIN = "'Helvetica Neue', 'Inter', sans-serif";
 
 export async function renderScoreCard(opts: RenderOpts): Promise<Blob> {
+  if (opts.variant === "domestic-report") {
+    return renderDomesticResultCard(opts);
+  }
+
   const canvas = document.createElement("canvas");
   canvas.width = W;
   canvas.height = H;
@@ -84,6 +100,311 @@ export async function renderScoreCard(opts: RenderOpts): Promise<Blob> {
       else reject(new Error("Canvas toBlob failed"));
     }, "image/png", 0.95);
   });
+}
+
+/**
+ * Domestic-abuse share card. This mirrors the live result report instead of
+ * reusing the legacy poster layout used by the other two scenarios.
+ */
+async function renderDomesticResultCard(opts: RenderOpts): Promise<Blob> {
+  const canvas = document.createElement("canvas");
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext("2d")!;
+  const lang = opts.language;
+
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, COLOR.bg1);
+  bg.addColorStop(1, COLOR.bg2);
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  drawBrandHeader(ctx, lang);
+
+  // Result summary — same content hierarchy as the live report.
+  const heroY = 180;
+  drawGlassCard(ctx, 60, heroY, W - 120, 460);
+  drawStar(ctx, 104, heroY + 48, 11, COLOR.brandPink);
+  ctx.textAlign = "left";
+  ctx.textBaseline = "top";
+  ctx.fillStyle = COLOR.brandPink;
+  ctx.font = `bold 24px ${FONT_ZH}`;
+  ctx.fillText(lang === "zh" ? "情景模拟 · 结果报告" : "Scenario simulation · Result report", 134, heroY + 34);
+
+  ctx.fillStyle = COLOR.text;
+  ctx.font = `bold 54px ${FONT_ZH}`;
+  drawWrappedText(
+    ctx,
+    lang === "zh" ? opts.score.headline.zh : opts.score.headline.en,
+    92,
+    heroY + 94,
+    W - 184,
+    66,
+    2
+  );
+
+  ctx.fillStyle = COLOR.textMuted;
+  ctx.font = `500 25px ${FONT_ZH}`;
+  drawWrappedText(
+    ctx,
+    lang === "zh" ? opts.score.detail.zh : opts.score.detail.en,
+    92,
+    heroY + 232,
+    W - 184,
+    38,
+    2
+  );
+
+  ctx.strokeStyle = COLOR.cardBorder;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(92, heroY + 322);
+  ctx.lineTo(W - 92, heroY + 322);
+  ctx.stroke();
+
+  ctx.fillStyle = COLOR.brandPink;
+  ctx.font = `600 21px ${FONT_ZH}`;
+  drawWrappedText(ctx, opts.scenarioTitle, 92, heroY + 348, 390, 30, 1);
+  ctx.fillStyle = COLOR.text;
+  ctx.font = `bold 30px ${FONT_ZH}`;
+  drawWrappedText(ctx, opts.endingTitle, 92, heroY + 392, W - 184, 38, 2);
+
+  // Overall score — same score, band colors, segmented ring, and marker.
+  const scoreY = 670;
+  drawGlassCard(ctx, 60, scoreY, W - 120, 550);
+  drawStar(ctx, 104, scoreY + 48, 11, COLOR.brandPink);
+  ctx.fillStyle = COLOR.text;
+  ctx.font = `bold 28px ${FONT_ZH}`;
+  ctx.fillText(lang === "zh" ? "你的综合得分" : "Your overall score", 134, scoreY + 32);
+
+  const scoreGradient = ctx.createLinearGradient(92, scoreY + 92, 410, scoreY + 250);
+  scoreGradient.addColorStop(0, COLOR.brandPurple);
+  scoreGradient.addColorStop(0.55, COLOR.brandPink);
+  scoreGradient.addColorStop(1, "#fb923c");
+  ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = scoreGradient;
+  ctx.font = `900 166px ${FONT_LATIN}`;
+  ctx.fillText(String(opts.score.score), 92, scoreY + 250);
+  const scoreWidth = ctx.measureText(String(opts.score.score)).width;
+  ctx.fillStyle = COLOR.textMuted;
+  ctx.font = `600 38px ${FONT_LATIN}`;
+  ctx.fillText("/ 100", 108 + scoreWidth, scoreY + 250);
+
+  const bandColor = bandColorFor(opts.score.band);
+  const bandLabel = lang === "zh" ? opts.score.label.zh : opts.score.label.en;
+  ctx.font = `bold 28px ${FONT_ZH}`;
+  const pillWidth = Math.min(390, ctx.measureText(bandLabel).width + 64);
+  drawRoundRect(ctx, 92, scoreY + 282, pillWidth, 58, 29);
+  ctx.strokeStyle = bandColor;
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+  ctx.fillStyle = bandColor;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(bandLabel, 92 + pillWidth / 2, scoreY + 311);
+
+  ctx.textAlign = "left";
+  ctx.textBaseline = "top";
+  ctx.fillStyle = COLOR.textMuted;
+  ctx.font = `500 22px ${FONT_ZH}`;
+  drawWrappedText(
+    ctx,
+    lang === "zh" ? opts.score.detail.zh : opts.score.detail.en,
+    92,
+    scoreY + 370,
+    390,
+    32,
+    4
+  );
+
+  drawDomesticBandCircle(ctx, opts, 650, scoreY + 315, 140);
+  drawDomesticBandLegend(ctx, opts, 825, scoreY + 88, 100);
+
+  // Same-line action comparison, matching the live result report.
+  drawDomesticActionComparison(ctx, opts, 1250);
+
+  await drawFooter(ctx, lang);
+  return canvasToBlob(canvas);
+}
+
+function drawDomesticBandCircle(
+  ctx: CanvasRenderingContext2D,
+  opts: RenderOpts,
+  cx: number,
+  cy: number,
+  radius: number
+) {
+  const segments: Array<{
+    band: SimulationScoreResult["band"];
+    start: number;
+    length: number;
+  }> = [
+    { band: "weak", start: 0, length: 0.4 },
+    { band: "partial", start: 0.4, length: 0.2 },
+    { band: "good", start: 0.6, length: 0.2 },
+    { band: "excellent", start: 0.8, length: 0.2 },
+  ];
+
+  ctx.strokeStyle = "rgba(255,255,255,0.10)";
+  ctx.lineWidth = 22;
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+  ctx.stroke();
+
+  for (const segment of segments) {
+    const start = -Math.PI / 2 + segment.start * Math.PI * 2 + 0.02;
+    const end = -Math.PI / 2 + (segment.start + segment.length) * Math.PI * 2 - 0.02;
+    ctx.strokeStyle = bandColorFor(segment.band);
+    ctx.globalAlpha = segment.band === opts.score.band ? 1 : 0.45;
+    ctx.lineWidth = segment.band === opts.score.band ? 24 : 18;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, start, end);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+  const markerAngle = -Math.PI / 2 + (opts.score.score / 100) * Math.PI * 2;
+  const markerX = cx + Math.cos(markerAngle) * radius;
+  const markerY = cy + Math.sin(markerAngle) * radius;
+  ctx.fillStyle = COLOR.text;
+  ctx.strokeStyle = bandColorFor(opts.score.band);
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.arc(markerX, markerY, 10, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = COLOR.brandPink;
+  drawStar(ctx, cx, cy - 18, 25, COLOR.brandPink);
+  ctx.fillStyle = COLOR.textMuted;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+  ctx.font = `bold 26px ${FONT_ZH}`;
+  ctx.fillText("THE UNMUTED", cx, cy + 24);
+}
+
+function drawDomesticBandLegend(
+  ctx: CanvasRenderingContext2D,
+  opts: RenderOpts,
+  x: number,
+  y: number,
+  rowHeight: number
+) {
+  const bands: Array<{
+    band: SimulationScoreResult["band"];
+    range: string;
+    zh: string;
+    en: string;
+  }> = [
+    { band: "excellent", range: "80–100", zh: "准备充分", en: "Well-prepared" },
+    { band: "good", range: "60–79", zh: "基本准备", en: "Basic preparation" },
+    { band: "partial", range: "40–59", zh: "部分准备", en: "Partial preparation" },
+    { band: "weak", range: "0–39", zh: "需要加强", en: "Needs strengthening" },
+  ];
+
+  for (let index = 0; index < bands.length; index++) {
+    const band = bands[index];
+    const rowY = y + index * rowHeight;
+    const color = bandColorFor(band.band);
+    const active = band.band === opts.score.band;
+    ctx.globalAlpha = active ? 1 : 0.62;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = active ? 4 : 2;
+    ctx.beginPath();
+    ctx.moveTo(x - 18, rowY);
+    ctx.lineTo(x - 18, rowY + 72);
+    ctx.stroke();
+
+    ctx.fillStyle = color;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    ctx.font = `${active ? "bold" : "600"} 24px ${FONT_LATIN}`;
+    ctx.fillText(band.range, x, rowY);
+    ctx.font = `${active ? "bold" : "600"} 21px ${FONT_ZH}`;
+    drawWrappedText(ctx, opts.language === "zh" ? band.zh : band.en, x, rowY + 34, 150, 28, 2);
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawDomesticActionComparison(ctx: CanvasRenderingContext2D, opts: RenderOpts, y: number) {
+  const summary = opts.summary;
+  const good = pickTop(opts.score.breakdown, "good", 2);
+  const bad = pickTop(opts.score.breakdown, "bad", 2);
+  const gap = 28;
+  const cardWidth = (W - 120 - gap) / 2;
+
+  const primaryTitle = summary?.primaryTitle ?? (opts.language === "zh" ? "你做对了" : "What you did right");
+  const primaryItems = summary?.primaryItems ?? good.map((item) => shortLabelFor(item.flag, opts.language));
+  const secondaryTitle = summary?.secondaryTitle ?? (opts.language === "zh" ? "这次出了问题的环节" : "Where things went wrong");
+  const secondaryItems = summary?.secondaryItems ?? bad.map((item) => shortLabelFor(item.flag, opts.language));
+  const secondaryAccent = summary?.secondaryTone === "avoided" ? COLOR.amber : COLOR.rose;
+
+  drawDomesticActionCard(ctx, 60, y, cardWidth, 380, COLOR.brandPink, "✓", primaryTitle, primaryItems);
+  drawDomesticActionCard(ctx, 60 + cardWidth + gap, y, cardWidth, 380, secondaryAccent, "!", secondaryTitle, secondaryItems);
+}
+
+function drawDomesticActionCard(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  accent: string,
+  icon: string,
+  title: string,
+  items: string[]
+) {
+  drawGlassCard(ctx, x, y, width, height);
+  ctx.strokeStyle = accent;
+  ctx.globalAlpha = 0.5;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  ctx.strokeStyle = accent;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(x + 50, y + 50, 20, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillStyle = accent;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = `bold 24px ${FONT_LATIN}`;
+  ctx.fillText(icon, x + 50, y + 51);
+
+  ctx.fillStyle = COLOR.text;
+  ctx.textAlign = "left";
+  ctx.textBaseline = "top";
+  ctx.font = `bold 26px ${FONT_ZH}`;
+  drawWrappedText(ctx, title, x + 84, y + 30, width - 116, 32, 2);
+
+  for (let index = 0; index < Math.min(items.length, 2); index++) {
+    const rowY = y + 128 + index * 106;
+    if (index > 0) {
+      ctx.strokeStyle = COLOR.cardBorder;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x + 32, rowY - 22);
+      ctx.lineTo(x + width - 32, rowY - 22);
+      ctx.stroke();
+    }
+    ctx.fillStyle = "rgba(255,255,255,0.06)";
+    ctx.beginPath();
+    ctx.arc(x + 54, rowY + 22, 26, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = accent;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = `bold 19px ${FONT_LATIN}`;
+    ctx.fillText(String(index + 1).padStart(2, "0"), x + 54, rowY + 23);
+
+    ctx.fillStyle = COLOR.text;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    ctx.font = `600 22px ${FONT_ZH}`;
+    drawWrappedText(ctx, items[index], x + 96, rowY, width - 128, 30, 3);
+  }
 }
 
 // ─── 1. 品牌头 ─────────────────────────────────
@@ -517,6 +838,59 @@ async function drawFooter(ctx: CanvasRenderingContext2D, lang: "en" | "zh") {
 }
 
 // ─── helpers ──────────────────────────────────
+
+function drawWrappedText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  maxWidth: number,
+  lineHeight: number,
+  maxLines: number
+) {
+  const paragraphs = text.split("\n");
+  const lines: string[] = [];
+
+  for (const paragraph of paragraphs) {
+    const wordBased = paragraph.includes(" ");
+    const units = wordBased ? paragraph.split(/\s+/) : [...paragraph];
+    const separator = wordBased ? " " : "";
+    let line = "";
+
+    for (const unit of units) {
+      const candidate = line ? `${line}${separator}${unit}` : unit;
+      if (ctx.measureText(candidate).width <= maxWidth || !line) {
+        line = candidate;
+      } else {
+        lines.push(line);
+        line = unit;
+      }
+    }
+    if (line) lines.push(line);
+  }
+
+  const visible = lines.slice(0, maxLines);
+  if (lines.length > maxLines && visible.length > 0) {
+    let last = visible[visible.length - 1];
+    while (last.length > 1 && ctx.measureText(`${last}…`).width > maxWidth) {
+      last = last.slice(0, -1).trimEnd();
+    }
+    visible[visible.length - 1] = `${last}…`;
+  }
+
+  for (let index = 0; index < visible.length; index++) {
+    ctx.fillText(visible[index], x, y + index * lineHeight);
+  }
+}
+
+function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob);
+      else reject(new Error("Canvas toBlob failed"));
+    }, "image/png", 0.95);
+  });
+}
 
 function bandColorFor(band: SimulationScoreResult["band"]): string {
   switch (band) {

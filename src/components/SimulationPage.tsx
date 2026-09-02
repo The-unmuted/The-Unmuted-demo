@@ -42,7 +42,7 @@ import {
   shortLabelFor,
   type SimulationScoreResult,
 } from "@/lib/simulationScore";
-import { renderScoreCard } from "@/lib/simulationImage";
+import { renderScoreCard, type DomesticScoreCardSummary } from "@/lib/simulationImage";
 
 interface SimulationPageProps {
   language: AppLanguage;
@@ -386,56 +386,64 @@ function EndingView({
             </div>
           )}
 
-          {/* Debrief section heading */}
-          <h2 className="text-sm font-bold text-foreground px-1">
-            {copyFor(language, "Debrief", "复盘")}
-          </h2>
+          {isDomesticViolence ? (
+            <h2 className="px-1 text-sm font-bold text-foreground">
+              {copyFor(language, "Legal tips and practical guidance", "法律提示与实用指引")}
+            </h2>
+          ) : (
+            <>
+              {/* Debrief section heading */}
+              <h2 className="px-1 text-sm font-bold text-foreground">
+                {copyFor(language, "Debrief", "复盘")}
+              </h2>
 
-          {/* Good items — triggered */}
-          {good.length > 0 && (
-            <CollapsibleSection
-              label={copyFor(language, `What you did right (${good.length})`, `你做对了（${good.length}）`)}
-              accent="emerald"
-              defaultOpen={false}
-            >
-              <div className="flex flex-col gap-3">
-                {good.map((r) => <DebriefCard key={r.id} rule={r} language={language} />)}
-              </div>
-            </CollapsibleSection>
-          )}
+              {/* Good items — triggered */}
+              {good.length > 0 && (
+                <CollapsibleSection
+                  label={copyFor(language, `What you did right (${good.length})`, `你做对了（${good.length}）`)}
+                  accent="emerald"
+                  defaultOpen={false}
+                >
+                  <div className="flex flex-col gap-3">
+                    {good.map((r) => <DebriefCard key={r.id} rule={r} language={language} />)}
+                  </div>
+                </CollapsibleSection>
+              )}
 
-          {/* Bad items — triggered (user made these mistakes) */}
-          {triggeredBad.length > 0 && (
-            <CollapsibleSection
-              label={copyFor(language, `Where things went wrong (${triggeredBad.length})`, `这次出了问题的环节（${triggeredBad.length}）`)}
-              accent="rose"
-              defaultOpen={false}
-            >
-              <div className="flex flex-col gap-3">
-                {triggeredBad.map((r) => <DebriefCard key={r.id} rule={r} language={language} />)}
-              </div>
-            </CollapsibleSection>
-          )}
+              {/* Bad items — triggered (user made these mistakes) */}
+              {triggeredBad.length > 0 && (
+                <CollapsibleSection
+                  label={copyFor(language, `Where things went wrong (${triggeredBad.length})`, `这次出了问题的环节（${triggeredBad.length}）`)}
+                  accent="rose"
+                  defaultOpen={false}
+                >
+                  <div className="flex flex-col gap-3">
+                    {triggeredBad.map((r) => <DebriefCard key={r.id} rule={r} language={language} />)}
+                  </div>
+                </CollapsibleSection>
+              )}
 
-          {/* Bad items — avoided (user didn't trigger, but should know about) */}
-          {avoidedBad.length > 0 && (
-            <CollapsibleSection
-              label={copyFor(language, `Risks you avoided this time (${avoidedBad.length})`, `这次你避开的风险（${avoidedBad.length}）`)}
-              accent="amber"
-              defaultOpen={false}
-            >
-              <div className="flex flex-col gap-3">
-                {avoidedBad.map((r) => <DebriefCard key={r.id} rule={r} language={language} avoided />)}
-              </div>
-            </CollapsibleSection>
-          )}
+              {/* Bad items — avoided (user didn't trigger, but should know about) */}
+              {avoidedBad.length > 0 && (
+                <CollapsibleSection
+                  label={copyFor(language, `Risks you avoided this time (${avoidedBad.length})`, `这次你避开的风险（${avoidedBad.length}）`)}
+                  accent="amber"
+                  defaultOpen={false}
+                >
+                  <div className="flex flex-col gap-3">
+                    {avoidedBad.map((r) => <DebriefCard key={r.id} rule={r} language={language} avoided />)}
+                  </div>
+                </CollapsibleSection>
+              )}
 
-          {triggered.length === 0 && allBad.length === 0 && (
-            <div className="rounded-2xl border border-border/70 bg-card p-4">
-              <p className="text-sm text-muted-foreground">
-                {copyFor(language, "No debrief entries for this run.", "这条路线没有产生复盘条目。")}
-              </p>
-            </div>
+              {triggered.length === 0 && allBad.length === 0 && (
+                <div className="rounded-2xl border border-border/70 bg-card p-4">
+                  <p className="text-sm text-muted-foreground">
+                    {copyFor(language, "No debrief entries for this run.", "这条路线没有产生复盘条目。")}
+                  </p>
+                </div>
+              )}
+            </>
           )}
 
           {coachHints.length > 0 && (
@@ -457,6 +465,9 @@ function EndingView({
           scenarioTitle={simText(language, scenario.title)}
           scenarioTagline={simText(language, scenario.tagline)}
           endingTitle={simText(language, ending.title)}
+          good={good}
+          triggeredBad={triggeredBad}
+          avoidedBad={avoidedBad}
         />
       )}
 
@@ -489,11 +500,53 @@ const RESULT_BANDS: Array<{
   id: SimulationScoreResult["band"];
   range: string;
   label: { en: string; zh: string };
+  textClass: string;
+  borderClass: string;
+  stroke: string;
 }> = [
-  { id: "excellent", range: "80–100", label: { en: "Well-prepared", zh: "准备充分" } },
-  { id: "good", range: "60–79", label: { en: "Basic preparation", zh: "基本准备" } },
-  { id: "partial", range: "40–59", label: { en: "Partial preparation", zh: "部分准备" } },
-  { id: "weak", range: "0–39", label: { en: "Needs strengthening", zh: "需要加强" } },
+  {
+    id: "excellent",
+    range: "80–100",
+    label: { en: "Well-prepared", zh: "准备充分" },
+    textClass: "text-emerald-300",
+    borderClass: "border-emerald-400",
+    stroke: "rgb(110 231 183)",
+  },
+  {
+    id: "good",
+    range: "60–79",
+    label: { en: "Basic preparation", zh: "基本准备" },
+    textClass: "text-cyan-300",
+    borderClass: "border-cyan-400",
+    stroke: "rgb(103 232 249)",
+  },
+  {
+    id: "partial",
+    range: "40–59",
+    label: { en: "Partial preparation", zh: "部分准备" },
+    textClass: "text-amber-300",
+    borderClass: "border-amber-400",
+    stroke: "rgb(252 211 77)",
+  },
+  {
+    id: "weak",
+    range: "0–39",
+    label: { en: "Needs strengthening", zh: "需要加强" },
+    textClass: "text-rose-300",
+    borderClass: "border-rose-400",
+    stroke: "rgb(253 164 175)",
+  },
+];
+
+const SCORE_RING_SEGMENTS: Array<{
+  id: SimulationScoreResult["band"];
+  start: number;
+  length: number;
+}> = [
+  { id: "weak", start: 0, length: 0.4 },
+  { id: "partial", start: 0.4, length: 0.2 },
+  { id: "good", start: 0.6, length: 0.2 },
+  { id: "excellent", start: 0.8, length: 0.2 },
 ];
 
 function DomesticViolenceResultReport({
@@ -515,6 +568,7 @@ function DomesticViolenceResultReport({
   triggeredBad: SimDebriefRule[];
   avoidedBad: SimDebriefRule[];
 }) {
+  const [openActionPanel, setOpenActionPanel] = useState<"good" | "secondary" | null>(null);
   const topGood = pickTop(score.breakdown, "good", 2).map((item) => ({
     id: item.flag,
     label: shortLabelFor(item.flag, language),
@@ -538,14 +592,18 @@ function DomesticViolenceResultReport({
 
   const secondaryActions = improvementActions.length > 0 ? improvementActions : avoidedActions;
   const secondaryIsAvoided = improvementActions.length === 0;
+  const secondaryRules = secondaryIsAvoided ? avoidedBad : triggeredBad;
   const circumference = 2 * Math.PI * 52;
-  const scoreOffset = circumference * (1 - score.score / 100);
+  const scoreAngle = (score.score / 100) * Math.PI * 2;
+  const markerX = 60 + 52 * Math.cos(scoreAngle);
+  const markerY = 60 + 52 * Math.sin(scoreAngle);
+  const activeBand = RESULT_BANDS.find((band) => band.id === score.band) ?? RESULT_BANDS[0];
 
   const bandAccent =
     score.band === "excellent"
       ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-300"
       : score.band === "good"
-      ? "border-primary/60 bg-primary/10 text-primary"
+      ? "border-cyan-400/60 bg-cyan-400/10 text-cyan-300"
       : score.band === "partial"
       ? "border-amber-400/60 bg-amber-400/10 text-amber-300"
       : "border-rose-400/60 bg-rose-400/10 text-rose-300";
@@ -608,24 +666,33 @@ function DomesticViolenceResultReport({
               role="img"
               aria-label={copyFor(language, `Score ${score.score} out of 100`, `得分 ${score.score}，满分 100`)}
             >
-              <defs>
-                <linearGradient id="domestic-score-gradient" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="hsl(var(--ring))" />
-                  <stop offset="52%" stopColor="hsl(var(--primary))" />
-                  <stop offset="100%" stopColor="hsl(var(--sos-offline))" />
-                </linearGradient>
-              </defs>
               <circle cx="60" cy="60" r="52" fill="none" stroke="hsl(var(--border))" strokeWidth="6" />
+              {SCORE_RING_SEGMENTS.map((segment) => {
+                const band = RESULT_BANDS.find((item) => item.id === segment.id) ?? activeBand;
+                const segmentLength = circumference * segment.length - 4;
+                return (
+                  <circle
+                    key={segment.id}
+                    cx="60"
+                    cy="60"
+                    r="52"
+                    fill="none"
+                    stroke={band.stroke}
+                    strokeWidth={segment.id === score.band ? 8 : 6}
+                    strokeLinecap="round"
+                    strokeDasharray={`${segmentLength} ${circumference - segmentLength}`}
+                    strokeDashoffset={-circumference * segment.start}
+                    opacity={segment.id === score.band ? 1 : 0.45}
+                  />
+                );
+              })}
               <circle
-                cx="60"
-                cy="60"
-                r="52"
-                fill="none"
-                stroke="url(#domestic-score-gradient)"
-                strokeWidth="7"
-                strokeLinecap="round"
-                strokeDasharray={circumference}
-                strokeDashoffset={scoreOffset}
+                cx={markerX}
+                cy={markerY}
+                r="3.5"
+                fill="hsl(var(--foreground))"
+                stroke={activeBand.stroke}
+                strokeWidth="2"
               />
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
@@ -646,12 +713,12 @@ function DomesticViolenceResultReport({
               return (
                 <li
                   key={band.id}
-                  className={`border-l pl-3 text-xs leading-4 ${
-                    active ? "border-primary text-foreground" : "border-border text-muted-foreground"
+                  className={`border-l pl-3 text-xs leading-4 ${band.borderClass} ${
+                    active ? "opacity-100" : "opacity-60"
                   }`}
                 >
-                  <span className="block font-mono tabular-nums">{band.range}</span>
-                  <span className={`mt-0.5 block font-bold ${active ? "text-primary" : ""}`}>
+                  <span className={`block font-mono tabular-nums ${band.textClass}`}>{band.range}</span>
+                  <span className={`mt-0.5 block font-bold ${band.textClass}`}>
                     {simText(language, band.label)}
                   </span>
                 </li>
@@ -661,12 +728,14 @@ function DomesticViolenceResultReport({
         </div>
       </section>
 
-      <div className="grid grid-cols-1 gap-3">
+      <div className="grid grid-cols-2 items-stretch gap-3">
         <ResultActionSummary
           language={language}
           title={copyFor(language, `What you did right (${good.length})`, `你做对了（${good.length}）`)}
           items={rightActions}
           tone="good"
+          open={openActionPanel === "good"}
+          onToggle={() => setOpenActionPanel((current) => current === "good" ? null : "good")}
         />
         <ResultActionSummary
           language={language}
@@ -685,7 +754,33 @@ function DomesticViolenceResultReport({
           }
           items={secondaryActions}
           tone={secondaryIsAvoided ? "avoided" : "improve"}
+          open={openActionPanel === "secondary"}
+          onToggle={() => setOpenActionPanel((current) => current === "secondary" ? null : "secondary")}
         />
+
+        {openActionPanel && (
+          <section
+            className={`col-span-2 rounded-2xl border p-4 ${
+              openActionPanel === "good"
+                ? "border-primary/25 bg-primary/5"
+                : secondaryIsAvoided
+                ? "border-amber-400/25 bg-amber-400/5"
+                : "border-rose-400/25 bg-rose-400/5"
+            }`}
+            data-testid="domestic-action-details"
+          >
+            <div className="flex flex-col gap-3">
+              {(openActionPanel === "good" ? good : secondaryRules).map((rule) => (
+                <DebriefCard
+                  key={rule.id}
+                  rule={rule}
+                  language={language}
+                  avoided={openActionPanel === "secondary" && secondaryIsAvoided}
+                />
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );
@@ -696,11 +791,15 @@ function ResultActionSummary({
   title,
   items,
   tone,
+  open,
+  onToggle,
 }: {
   language: AppLanguage;
   title: string;
   items: Array<{ id: string; label: string }>;
   tone: "good" | "improve" | "avoided";
+  open: boolean;
+  onToggle: () => void;
 }) {
   const toneClass =
     tone === "good"
@@ -712,22 +811,32 @@ function ResultActionSummary({
   const Icon = tone === "good" ? CheckCircle2 : tone === "improve" ? AlertTriangle : ShieldCheck;
 
   return (
-    <section className={`rounded-2xl border p-4 ${toneClass}`}>
-      <div className="flex items-start gap-3">
-        <Icon className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
-        <div>
-          <h2 className="text-sm font-black text-foreground">{title}</h2>
-        </div>
-      </div>
+    <section className={`flex min-w-0 flex-col rounded-2xl border p-3 ${toneClass}`}>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        className="flex min-h-10 w-full items-start justify-between gap-1 rounded-lg text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card active:translate-y-px"
+      >
+        <span className="flex min-w-0 items-start gap-2">
+          <Icon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <span className="text-[11px] font-black leading-4 text-foreground min-[390px]:text-xs">{title}</span>
+        </span>
+        {open ? (
+          <ChevronUp className="h-4 w-4 shrink-0" aria-hidden="true" />
+        ) : (
+          <ChevronDown className="h-4 w-4 shrink-0" aria-hidden="true" />
+        )}
+      </button>
 
       {items.length > 0 ? (
-        <ol className="mt-4 divide-y divide-border/60">
+        <ol className="mt-3 divide-y divide-border/60">
           {items.map((item, index) => (
-            <li key={item.id} className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-background/45 font-mono text-xs font-black tabular-nums">
+            <li key={item.id} className="flex min-w-0 items-start gap-2 py-3 first:pt-0 last:pb-0">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-background/45 font-mono text-[10px] font-black tabular-nums">
                 {String(index + 1).padStart(2, "0")}
               </span>
-              <span className="pt-1 text-sm font-semibold leading-5 text-foreground/90">{item.label}</span>
+              <span className="min-w-0 pt-1 text-xs font-semibold leading-4 text-foreground/90">{item.label}</span>
             </li>
           ))}
         </ol>
@@ -750,14 +859,51 @@ function DomesticResultImageSection({
   scenarioTitle,
   scenarioTagline,
   endingTitle,
+  good,
+  triggeredBad,
+  avoidedBad,
 }: {
   language: AppLanguage;
   score: SimulationScoreResult;
   scenarioTitle: string;
   scenarioTagline: string;
   endingTitle: string;
+  good: SimDebriefRule[];
+  triggeredBad: SimDebriefRule[];
+  avoidedBad: SimDebriefRule[];
 }) {
   const [open, setOpen] = useState(false);
+  const topGood = pickTop(score.breakdown, "good", 2).map((item) => shortLabelFor(item.flag, language));
+  const topBad = pickTop(score.breakdown, "bad", 2).map((item) => shortLabelFor(item.flag, language));
+  const primaryItems = topGood.length > 0
+    ? topGood
+    : good.slice(0, 2).map((rule) => simText(language, rule.title));
+  const improvementItems = topBad.length > 0
+    ? topBad
+    : triggeredBad.slice(0, 2).map((rule) => simText(language, rule.title));
+  const secondaryIsAvoided = improvementItems.length === 0;
+  const secondaryItems = secondaryIsAvoided
+    ? avoidedBad.slice(0, 2).map((rule) => simText(language, rule.title))
+    : improvementItems;
+  const summary: DomesticScoreCardSummary = {
+    primaryTitle: copyFor(language, `What you did right (${good.length})`, `你做对了（${good.length}）`),
+    primaryCount: good.length,
+    primaryItems,
+    secondaryTitle: secondaryIsAvoided
+      ? copyFor(
+          language,
+          `Risks you avoided this time (${avoidedBad.length})`,
+          `这次你避开的风险（${avoidedBad.length}）`
+        )
+      : copyFor(
+          language,
+          `Where things went wrong (${triggeredBad.length})`,
+          `这次出了问题的环节（${triggeredBad.length}）`
+        ),
+    secondaryCount: secondaryIsAvoided ? avoidedBad.length : triggeredBad.length,
+    secondaryItems,
+    secondaryTone: secondaryIsAvoided ? "avoided" : "improve",
+  };
 
   return (
     <section className="rounded-2xl border border-border/70 bg-card p-4">
@@ -795,6 +941,8 @@ function DomesticResultImageSection({
             scenarioTitle={scenarioTitle}
             scenarioTagline={scenarioTagline}
             endingTitle={endingTitle}
+            variant="domestic-report"
+            summary={summary}
           />
         </div>
       )}
@@ -984,16 +1132,22 @@ function ScoreCard({
   scenarioTitle,
   scenarioTagline,
   endingTitle,
+  variant = "default",
+  summary,
 }: {
   language: AppLanguage;
   score: SimulationScoreResult;
   scenarioTitle: string;
   scenarioTagline: string;
   endingTitle: string;
+  variant?: "default" | "domestic-report";
+  summary?: DomesticScoreCardSummary;
 }) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState(false);
+  const primaryItemsKey = summary?.primaryItems.join("\u001f") ?? "";
+  const secondaryItemsKey = summary?.secondaryItems.join("\u001f") ?? "";
 
   // Auto-generate the image on mount
   useEffect(() => {
@@ -1009,6 +1163,8 @@ function ScoreCard({
           scenarioTagline,
           endingTitle,
           score,
+          variant,
+          summary,
         });
         if (cancelled) return;
         objectUrl = URL.createObjectURL(blob);
@@ -1025,7 +1181,21 @@ function ScoreCard({
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [language, score.score, scenarioTitle, scenarioTagline, endingTitle]);
+  }, [
+    language,
+    score.score,
+    scenarioTitle,
+    scenarioTagline,
+    endingTitle,
+    variant,
+    summary?.primaryTitle,
+    summary?.primaryCount,
+    primaryItemsKey,
+    summary?.secondaryTitle,
+    summary?.secondaryCount,
+    secondaryItemsKey,
+    summary?.secondaryTone,
+  ]);
 
   if (busy) {
     return (
