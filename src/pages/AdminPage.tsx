@@ -2,10 +2,12 @@
  * /admin route — team-only feedback panel.
  *
  * Auth model:
- * 1. User enters their email → we call supabase.auth.signInWithOtp with
- *    a magic-link redirect back to /admin.
- * 2. They click the link in their email → they land on /admin with a valid
- *    session.
+ * 1. User enters their email → we call supabase.auth.signInWithOtp.
+ *    Supabase emails BOTH a 6-digit code AND a magic link. Whichever the
+ *    user's email template renders will work.
+ * 2. User enters the 6-digit code → verifyOtp({type:"email"}) sets the
+ *    session. (Alternatively, clicking the magic link in the email lands
+ *    them back here with a valid session already set.)
  * 3. RLS in Supabase (migration 0002) checks the JWT email against the
  *    unmuted_admins allow-list. If not on the list, the feedback SELECT
  *    query silently returns nothing.
@@ -84,7 +86,9 @@ export default function AdminPage() {
 
 function AdminLogin({ onBack }: { onBack: () => void }) {
   const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
   const [sending, setSending] = useState(false);
+  const [verifying, setVerifying] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -108,6 +112,25 @@ function AdminLogin({ onBack }: { onBack: () => void }) {
     }
   };
 
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setVerifying(true);
+    try {
+      const { error } = await supabase!.auth.verifyOtp({
+        email: email.trim(),
+        token: code.trim(),
+        type: "email",
+      });
+      if (error) throw error;
+      // onAuthStateChange in the parent will pick up the new session.
+    } catch (e) {
+      setError((e as Error).message || "验证码无效或已过期");
+    } finally {
+      setVerifying(false);
+    }
+  };
+
   return (
     <FullScreen>
       <div className="w-full max-w-sm rounded-2xl border border-border/70 bg-card p-6">
@@ -117,26 +140,64 @@ function AdminLogin({ onBack }: { onBack: () => void }) {
         </p>
 
         {sent ? (
-          <div className="mt-6 flex flex-col items-center gap-3 text-center">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-              <Mail className="h-5 w-5 text-primary" />
+          <form onSubmit={handleVerify} className="mt-6 flex flex-col gap-3">
+            <div className="flex flex-col items-center gap-2 text-center">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                <Mail className="h-5 w-5 text-primary" />
+              </div>
+              <p className="text-sm text-foreground">
+                验证码已发送到 <span className="font-mono text-primary">{email}</span>
+              </p>
+              <p className="text-[11px] text-muted-foreground">
+                在邮件里找 6 位数字验证码，填到下方。（也可能在垃圾邮件里）
+              </p>
             </div>
-            <p className="text-sm text-foreground">
-              登录链接已发送到 <span className="font-mono text-primary">{email}</span>
-            </p>
-            <p className="text-xs text-muted-foreground">
-              请到邮箱点击链接完成登录。（可能在垃圾邮件里）
-            </p>
+            <label className="mt-2 text-xs font-semibold text-muted-foreground">
+              6 位验证码
+            </label>
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={6}
+              required
+              autoFocus
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+              placeholder="123456"
+              className="rounded-xl border border-border bg-background px-3 py-2 text-center font-mono text-lg tracking-[0.4em] text-foreground placeholder:text-muted-foreground/40 focus:border-primary focus:outline-none"
+            />
+            {error && <p className="text-xs text-rose-400">{error}</p>}
             <button
-              onClick={() => {
-                setSent(false);
-                setEmail("");
-              }}
-              className="mt-2 text-xs text-muted-foreground underline"
+              type="submit"
+              disabled={verifying || code.length !== 6}
+              className="flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-60"
             >
-              换一个邮箱
+              {verifying && <Loader2 className="h-4 w-4 animate-spin" />}
+              {verifying ? "验证中..." : "登录"}
             </button>
-          </div>
+            <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
+              <button
+                type="button"
+                onClick={() => {
+                  setSent(false);
+                  setCode("");
+                  setError(null);
+                }}
+                className="underline"
+              >
+                ← 换一个邮箱
+              </button>
+              <button
+                type="button"
+                onClick={(ev) => handleSend(ev as unknown as React.FormEvent)}
+                disabled={sending}
+                className="underline disabled:opacity-50"
+              >
+                {sending ? "重新发送中..." : "重新发送"}
+              </button>
+            </div>
+          </form>
         ) : (
           <form onSubmit={handleSend} className="mt-6 flex flex-col gap-3">
             <label className="text-xs font-semibold text-muted-foreground">
@@ -160,7 +221,7 @@ function AdminLogin({ onBack }: { onBack: () => void }) {
               className="flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-60"
             >
               {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-              {sending ? "发送中..." : "发送登录链接"}
+              {sending ? "发送中..." : "发送验证码"}
             </button>
             <p className="mt-2 text-[10px] leading-4 text-muted-foreground">
               只有 5 位团队成员的邮箱能进入。其他邮箱可以完成登录，但看不到任何反馈内容。
