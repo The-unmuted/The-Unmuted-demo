@@ -502,7 +502,6 @@ const RESULT_BANDS: Array<{
   label: { en: string; zh: string };
   textClass: string;
   borderClass: string;
-  stroke: string;
 }> = [
   {
     id: "excellent",
@@ -510,7 +509,6 @@ const RESULT_BANDS: Array<{
     label: { en: "Well-prepared", zh: "准备充分" },
     textClass: "text-emerald-300",
     borderClass: "border-emerald-400",
-    stroke: "rgb(110 231 183)",
   },
   {
     id: "good",
@@ -518,7 +516,6 @@ const RESULT_BANDS: Array<{
     label: { en: "Basic preparation", zh: "基本准备" },
     textClass: "text-cyan-300",
     borderClass: "border-cyan-400",
-    stroke: "rgb(103 232 249)",
   },
   {
     id: "partial",
@@ -526,7 +523,6 @@ const RESULT_BANDS: Array<{
     label: { en: "Partial preparation", zh: "部分准备" },
     textClass: "text-amber-300",
     borderClass: "border-amber-400",
-    stroke: "rgb(252 211 77)",
   },
   {
     id: "weak",
@@ -534,19 +530,7 @@ const RESULT_BANDS: Array<{
     label: { en: "Needs strengthening", zh: "需要加强" },
     textClass: "text-rose-300",
     borderClass: "border-rose-400",
-    stroke: "rgb(253 164 175)",
   },
-];
-
-const SCORE_RING_SEGMENTS: Array<{
-  id: SimulationScoreResult["band"];
-  start: number;
-  length: number;
-}> = [
-  { id: "weak", start: 0, length: 0.4 },
-  { id: "partial", start: 0.4, length: 0.2 },
-  { id: "good", start: 0.6, length: 0.2 },
-  { id: "excellent", start: 0.8, length: 0.2 },
 ];
 
 function DomesticViolenceResultReport({
@@ -569,34 +553,10 @@ function DomesticViolenceResultReport({
   avoidedBad: SimDebriefRule[];
 }) {
   const [openActionPanel, setOpenActionPanel] = useState<"good" | "secondary" | null>(null);
-  const topGood = pickTop(score.breakdown, "good", 2).map((item) => ({
-    id: item.flag,
-    label: shortLabelFor(item.flag, language),
-  }));
-  const topBad = pickTop(score.breakdown, "bad", 2).map((item) => ({
-    id: item.flag,
-    label: shortLabelFor(item.flag, language),
-  }));
-
-  const rightActions = topGood.length > 0
-    ? topGood
-    : good.slice(0, 2).map((rule) => ({ id: rule.id, label: simText(language, rule.title) }));
-
-  const improvementActions = topBad.length > 0
-    ? topBad
-    : triggeredBad.slice(0, 2).map((rule) => ({ id: rule.id, label: simText(language, rule.title) }));
-
-  const avoidedActions = avoidedBad
-    .slice(0, 2)
-    .map((rule) => ({ id: rule.id, label: simText(language, rule.title) }));
-
-  const secondaryActions = improvementActions.length > 0 ? improvementActions : avoidedActions;
-  const secondaryIsAvoided = improvementActions.length === 0;
+  const secondaryIsAvoided = triggeredBad.length === 0;
   const secondaryRules = secondaryIsAvoided ? avoidedBad : triggeredBad;
   const circumference = 2 * Math.PI * 52;
-  const scoreAngle = (score.score / 100) * Math.PI * 2;
-  const markerX = 60 + 52 * Math.cos(scoreAngle);
-  const markerY = 60 + 52 * Math.sin(scoreAngle);
+  const scoreOffset = circumference * (1 - score.score / 100);
   const activeBand = RESULT_BANDS.find((band) => band.id === score.band) ?? RESULT_BANDS[0];
 
   const bandAccent =
@@ -649,7 +609,10 @@ function DomesticViolenceResultReport({
         </div>
 
         <div className="mt-3 flex items-baseline gap-2">
-          <span className="bg-gradient-to-br from-ring via-primary to-sos-offline bg-clip-text font-mono text-6xl font-black tabular-nums text-transparent">
+          <span
+            data-testid="domestic-score-value"
+            className={`font-mono text-6xl font-black tabular-nums ${activeBand.textClass}`}
+          >
             {score.score}
           </span>
           <span className="font-mono text-lg font-semibold tabular-nums text-muted-foreground">/ 100</span>
@@ -666,33 +629,34 @@ function DomesticViolenceResultReport({
               role="img"
               aria-label={copyFor(language, `Score ${score.score} out of 100`, `得分 ${score.score}，满分 100`)}
             >
+              <defs>
+                <linearGradient id="domestic-score-gradient" x1="0" y1="1" x2="1" y2="0">
+                  <stop offset="0%" stopColor="rgb(168 85 247)" />
+                  <stop offset="42%" stopColor="rgb(244 114 182)" />
+                  <stop offset="72%" stopColor="rgb(251 146 60)" />
+                  <stop offset="100%" stopColor="rgb(252 211 77)" />
+                </linearGradient>
+                <filter id="domestic-score-glow" x="-30%" y="-30%" width="160%" height="160%">
+                  <feGaussianBlur stdDeviation="2" result="glow" />
+                  <feMerge>
+                    <feMergeNode in="glow" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
               <circle cx="60" cy="60" r="52" fill="none" stroke="hsl(var(--border))" strokeWidth="6" />
-              {SCORE_RING_SEGMENTS.map((segment) => {
-                const band = RESULT_BANDS.find((item) => item.id === segment.id) ?? activeBand;
-                const segmentLength = circumference * segment.length - 4;
-                return (
-                  <circle
-                    key={segment.id}
-                    cx="60"
-                    cy="60"
-                    r="52"
-                    fill="none"
-                    stroke={band.stroke}
-                    strokeWidth={segment.id === score.band ? 8 : 6}
-                    strokeLinecap="round"
-                    strokeDasharray={`${segmentLength} ${circumference - segmentLength}`}
-                    strokeDashoffset={-circumference * segment.start}
-                    opacity={segment.id === score.band ? 1 : 0.45}
-                  />
-                );
-              })}
               <circle
-                cx={markerX}
-                cy={markerY}
-                r="3.5"
-                fill="hsl(var(--foreground))"
-                stroke={activeBand.stroke}
-                strokeWidth="2"
+                data-testid="domestic-score-gradient-progress"
+                cx="60"
+                cy="60"
+                r="52"
+                fill="none"
+                stroke="url(#domestic-score-gradient)"
+                strokeWidth="7"
+                strokeLinecap="round"
+                strokeDasharray={circumference}
+                strokeDashoffset={scoreOffset}
+                filter="url(#domestic-score-glow)"
               />
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
@@ -730,15 +694,12 @@ function DomesticViolenceResultReport({
 
       <div className="grid grid-cols-2 items-stretch gap-3">
         <ResultActionSummary
-          language={language}
           title={copyFor(language, `What you did right (${good.length})`, `你做对了（${good.length}）`)}
-          items={rightActions}
           tone="good"
           open={openActionPanel === "good"}
           onToggle={() => setOpenActionPanel((current) => current === "good" ? null : "good")}
         />
         <ResultActionSummary
-          language={language}
           title={
             secondaryIsAvoided
               ? copyFor(
@@ -752,7 +713,6 @@ function DomesticViolenceResultReport({
                   `这次出了问题的环节（${triggeredBad.length}）`
                 )
           }
-          items={secondaryActions}
           tone={secondaryIsAvoided ? "avoided" : "improve"}
           open={openActionPanel === "secondary"}
           onToggle={() => setOpenActionPanel((current) => current === "secondary" ? null : "secondary")}
@@ -787,16 +747,12 @@ function DomesticViolenceResultReport({
 }
 
 function ResultActionSummary({
-  language,
   title,
-  items,
   tone,
   open,
   onToggle,
 }: {
-  language: AppLanguage;
   title: string;
-  items: Array<{ id: string; label: string }>;
   tone: "good" | "improve" | "avoided";
   open: boolean;
   onToggle: () => void;
@@ -828,27 +784,6 @@ function ResultActionSummary({
           <ChevronDown className="h-4 w-4 shrink-0" aria-hidden="true" />
         )}
       </button>
-
-      {items.length > 0 ? (
-        <ol className="mt-3 divide-y divide-border/60">
-          {items.map((item, index) => (
-            <li key={item.id} className="flex min-w-0 items-start gap-2 py-3 first:pt-0 last:pb-0">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-background/45 font-mono text-[10px] font-black tabular-nums">
-                {String(index + 1).padStart(2, "0")}
-              </span>
-              <span className="min-w-0 pt-1 text-xs font-semibold leading-4 text-foreground/90">{item.label}</span>
-            </li>
-          ))}
-        </ol>
-      ) : (
-        <p className="mt-4 rounded-xl bg-background/35 px-3 py-3 text-sm leading-5 text-foreground/75">
-          {copyFor(
-            language,
-            "No scored action appeared in this category on this path.",
-            "本次路径在这一类别中没有产生计分动作。"
-          )}
-        </p>
-      )}
     </section>
   );
 }

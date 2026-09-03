@@ -49,6 +49,10 @@ describe("SimulationPage", () => {
     expect(screen.getByText("你的综合得分")).toBeTruthy();
     expect(screen.getByText("拿到保护令——用六个月做规划")).toBeTruthy();
     expect(screen.queryByText("每次事发都拨 110 报警，每次都保留接处警记录")).toBeNull();
+    expect(screen.queryByText("申请了人身安全保护令")).toBeNull();
+    expect(screen.getByTestId("domestic-score-gradient-progress").getAttribute("stroke")).toBe(
+      "url(#domestic-score-gradient)"
+    );
 
     // The same-line result summaries are the only disclosure point for action details.
     const goodSummary = screen.getByRole("button", { name: /你做对了/ });
