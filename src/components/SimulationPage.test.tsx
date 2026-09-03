@@ -53,6 +53,17 @@ describe("SimulationPage", () => {
     expect(screen.getByTestId("domestic-score-gradient-progress").getAttribute("stroke")).toBe(
       "url(#domestic-score-gradient)"
     );
+    expect(screen.getByTestId("domestic-score-value").className).toContain("--domestic-score-good");
+    expect(
+      Array.from(document.querySelectorAll("#domestic-score-gradient stop")).map((stop) =>
+        stop.getAttribute("stop-color")
+      )
+    ).toEqual([
+      "hsl(var(--domestic-score-excellent))",
+      "hsl(var(--domestic-score-good))",
+      "hsl(var(--domestic-score-partial))",
+      "hsl(var(--domestic-score-weak))",
+    ]);
 
     // The same-line result summaries are the only disclosure point for action details.
     const goodSummary = screen.getByRole("button", { name: /你做对了/ });

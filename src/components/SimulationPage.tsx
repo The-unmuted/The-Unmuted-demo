@@ -631,10 +631,10 @@ function DomesticViolenceResultReport({
             >
               <defs>
                 <linearGradient id="domestic-score-gradient" x1="0" y1="1" x2="1" y2="0">
-                  <stop offset="0%" stopColor="hsl(var(--domestic-score-weak))" />
-                  <stop offset="42%" stopColor="hsl(var(--domestic-score-partial))" />
-                  <stop offset="72%" stopColor="hsl(var(--domestic-score-good))" />
-                  <stop offset="100%" stopColor="hsl(var(--domestic-score-excellent))" />
+                  <stop offset="0%" stopColor="hsl(var(--domestic-score-excellent))" />
+                  <stop offset="42%" stopColor="hsl(var(--domestic-score-good))" />
+                  <stop offset="72%" stopColor="hsl(var(--domestic-score-partial))" />
+                  <stop offset="100%" stopColor="hsl(var(--domestic-score-weak))" />
                 </linearGradient>
                 <filter id="domestic-score-glow" x="-30%" y="-30%" width="160%" height="160%">
                   <feGaussianBlur stdDeviation="2" result="glow" />

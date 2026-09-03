@@ -48,11 +48,11 @@
     --nav-active: 320 100% 80%;
     --nav-inactive: 261 16% 61%;
 
-    /* Domestic simulation score ramp: light yellow to dark pink */
-    --domestic-score-excellent: 50 98% 77%;
-    --domestic-score-good: 346 100% 82%;
-    --domestic-score-partial: 326 100% 72%;
-    --domestic-score-weak: 333 78% 38%;
+    /* Domestic simulation score ramp: low yellow to high dark pink */
+    --domestic-score-excellent: 333 78% 38%;
+    --domestic-score-good: 326 100% 72%;
+    --domestic-score-partial: 346 100% 82%;
+    --domestic-score-weak: 50 98% 77%;
 
     --sidebar-background: 240 44% 10%;
     --sidebar-foreground: 296 53% 95%;
