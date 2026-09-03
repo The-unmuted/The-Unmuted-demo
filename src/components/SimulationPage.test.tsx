@@ -58,7 +58,9 @@ describe("SimulationPage", () => {
     const goodSummary = screen.getByRole("button", { name: /你做对了/ });
     fireEvent.click(goodSummary);
     expect(screen.getByTestId("domestic-action-details")).toBeTruthy();
-    expect(screen.getByText(/你申请了人身安全保护令/)).toBeTruthy();
+    const goodDetail = screen.getByText(/你申请了人身安全保护令/).closest(".rounded-xl");
+    expect(goodDetail?.className).toContain("border-l-primary");
+    expect(goodDetail?.querySelector("svg")?.getAttribute("class")).toContain("text-primary");
     fireEvent.click(goodSummary);
     const secondarySummary = screen.getByRole("button", { name: /这次你避开的风险|这次出了问题的环节/ });
     fireEvent.click(secondarySummary);

@@ -507,29 +507,29 @@ const RESULT_BANDS: Array<{
     id: "excellent",
     range: "80–100",
     label: { en: "Well-prepared", zh: "准备充分" },
-    textClass: "text-emerald-300",
-    borderClass: "border-emerald-400",
+    textClass: "text-[hsl(var(--domestic-score-excellent))]",
+    borderClass: "border-[hsl(var(--domestic-score-excellent))]",
   },
   {
     id: "good",
     range: "60–79",
     label: { en: "Basic preparation", zh: "基本准备" },
-    textClass: "text-cyan-300",
-    borderClass: "border-cyan-400",
+    textClass: "text-[hsl(var(--domestic-score-good))]",
+    borderClass: "border-[hsl(var(--domestic-score-good))]",
   },
   {
     id: "partial",
     range: "40–59",
     label: { en: "Partial preparation", zh: "部分准备" },
-    textClass: "text-amber-300",
-    borderClass: "border-amber-400",
+    textClass: "text-[hsl(var(--domestic-score-partial))]",
+    borderClass: "border-[hsl(var(--domestic-score-partial))]",
   },
   {
     id: "weak",
     range: "0–39",
     label: { en: "Needs strengthening", zh: "需要加强" },
-    textClass: "text-rose-300",
-    borderClass: "border-rose-400",
+    textClass: "text-[hsl(var(--domestic-score-weak))]",
+    borderClass: "border-[hsl(var(--domestic-score-weak))]",
   },
 ];
 
@@ -561,12 +561,12 @@ function DomesticViolenceResultReport({
 
   const bandAccent =
     score.band === "excellent"
-      ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-300"
+      ? "border-[hsl(var(--domestic-score-excellent)/0.6)] bg-[hsl(var(--domestic-score-excellent)/0.1)] text-[hsl(var(--domestic-score-excellent))]"
       : score.band === "good"
-      ? "border-cyan-400/60 bg-cyan-400/10 text-cyan-300"
+      ? "border-[hsl(var(--domestic-score-good)/0.6)] bg-[hsl(var(--domestic-score-good)/0.1)] text-[hsl(var(--domestic-score-good))]"
       : score.band === "partial"
-      ? "border-amber-400/60 bg-amber-400/10 text-amber-300"
-      : "border-rose-400/60 bg-rose-400/10 text-rose-300";
+      ? "border-[hsl(var(--domestic-score-partial)/0.6)] bg-[hsl(var(--domestic-score-partial)/0.1)] text-[hsl(var(--domestic-score-partial))]"
+      : "border-[hsl(var(--domestic-score-weak)/0.6)] bg-[hsl(var(--domestic-score-weak)/0.1)] text-[hsl(var(--domestic-score-weak))]";
 
   return (
     <div data-testid="domestic-result-report" className="flex flex-col gap-3">
@@ -631,10 +631,10 @@ function DomesticViolenceResultReport({
             >
               <defs>
                 <linearGradient id="domestic-score-gradient" x1="0" y1="1" x2="1" y2="0">
-                  <stop offset="0%" stopColor="rgb(168 85 247)" />
-                  <stop offset="42%" stopColor="rgb(244 114 182)" />
-                  <stop offset="72%" stopColor="rgb(251 146 60)" />
-                  <stop offset="100%" stopColor="rgb(252 211 77)" />
+                  <stop offset="0%" stopColor="hsl(var(--domestic-score-weak))" />
+                  <stop offset="42%" stopColor="hsl(var(--domestic-score-partial))" />
+                  <stop offset="72%" stopColor="hsl(var(--domestic-score-good))" />
+                  <stop offset="100%" stopColor="hsl(var(--domestic-score-excellent))" />
                 </linearGradient>
                 <filter id="domestic-score-glow" x="-30%" y="-30%" width="160%" height="160%">
                   <feGaussianBlur stdDeviation="2" result="glow" />
@@ -736,6 +736,7 @@ function DomesticViolenceResultReport({
                   rule={rule}
                   language={language}
                   avoided={openActionPanel === "secondary" && secondaryIsAvoided}
+                  goodAccent="pink"
                 />
               ))}
             </div>
@@ -959,21 +960,27 @@ function DebriefCard({
   rule,
   language,
   avoided = false,
+  goodAccent = "green",
 }: {
   rule: SimDebriefRule;
   language: AppLanguage;
   avoided?: boolean;
+  goodAccent?: "green" | "pink";
 }) {
   const isGood = rule.kind === "good";
   // Darker, higher-contrast backgrounds — the previous /5 tints were nearly invisible
   // against the dark-purple app background. Now: solid dark card + strong colored border.
   const cardClass = isGood
-    ? "border-l-4 border-l-emerald-500 border-y border-r border-border/60 bg-secondary/50"
+    ? goodAccent === "pink"
+      ? "border-l-4 border-l-primary border-y border-r border-border/60 bg-secondary/50"
+      : "border-l-4 border-l-emerald-500 border-y border-r border-border/60 bg-secondary/50"
     : avoided
     ? "border-l-4 border-l-amber-500 border-y border-r border-border/60 bg-secondary/50 opacity-90"
     : "border-l-4 border-l-rose-500 border-y border-r border-border/60 bg-secondary/50";
   const icon = isGood ? (
-    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+    <CheckCircle2
+      className={`mt-0.5 h-4 w-4 shrink-0 ${goodAccent === "pink" ? "text-primary" : "text-emerald-500"}`}
+    />
   ) : avoided ? (
     <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
   ) : (
