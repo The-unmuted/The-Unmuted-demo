@@ -1,6 +1,6 @@
 # Tasks & Roadmap — The Unmuted (非默)
 
-_Last updated: 2026-09-01_
+_Last updated: 2026-09-03_
 
 ---
 
@@ -120,6 +120,7 @@ _Last updated: 2026-09-01_
 
 ## Done (Recent)
 
+- [x] Simulation score UI alignment: low-red → high-green band colors now control the large score, progress ring, status pill, right-side guide, and downloadable result card; ring center is Logo-only (2026-09-03)
 - [x] SOS hold 5s → real 2s; 修改密码 in settings; donation widget + display-name setting removed (2026-07-10, Katie's UX feedback)
 - [x] China-reachable deployment live on CloudBase default domain (2026-07-02)
 - [x] Unify diverged repos (The-Unmuted-demo + The-Unmuted-v2) onto single main lineage (2026-07-02)

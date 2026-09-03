@@ -1,5 +1,27 @@
 # Changelog — The Unmuted (非默)
 
+## 2026-09-03 — Unified simulation score and education card
+
+### Changed
+- Finalized the share image as a fixed 1080×1020 compact card: removed the 3+3 detail panels and footer, retained one “场景科普小 Tip”, and moved the beta QR treatment into the header.
+- Added `src/data/simulationTips.json` with five domestic-violence and six sexual-harassment tips transcribed from the supplied source PDFs. A stable scenario/path hash selects one tip without changing on re-render; sexual-assault currently falls back to its first visited legal hint.
+- Added Chinese Canvas line-breaking safeguards for punctuation, common short words, explicit source newlines, and number-unit combinations such as `72小时`; exact 100 scores omit `/100` to avoid the ring.
+- Increased Chinese/English brand-line spacing, replaced ellipsis-based left-column summaries with purpose-written one-line explanations, and rebuilt the footer in the approved P2 layout with a companionship message and centered bilingual signature.
+- Balanced the two lower columns by adding a concise supporting line to every “你做对了什么” item, and enlarged the bottom-right beta QR code by 1.5× with extra footer clearance.
+- Rebuilt the result-card visual layer against the approved reference: mesh glows, fine grain, gradient glass surfaces, top-edge highlights, deeper shadows, dotted ring guide, endpoint light, and more generous spacing.
+- The real logo is now cropped by visible alpha bounds before drawing, fixing the apparent off-center mark caused by transparent PNG padding.
+- Brightened and rebalanced the score palette, especially the 40–59 band, which now uses luminous yellow instead of brown-gold.
+- Reworked education copy into neutral concepts such as “报警记录的作用” and “安全转移优先”; it prioritizes correct steps missed in the current run and no longer begins with “你”. Increased row and card height to preserve full explanations without overflow.
+- Unified all three simulation endings on one directly visible 1080×1920 result image, removing the separate save-card disclosure.
+- Added scenario-specific knowledge-score titles and the concise “希望这些知识永远不必用上” line; restored native long-press image saving on iOS.
+- Corrected the soft four-band ramp to low red → amber → purple → high green. The score, status pill, progress ring, and active legend band use the same color.
+- The progress ring starts at the top, advances clockwise by the exact score, and contains only an enlarged The Unmuted mark without the caption beneath it.
+- Replaced the lower summary with side-by-side sections containing three honest “what you did right” items and three path-specific education items. The compact beta QR code moved to the saved image's bottom-right corner, and the poster height was reduced to 1080×1380. Detailed analysis remains available separately.
+
+### Verification
+- Added low-score (32, red) and high-score (94, green) regression paths. Full Vitest suite passes (82/82) and the production Vite build completes.
+- Local mobile-layout browser checks confirmed the generated 3+3 two-column card, bottom-right QR code, score ring, and absence of console errors.
+
 ## 2026-09-01 — Retired blockchain implementation cleanup
 
 ### Maintenance

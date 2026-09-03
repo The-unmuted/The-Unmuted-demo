@@ -29,31 +29,46 @@ interface RenderOpts {
 }
 
 export interface DomesticScoreCardSummary {
-  primaryTitle: string;
-  primaryCount: number;
-  primaryItems: string[];
-  secondaryTitle: string;
-  secondaryCount: number;
-  secondaryItems: string[];
-  secondaryTone: "improve" | "avoided";
+  scoreTitle: string;
+  shareHint: string;
+  correctTitle: string;
+  correctItems: KnowledgeCardItem[];
+  educationTitle: string;
+  educationItems: KnowledgeCardItem[];
+  qrLabel: string;
+  correctCount?: number;
+  sceneTipTitle?: string;
+  sceneTip?: string;
+}
+
+export interface KnowledgeCardItem {
+  title: string;
+  detail?: string;
 }
 
 // 深紫渐变主色
 const COLOR = {
-  bg1: "#1a0d2e",
-  bg2: "#0a0518",
-  card: "rgba(255, 255, 255, 0.04)",
-  cardBorder: "rgba(255, 255, 255, 0.10)",
+  bg1: "#15142f",
+  bg2: "#09091d",
+  card: "rgba(35, 32, 70, 0.58)",
+  cardBorder: "rgba(180, 174, 232, 0.16)",
   text: "#ffffff",
   textMuted: "rgba(255, 255, 255, 0.65)",
   textDim: "rgba(255, 255, 255, 0.45)",
   brandPurple: "#c084fc",
   brandPink: "#f472b6",
   brandGold: "#fbbf24",
-  emerald: "#4ade80",
-  amber: "#fbbf24",
-  rose: "#f87171",
+  emerald: "#86dfa0",
+  amber: "#f2d08a",
+  rose: "#eb7186",
 } as const;
+
+const SCORE_BAND_COLOR: Record<SimulationScoreResult["band"], string> = {
+  excellent: "#86dfa0",
+  good: "#e29bde",
+  partial: "#e9bd66",
+  weak: "#f47b91",
+};
 
 const FONT_ZH = "'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif";
 const FONT_LATIN = "'Helvetica Neue', 'Inter', sans-serif";
@@ -77,7 +92,7 @@ export async function renderScoreCard(opts: RenderOpts): Promise<Blob> {
   ctx.fillRect(0, 0, W, H);
 
   // ─── 2. 品牌头（顶部 y=60~140）─────────────────
-  drawBrandHeader(ctx, lang);
+  await drawBrandHeader(ctx, lang);
 
   // ─── 3. Headline + 情景卡（y=210~530）─────────
   drawHeadlineAndScenario(ctx, opts);
@@ -102,186 +117,174 @@ export async function renderScoreCard(opts: RenderOpts): Promise<Blob> {
   });
 }
 
-/**
- * Domestic-abuse share card. This mirrors the live result report instead of
- * reusing the legacy poster layout used by the other two scenarios.
- */
+/** Unified score/report card used by all three scenarios. */
 async function renderDomesticResultCard(opts: RenderOpts): Promise<Blob> {
+  const summary = opts.summary;
+  const cardHeight = 1020;
   const canvas = document.createElement("canvas");
   canvas.width = W;
-  canvas.height = H;
+  canvas.height = cardHeight;
   const ctx = canvas.getContext("2d")!;
   const lang = opts.language;
 
-  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  const bg = ctx.createLinearGradient(0, 0, 0, cardHeight);
   bg.addColorStop(0, COLOR.bg1);
   bg.addColorStop(1, COLOR.bg2);
   ctx.fillStyle = bg;
-  ctx.fillRect(0, 0, W, H);
+  ctx.fillRect(0, 0, W, cardHeight);
+  drawBackgroundAtmosphere(ctx, cardHeight);
 
-  drawBrandHeader(ctx, lang);
+  await drawBrandHeader(ctx, lang);
 
-  // Result summary — same content hierarchy as the live report.
-  const heroY = 180;
-  drawGlassCard(ctx, 60, heroY, W - 120, 460);
-  drawStar(ctx, 104, heroY + 48, 11, COLOR.brandPink);
+  const scoreY = 175;
+  const contentY = scoreY + 28;
+  const scoreX = 106;
+  drawGlassCard(ctx, 60, scoreY, W - 120, 800);
+  drawStar(ctx, 104, contentY + 47, 11, COLOR.brandPink);
   ctx.textAlign = "left";
   ctx.textBaseline = "top";
-  ctx.fillStyle = COLOR.brandPink;
-  ctx.font = `bold 24px ${FONT_ZH}`;
-  ctx.fillText(lang === "zh" ? "情景模拟 · 结果报告" : "Scenario simulation · Result report", 134, heroY + 34);
-
   ctx.fillStyle = COLOR.text;
-  ctx.font = `bold 54px ${FONT_ZH}`;
-  drawWrappedText(
-    ctx,
-    lang === "zh" ? opts.score.headline.zh : opts.score.headline.en,
-    92,
-    heroY + 94,
-    W - 184,
-    66,
-    2
-  );
-
+  ctx.font = `bold 29px ${FONT_ZH}`;
+  ctx.fillText(summary?.scoreTitle ?? (lang === "zh" ? "安全应对 · 知识储备得分" : "Safety response · Knowledge score"), 134, contentY + 31);
   ctx.fillStyle = COLOR.textMuted;
-  ctx.font = `500 25px ${FONT_ZH}`;
-  drawWrappedText(
-    ctx,
-    lang === "zh" ? opts.score.detail.zh : opts.score.detail.en,
-    92,
-    heroY + 232,
-    W - 184,
-    38,
-    2
-  );
-
-  ctx.strokeStyle = COLOR.cardBorder;
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(92, heroY + 322);
-  ctx.lineTo(W - 92, heroY + 322);
-  ctx.stroke();
-
-  ctx.fillStyle = COLOR.brandPink;
-  ctx.font = `600 21px ${FONT_ZH}`;
-  drawWrappedText(ctx, opts.scenarioTitle, 92, heroY + 348, 390, 30, 1);
-  ctx.fillStyle = COLOR.text;
-  ctx.font = `bold 30px ${FONT_ZH}`;
-  drawWrappedText(ctx, opts.endingTitle, 92, heroY + 392, W - 184, 38, 2);
-
-  // Overall score — same score, band colors, segmented ring, and marker.
-  const scoreY = 670;
-  drawGlassCard(ctx, 60, scoreY, W - 120, 550);
-  drawStar(ctx, 104, scoreY + 48, 11, COLOR.brandPink);
-  ctx.fillStyle = COLOR.text;
-  ctx.font = `bold 28px ${FONT_ZH}`;
-  ctx.fillText(lang === "zh" ? "你的综合得分" : "Your overall score", 134, scoreY + 32);
-
-  const scoreGradient = ctx.createLinearGradient(92, scoreY + 92, 410, scoreY + 250);
-  scoreGradient.addColorStop(0, COLOR.brandPurple);
-  scoreGradient.addColorStop(0.55, COLOR.brandPink);
-  scoreGradient.addColorStop(1, "#fb923c");
-  ctx.textBaseline = "alphabetic";
-  ctx.fillStyle = scoreGradient;
-  ctx.font = `900 166px ${FONT_LATIN}`;
-  ctx.fillText(String(opts.score.score), 92, scoreY + 250);
-  const scoreWidth = ctx.measureText(String(opts.score.score)).width;
-  ctx.fillStyle = COLOR.textMuted;
-  ctx.font = `600 38px ${FONT_LATIN}`;
-  ctx.fillText("/ 100", 108 + scoreWidth, scoreY + 250);
+  ctx.font = `500 20px ${FONT_ZH}`;
+  ctx.fillText(summary?.shareHint ?? (lang === "zh" ? "长按保存图片 · 希望这些知识永远不必用上" : "Long-press to save · May you never need this knowledge"), 134, contentY + 73);
 
   const bandColor = bandColorFor(opts.score.band);
+  ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = bandColor;
+  ctx.font = `900 156px ${FONT_LATIN}`;
+  ctx.shadowColor = bandColor;
+  ctx.shadowBlur = 16;
+  const scoreText = String(opts.score.score);
+  const digitGap = scoreText.length === 2 ? -12 : 0;
+  let scoreWidth = 0;
+  for (const digit of scoreText) {
+    ctx.fillText(digit, scoreX + scoreWidth, contentY + 286);
+    scoreWidth += ctx.measureText(digit).width + digitGap;
+  }
+  scoreWidth -= digitGap;
+  ctx.shadowBlur = 0;
+  if (opts.score.score !== 100) {
+    ctx.fillStyle = COLOR.textMuted;
+    ctx.font = `600 38px ${FONT_LATIN}`;
+    ctx.fillText("/ 100", scoreX + scoreWidth - 5, contentY + 286);
+  }
+
   const bandLabel = lang === "zh" ? opts.score.label.zh : opts.score.label.en;
   ctx.font = `bold 28px ${FONT_ZH}`;
-  const pillWidth = Math.min(390, ctx.measureText(bandLabel).width + 64);
-  drawRoundRect(ctx, 92, scoreY + 282, pillWidth, 58, 29);
+  const pillWidth = Math.min(360, ctx.measureText(bandLabel).width + 64);
+  drawRoundRect(ctx, scoreX, contentY + 322, pillWidth, 58, 29);
   ctx.strokeStyle = bandColor;
   ctx.lineWidth = 2.5;
   ctx.stroke();
   ctx.fillStyle = bandColor;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(bandLabel, 92 + pillWidth / 2, scoreY + 311);
+  ctx.fillText(bandLabel, scoreX + pillWidth / 2, contentY + 351);
+
+  await drawDomesticBandCircle(ctx, opts, 620, contentY + 365, 172);
+  drawDomesticBandLegend(ctx, opts, 880, contentY + 150, 102);
 
   ctx.textAlign = "left";
   ctx.textBaseline = "top";
   ctx.fillStyle = COLOR.textMuted;
-  ctx.font = `500 22px ${FONT_ZH}`;
+  ctx.font = `500 19px ${FONT_ZH}`;
   drawWrappedText(
     ctx,
     lang === "zh" ? opts.score.detail.zh : opts.score.detail.en,
-    92,
-    scoreY + 370,
-    390,
-    32,
-    4
+    scoreX,
+    contentY + 455,
+    280,
+    28,
+    3
   );
 
-  drawDomesticBandCircle(ctx, opts, 650, scoreY + 315, 140);
-  drawDomesticBandLegend(ctx, opts, 825, scoreY + 88, 100);
-
-  // Same-line action comparison, matching the live result report.
-  drawDomesticActionComparison(ctx, opts, 1250);
-
-  await drawFooter(ctx, lang);
+  drawCompactSummary(ctx, lang, summary, 92, 805, W - 184);
   return canvasToBlob(canvas);
 }
 
-function drawDomesticBandCircle(
+function drawCompactSummary(
+  ctx: CanvasRenderingContext2D,
+  lang: "en" | "zh",
+  summary: DomesticScoreCardSummary | undefined,
+  x: number,
+  y: number,
+  width: number
+) {
+  const tip = summary?.educationItems[0];
+  ctx.textAlign = "left";
+  ctx.textBaseline = "top";
+  ctx.font = `bold 22px ${FONT_ZH}`;
+  ctx.fillStyle = COLOR.brandPink;
+  ctx.fillText(`ⓘ  ${summary?.sceneTipTitle ?? (lang === "zh" ? "场景科普小tip" : "Scenario tip")}`, x + 32, y + 18);
+  ctx.fillStyle = COLOR.textMuted;
+  ctx.font = `500 17px ${FONT_ZH}`;
+  const tipText = normalizeTipText(summary?.sceneTip ?? tip?.detail ?? tip?.title ?? "");
+  drawWrappedText(ctx, tipText, x + 32, y + 58, width - 64, 23, 3);
+}
+
+function normalizeTipText(text: string): string {
+  return text.replace(/\s*\n\s*/g, "").trim();
+}
+
+async function drawDomesticBandCircle(
   ctx: CanvasRenderingContext2D,
   opts: RenderOpts,
   cx: number,
   cy: number,
   radius: number
 ) {
-  const segments: Array<{
-    band: SimulationScoreResult["band"];
-    start: number;
-    length: number;
-  }> = [
-    { band: "weak", start: 0, length: 0.4 },
-    { band: "partial", start: 0.4, length: 0.2 },
-    { band: "good", start: 0.6, length: 0.2 },
-    { band: "excellent", start: 0.8, length: 0.2 },
-  ];
+  const bandColor = bandColorFor(opts.score.band);
+  const halo = ctx.createRadialGradient(cx, cy, radius * 0.16, cx, cy, radius * 1.18);
+  halo.addColorStop(0, "rgba(226,155,222,0.08)");
+  halo.addColorStop(0.72, "rgba(31,28,65,0.05)");
+  halo.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = halo;
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius * 1.22, 0, Math.PI * 2);
+  ctx.fill();
 
-  ctx.strokeStyle = "rgba(255,255,255,0.10)";
+  ctx.save();
+  ctx.setLineDash([2, 10]);
+  ctx.strokeStyle = bandColor;
+  ctx.globalAlpha = 0.46;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius + 34, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.strokeStyle = "rgba(74,70,112,0.58)";
   ctx.lineWidth = 22;
+  ctx.lineCap = "round";
   ctx.beginPath();
   ctx.arc(cx, cy, radius, 0, Math.PI * 2);
   ctx.stroke();
 
-  for (const segment of segments) {
-    const start = -Math.PI / 2 + segment.start * Math.PI * 2 + 0.02;
-    const end = -Math.PI / 2 + (segment.start + segment.length) * Math.PI * 2 - 0.02;
-    ctx.strokeStyle = bandColorFor(segment.band);
-    ctx.globalAlpha = segment.band === opts.score.band ? 1 : 0.45;
-    ctx.lineWidth = segment.band === opts.score.band ? 24 : 18;
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.arc(cx, cy, radius, start, end);
-    ctx.stroke();
-  }
-  ctx.globalAlpha = 1;
-
-  const markerAngle = -Math.PI / 2 + (opts.score.score / 100) * Math.PI * 2;
-  const markerX = cx + Math.cos(markerAngle) * radius;
-  const markerY = cy + Math.sin(markerAngle) * radius;
-  ctx.fillStyle = COLOR.text;
-  ctx.strokeStyle = bandColorFor(opts.score.band);
-  ctx.lineWidth = 5;
+  const start = -Math.PI / 2;
+  const end = start + (opts.score.score / 100) * Math.PI * 2;
+  ctx.strokeStyle = bandColor;
+  ctx.lineWidth = 24;
+  ctx.shadowColor = bandColor;
+  ctx.shadowBlur = 28;
   ctx.beginPath();
-  ctx.arc(markerX, markerY, 10, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.arc(cx, cy, radius, start, end);
   ctx.stroke();
+  ctx.shadowBlur = 0;
 
-  ctx.fillStyle = COLOR.brandPink;
-  drawStar(ctx, cx, cy - 18, 25, COLOR.brandPink);
-  ctx.fillStyle = COLOR.textMuted;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "top";
-  ctx.font = `bold 26px ${FONT_ZH}`;
-  ctx.fillText("THE UNMUTED", cx, cy + 24);
+  const endX = cx + Math.cos(end) * radius;
+  const endY = cy + Math.sin(end) * radius;
+  ctx.fillStyle = bandColor;
+  ctx.shadowColor = bandColor;
+  ctx.shadowBlur = 22;
+  ctx.beginPath();
+  ctx.arc(endX, endY, 11, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  const logo = await loadImage("/the-unmuted-mark.png");
+  drawVisibleLogoCentered(ctx, logo, cx, cy, radius * 1.42);
 }
 
 function drawDomesticBandLegend(
@@ -327,24 +330,7 @@ function drawDomesticBandLegend(
   ctx.globalAlpha = 1;
 }
 
-function drawDomesticActionComparison(ctx: CanvasRenderingContext2D, opts: RenderOpts, y: number) {
-  const summary = opts.summary;
-  const good = pickTop(opts.score.breakdown, "good", 2);
-  const bad = pickTop(opts.score.breakdown, "bad", 2);
-  const gap = 28;
-  const cardWidth = (W - 120 - gap) / 2;
-
-  const primaryTitle = summary?.primaryTitle ?? (opts.language === "zh" ? "你做对了" : "What you did right");
-  const primaryItems = summary?.primaryItems ?? good.map((item) => shortLabelFor(item.flag, opts.language));
-  const secondaryTitle = summary?.secondaryTitle ?? (opts.language === "zh" ? "这次出了问题的环节" : "Where things went wrong");
-  const secondaryItems = summary?.secondaryItems ?? bad.map((item) => shortLabelFor(item.flag, opts.language));
-  const secondaryAccent = summary?.secondaryTone === "avoided" ? COLOR.amber : COLOR.rose;
-
-  drawDomesticActionCard(ctx, 60, y, cardWidth, 380, COLOR.brandPink, "✓", primaryTitle, primaryItems);
-  drawDomesticActionCard(ctx, 60 + cardWidth + gap, y, cardWidth, 380, secondaryAccent, "!", secondaryTitle, secondaryItems);
-}
-
-function drawDomesticActionCard(
+function drawKnowledgeListCard(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
@@ -353,7 +339,9 @@ function drawDomesticActionCard(
   accent: string,
   icon: string,
   title: string,
-  items: string[]
+  items: KnowledgeCardItem[],
+  showDetail = false,
+  detailLines = 3
 ) {
   drawGlassCard(ctx, x, y, width, height);
   ctx.strokeStyle = accent;
@@ -379,88 +367,126 @@ function drawDomesticActionCard(
   ctx.font = `bold 26px ${FONT_ZH}`;
   drawWrappedText(ctx, title, x + 84, y + 30, width - 116, 32, 2);
 
-  for (let index = 0; index < Math.min(items.length, 2); index++) {
-    const rowY = y + 128 + index * 106;
+  const rowHeight = showDetail ? 108 : 98;
+  for (let index = 0; index < Math.min(items.length, 3); index++) {
+    const rowY = y + 108 + index * rowHeight;
     if (index > 0) {
       ctx.strokeStyle = COLOR.cardBorder;
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(x + 32, rowY - 22);
-      ctx.lineTo(x + width - 32, rowY - 22);
+      ctx.moveTo(x + 32, rowY - 8);
+      ctx.lineTo(x + width - 32, rowY - 8);
       ctx.stroke();
     }
     ctx.fillStyle = "rgba(255,255,255,0.06)";
     ctx.beginPath();
-    ctx.arc(x + 54, rowY + 22, 26, 0, Math.PI * 2);
+    ctx.arc(x + 54, rowY + 18, 20, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = accent;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.font = `bold 19px ${FONT_LATIN}`;
-    ctx.fillText(String(index + 1).padStart(2, "0"), x + 54, rowY + 23);
+    ctx.font = `bold 16px ${FONT_LATIN}`;
+    ctx.fillText(String(index + 1), x + 54, rowY + 19);
 
     ctx.fillStyle = COLOR.text;
     ctx.textAlign = "left";
     ctx.textBaseline = "top";
-    ctx.font = `600 22px ${FONT_ZH}`;
-    drawWrappedText(ctx, items[index], x + 96, rowY, width - 128, 30, 3);
+    ctx.font = `600 19px ${FONT_ZH}`;
+    drawWrappedText(ctx, items[index].title, x + 88, rowY + 1, width - 116, 25, showDetail ? 1 : 2);
+    if (showDetail && items[index].detail) {
+      ctx.fillStyle = COLOR.textMuted;
+      ctx.font = `500 16px ${FONT_ZH}`;
+      drawWrappedText(ctx, items[index].detail!, x + 88, rowY + 30, width - 116, 20, detailLines);
+    }
   }
 }
 
+async function drawP2Footer(
+  ctx: CanvasRenderingContext2D,
+  lang: "en" | "zh",
+  label: string,
+  x: number,
+  y: number
+) {
+  const size = 123;
+  const qrDataUrl = await QRCode.toDataURL(BETA_URL, {
+    width: size * 2,
+    margin: 1,
+    color: { dark: "#1a0d2e", light: "#ffffff" },
+  });
+  const qr = await loadImage(qrDataUrl);
+  drawRoundRect(ctx, x, y, size, size, 14);
+  ctx.fillStyle = "#ffffff";
+  ctx.fill();
+  ctx.drawImage(qr, x + 6, y + 6, size - 12, size - 12);
+
+  ctx.textAlign = "left";
+  ctx.textBaseline = "top";
+  ctx.fillStyle = "rgba(255,255,255,0.72)";
+  ctx.font = `bold 24px ${FONT_ZH}`;
+  ctx.fillText(lang === "zh" ? "你不是一个人" : "You are not alone", 76, y + 18);
+  ctx.fillStyle = COLOR.textDim;
+  ctx.font = `500 18px ${FONT_ZH}`;
+  ctx.fillText(lang === "zh" ? "非默 · 安全记录 守护发声" : "The Unmuted · Safety, evidence, voice", 76, y + 58);
+
+  ctx.textAlign = "right";
+  ctx.textBaseline = "top";
+  ctx.fillStyle = COLOR.text;
+  ctx.font = `bold 19px ${FONT_ZH}`;
+  if (lang === "zh") {
+    ctx.fillText("扫码体验", x - 18, y + 30);
+    ctx.fillStyle = COLOR.brandPink;
+    ctx.fillText("非默内测版", x - 18, y + 62);
+  } else {
+    drawWrappedText(ctx, label, x - 18, y + 31, 160, 26, 2);
+  }
+
+  ctx.textAlign = "center";
+  ctx.fillStyle = "rgba(255,255,255,0.32)";
+  ctx.font = `600 17px ${FONT_LATIN}`;
+  ctx.fillText("THE UNMUTED · 非默", W / 2, 1562);
+}
+
 // ─── 1. 品牌头 ─────────────────────────────────
-function drawBrandHeader(ctx: CanvasRenderingContext2D, lang: "en" | "zh") {
-  // 左侧: 品牌 icon（简化的品牌标记：紫粉渐变圆点）
+async function drawBrandHeader(ctx: CanvasRenderingContext2D, lang: "en" | "zh") {
+  // 左侧：使用正式品牌标记，并按可见像素居中。
   const iconCx = 100;
   const iconCy = 110;
-  const iconR = 32;
-  const g = ctx.createLinearGradient(iconCx - iconR, iconCy - iconR, iconCx + iconR, iconCy + iconR);
-  g.addColorStop(0, COLOR.brandPurple);
-  g.addColorStop(1, COLOR.brandPink);
-  ctx.fillStyle = g;
-  ctx.beginPath();
-  ctx.arc(iconCx, iconCy, iconR, 0, Math.PI * 2);
-  ctx.fill();
-  // 简化的手形/声波
-  ctx.strokeStyle = "rgba(255,255,255,0.9)";
-  ctx.lineWidth = 4;
-  ctx.lineCap = "round";
-  ctx.beginPath();
-  ctx.arc(iconCx, iconCy - 8, 14, Math.PI * 0.15, Math.PI * 0.85);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(iconCx - 12, iconCy + 12);
-  ctx.quadraticCurveTo(iconCx, iconCy + 2, iconCx + 12, iconCy + 12);
-  ctx.stroke();
+  const brandLogo = await loadImage("/the-unmuted-mark.png");
+  drawVisibleLogoCentered(ctx, brandLogo, iconCx, iconCy, 68);
 
   // 品牌名 非默 THE UNMUTED
   ctx.fillStyle = COLOR.text;
   ctx.textBaseline = "middle";
   ctx.textAlign = "left";
   ctx.font = `bold 48px ${FONT_ZH}`;
-  ctx.fillText("非默", 155, 92);
+  ctx.fillText("非默", 155, 84);
   ctx.font = `500 22px ${FONT_LATIN}`;
   ctx.fillStyle = COLOR.textMuted;
   ctx.letterSpacing = "0.15em";
-  ctx.fillText("THE UNMUTED", 155, 128);
+  ctx.fillText("THE UNMUTED", 155, 140);
 
-  // 右侧胶囊：情景模拟·结果报告
-  const pillText = lang === "zh" ? "情景模拟 · 结果报告" : "Scenario · Result";
-  ctx.font = `600 24px ${FONT_ZH}`;
-  const pillTextW = ctx.measureText(pillText).width;
-  const pillW = pillTextW + 90;
-  const pillH = 56;
-  const pillX = W - 60 - pillW;
-  const pillY = 82;
-  drawRoundRect(ctx, pillX, pillY, pillW, pillH, 28);
-  ctx.strokeStyle = "rgba(192, 132, 252, 0.5)";
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  // 星标
-  drawStar(ctx, pillX + 32, pillY + pillH / 2, 10, COLOR.brandPurple);
-  ctx.fillStyle = COLOR.text;
-  ctx.textAlign = "left";
-  ctx.textBaseline = "middle";
-  ctx.fillText(pillText, pillX + 58, pillY + pillH / 2);
+  // 右上角：内测体验二维码。
+  const size = 96;
+  const qrX = W - 60 - size;
+  const qrY = 42;
+  const qrDataUrl = await QRCode.toDataURL(BETA_URL, {
+    width: size * 2,
+    margin: 1,
+    color: { dark: "#1a0d2e", light: "#ffffff" },
+  });
+  const qr = await loadImage(qrDataUrl);
+  drawRoundRect(ctx, qrX, qrY, size, size, 12);
+  ctx.fillStyle = "#ffffff";
+  ctx.fill();
+  ctx.drawImage(qr, qrX + 5, qrY + 5, size - 10, size - 10);
+  ctx.textAlign = "right";
+  ctx.textBaseline = "top";
+  ctx.fillStyle = COLOR.textMuted;
+  ctx.font = `600 17px ${FONT_ZH}`;
+  ctx.fillText(lang === "zh" ? "扫码体验" : "Scan to try", qrX - 18, qrY + 27);
+  ctx.fillStyle = COLOR.brandPurple;
+  ctx.fillText(lang === "zh" ? "非默内测版" : "The Unmuted beta", qrX - 18, qrY + 57);
 }
 
 // ─── 2. Headline + 情景卡 ──────────────────────
@@ -852,8 +878,14 @@ function drawWrappedText(
   const lines: string[] = [];
 
   for (const paragraph of paragraphs) {
-    const wordBased = paragraph.includes(" ");
-    const units = wordBased ? paragraph.split(/\s+/) : [...paragraph];
+    let normalizedParagraph = paragraph.replace(
+      /(\d)\s+(小时|分钟|天|日|个月|月|年|元|万元)/g,
+      "$1$2"
+    );
+    const containsChinese = /[\u3400-\u9fff]/.test(normalizedParagraph);
+    if (containsChinese) normalizedParagraph = normalizedParagraph.replace(/\s+/g, "");
+    const wordBased = !containsChinese && normalizedParagraph.includes(" ");
+    const units = wordBased ? normalizedParagraph.split(/\s+/) : [...normalizedParagraph];
     const separator = wordBased ? " " : "";
     let line = "";
 
@@ -869,6 +901,8 @@ function drawWrappedText(
     if (line) lines.push(line);
   }
 
+  rebalanceChineseLineBreaks(lines);
+
   const visible = lines.slice(0, maxLines);
   if (lines.length > maxLines && visible.length > 0) {
     let last = visible[visible.length - 1];
@@ -883,6 +917,33 @@ function drawWrappedText(
   }
 }
 
+function rebalanceChineseLineBreaks(lines: string[]) {
+  const forbiddenLineStart = /^[，。！？；：、）】》”’…]/;
+  const protectedPairs = new Set([
+    "一些", "这个", "这些", "可以", "以及", "如果", "但是", "还有", "需要", "没有", "已经", "因为", "所以",
+    "小时", "分钟", "个月", "万元",
+  ]);
+
+  for (let index = 1; index < lines.length; index++) {
+    while (forbiddenLineStart.test(lines[index])) {
+      lines[index - 1] += lines[index][0];
+      lines[index] = lines[index].slice(1);
+    }
+    const previous = lines[index - 1];
+    const current = lines[index];
+    const trailingNumber = previous.match(/\d+$/)?.[0];
+    if (trailingNumber && /^(小时|分钟|天|日|个月|月|年|元|万元)/.test(current)) {
+      lines[index - 1] = previous.slice(0, -trailingNumber.length);
+      lines[index] = trailingNumber + current;
+      continue;
+    }
+    if (previous && current && protectedPairs.has(previous.slice(-1) + current[0])) {
+      lines[index - 1] = previous.slice(0, -1);
+      lines[index] = previous.slice(-1) + current;
+    }
+  }
+}
+
 function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
   return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob((blob) => {
@@ -893,12 +954,81 @@ function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
 }
 
 function bandColorFor(band: SimulationScoreResult["band"]): string {
-  switch (band) {
-    case "excellent": return COLOR.emerald;
-    case "good": return "#67e8f9"; // cyan
-    case "partial": return COLOR.amber;
-    case "weak": return COLOR.rose;
+  return SCORE_BAND_COLOR[band];
+}
+
+function drawBackgroundAtmosphere(ctx: CanvasRenderingContext2D, height: number) {
+  const topGlow = ctx.createRadialGradient(W * 0.7, 120, 10, W * 0.7, 120, 620);
+  topGlow.addColorStop(0, "rgba(151,107,255,0.13)");
+  topGlow.addColorStop(0.55, "rgba(113,76,202,0.055)");
+  topGlow.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = topGlow;
+  ctx.fillRect(0, 0, W, height);
+
+  const sideGlow = ctx.createRadialGradient(90, height * 0.66, 10, 90, height * 0.66, 500);
+  sideGlow.addColorStop(0, "rgba(244,114,182,0.075)");
+  sideGlow.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = sideGlow;
+  ctx.fillRect(0, 0, W, height);
+
+  ctx.save();
+  ctx.globalAlpha = 0.055;
+  ctx.fillStyle = "#ffffff";
+  let seed = 1947;
+  for (let index = 0; index < 720; index++) {
+    seed = (seed * 16807) % 2147483647;
+    const x = (seed / 2147483647) * W;
+    seed = (seed * 16807) % 2147483647;
+    const y = (seed / 2147483647) * height;
+    ctx.fillRect(x, y, 0.8, 0.8);
   }
+  ctx.restore();
+}
+
+function drawVisibleLogoCentered(
+  ctx: CanvasRenderingContext2D,
+  image: HTMLImageElement,
+  cx: number,
+  cy: number,
+  targetSize: number
+) {
+  const sample = document.createElement("canvas");
+  sample.width = image.naturalWidth || image.width;
+  sample.height = image.naturalHeight || image.height;
+  const sampleCtx = sample.getContext("2d", { willReadFrequently: true })!;
+  sampleCtx.drawImage(image, 0, 0);
+  const pixels = sampleCtx.getImageData(0, 0, sample.width, sample.height).data;
+  let minX = sample.width;
+  let minY = sample.height;
+  let maxX = 0;
+  let maxY = 0;
+  for (let y = 0; y < sample.height; y += 2) {
+    for (let x = 0; x < sample.width; x += 2) {
+      const alpha = pixels[(y * sample.width + x) * 4 + 3];
+      if (alpha < 32) continue;
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x);
+      maxY = Math.max(maxY, y);
+    }
+  }
+  if (minX > maxX || minY > maxY) return;
+  const sourceWidth = maxX - minX + 1;
+  const sourceHeight = maxY - minY + 1;
+  const scale = targetSize / Math.max(sourceWidth, sourceHeight);
+  const drawWidth = sourceWidth * scale;
+  const drawHeight = sourceHeight * scale;
+  ctx.drawImage(
+    image,
+    minX,
+    minY,
+    sourceWidth,
+    sourceHeight,
+    cx - drawWidth / 2,
+    cy - drawHeight / 2,
+    drawWidth,
+    drawHeight
+  );
 }
 
 function drawStar(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number, color: string) {
@@ -922,12 +1052,30 @@ function drawGlassCard(
   ctx: CanvasRenderingContext2D,
   x: number, y: number, w: number, h: number
 ) {
+  ctx.save();
+  ctx.shadowColor = "rgba(3, 2, 18, 0.4)";
+  ctx.shadowBlur = 28;
+  ctx.shadowOffsetY = 12;
   drawRoundRect(ctx, x, y, w, h, 32);
-  ctx.fillStyle = COLOR.card;
+  const fill = ctx.createLinearGradient(x, y, x + w, y + h);
+  fill.addColorStop(0, "rgba(42, 39, 81, 0.72)");
+  fill.addColorStop(0.55, COLOR.card);
+  fill.addColorStop(1, "rgba(19, 18, 46, 0.72)");
+  ctx.fillStyle = fill;
   ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetY = 0;
   ctx.strokeStyle = COLOR.cardBorder;
   ctx.lineWidth = 1.5;
   ctx.stroke();
+  ctx.globalAlpha = 0.45;
+  ctx.strokeStyle = "rgba(255,255,255,0.12)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(x + 34, y + 1);
+  ctx.lineTo(x + w - 34, y + 1);
+  ctx.stroke();
+  ctx.restore();
 }
 
 function wrapText(

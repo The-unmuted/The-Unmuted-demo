@@ -17,8 +17,6 @@ import {
   ChevronDown,
   ChevronUp,
   BookOpen,
-  Share2,
-  ShieldCheck,
   Sparkles,
 } from "lucide-react";
 import { AppLanguage, copyFor } from "@/lib/locale";
@@ -35,14 +33,17 @@ import {
   resolveAuto,
   simText,
 } from "@/lib/simulation";
+import simulationTips from "@/data/simulationTips.json";
 import {
   collectCoachHints,
   computeSimulationScore,
-  pickTop,
-  shortLabelFor,
   type SimulationScoreResult,
 } from "@/lib/simulationScore";
-import { renderScoreCard, type DomesticScoreCardSummary } from "@/lib/simulationImage";
+import {
+  renderScoreCard,
+  type DomesticScoreCardSummary,
+  type KnowledgeCardItem,
+} from "@/lib/simulationImage";
 
 interface SimulationPageProps {
   language: AppLanguage;
@@ -329,6 +330,15 @@ function EndingView({
   const score = computeSimulationScore(flags);
   const coachHints = collectCoachHints(scenario, visitedSceneIds);
   const isDomesticViolence = scenario.id === "domestic-violence";
+  const scoreCardSummary = buildScoreCardSummary(
+    language,
+    scenario,
+    good,
+    triggeredBad,
+    avoidedBad,
+    coachHints[0] ? simText(language, coachHints[0].text) : undefined,
+    [...flags].sort().join("|")
+  );
 
   const [showAnalysis, setShowAnalysis] = useState(false);
   const analysisRef = useRef<HTMLDivElement | null>(null);
@@ -343,26 +353,15 @@ function EndingView({
 
   return (
     <div className="mt-2 flex flex-col gap-3">
-      {isDomesticViolence ? (
-        <DomesticViolenceResultReport
-          language={language}
-          score={score}
-          scenarioTitle={simText(language, scenario.title)}
-          endingTitle={simText(language, ending.title)}
-          endingSummary={simText(language, ending.summary)}
-          good={good}
-          triggeredBad={triggeredBad}
-          avoidedBad={avoidedBad}
-        />
-      ) : (
-        <ScoreCard
-          language={language}
-          score={score}
-          scenarioTitle={simText(language, scenario.title)}
-          scenarioTagline={simText(language, scenario.tagline)}
-          endingTitle={simText(language, ending.title)}
-        />
-      )}
+      <SimulationResultReport
+        language={language}
+        score={score}
+        scenarioTitle={simText(language, scenario.title)}
+        scenarioTagline={simText(language, scenario.tagline)}
+        endingTitle={simText(language, ending.title)}
+        endingSummary={simText(language, ending.summary)}
+        summary={scoreCardSummary}
+      />
 
       {!showAnalysis && (
         <button
@@ -458,19 +457,6 @@ function EndingView({
         </div>
       )}
 
-      {isDomesticViolence && (
-        <DomesticResultImageSection
-          language={language}
-          score={score}
-          scenarioTitle={simText(language, scenario.title)}
-          scenarioTagline={simText(language, scenario.tagline)}
-          endingTitle={simText(language, ending.title)}
-          good={good}
-          triggeredBad={triggeredBad}
-          avoidedBad={avoidedBad}
-        />
-      )}
-
       <div className="flex flex-col gap-2">
         <button
           onClick={onRetry}
@@ -496,80 +482,278 @@ function EndingView({
   );
 }
 
-const RESULT_BANDS: Array<{
-  id: SimulationScoreResult["band"];
-  range: string;
-  label: { en: string; zh: string };
-  textClass: string;
-  borderClass: string;
-}> = [
-  {
-    id: "excellent",
-    range: "80–100",
-    label: { en: "Well-prepared", zh: "准备充分" },
-    textClass: "text-[hsl(var(--domestic-score-excellent))]",
-    borderClass: "border-[hsl(var(--domestic-score-excellent))]",
-  },
-  {
-    id: "good",
-    range: "60–79",
-    label: { en: "Basic preparation", zh: "基本准备" },
-    textClass: "text-[hsl(var(--domestic-score-good))]",
-    borderClass: "border-[hsl(var(--domestic-score-good))]",
-  },
-  {
-    id: "partial",
-    range: "40–59",
-    label: { en: "Partial preparation", zh: "部分准备" },
-    textClass: "text-[hsl(var(--domestic-score-partial))]",
-    borderClass: "border-[hsl(var(--domestic-score-partial))]",
-  },
-  {
-    id: "weak",
-    range: "0–39",
-    label: { en: "Needs strengthening", zh: "需要加强" },
-    textClass: "text-[hsl(var(--domestic-score-weak))]",
-    borderClass: "border-[hsl(var(--domestic-score-weak))]",
-  },
-];
+function buildScoreCardSummary(
+  language: AppLanguage,
+  scenario: SimScenario,
+  good: SimDebriefRule[],
+  triggeredBad: SimDebriefRule[],
+  avoidedBad: SimDebriefRule[],
+  firstLegalTip?: string,
+  resultSeed = ""
+): DomesticScoreCardSummary {
+  const correctItems: KnowledgeCardItem[] = [];
+  const educationItems: KnowledgeCardItem[] = [];
+  const addUnique = (items: KnowledgeCardItem[], item: KnowledgeCardItem) => {
+    if (items.length >= 3 || items.some((existing) => existing.title === item.title)) return;
+    items.push(item);
+  };
 
-function DomesticViolenceResultReport({
+  good.forEach((rule) => addUnique(correctItems, {
+    title: conciseFeedbackTitle(simText(language, rule.title), language),
+    detail: correctSupportText(language, rule),
+  }));
+  avoidedBad.forEach((rule) => addUnique(correctItems, {
+    title: copyFor(
+      language,
+      `Avoided: ${conciseFeedbackTitle(simText(language, rule.title), language)}`,
+      `避开：${conciseFeedbackTitle(simText(language, rule.title), language)}`
+    ),
+    detail: correctSupportText(language, rule),
+  }));
+
+  const triggeredGoodIds = new Set(good.map((rule) => rule.id));
+  scenario.debrief
+    .filter((rule) => rule.kind === "good" && !triggeredGoodIds.has(rule.id))
+    .forEach((rule) => addUnique(educationItems, knowledgeItemForRule(language, rule)));
+
+  triggeredBad.forEach((rule) =>
+    addUnique(educationItems, knowledgeItemForRule(language, rule))
+  );
+
+  scenario.glossary?.forEach((term) => addUnique(educationItems, {
+    title: simText(language, term.term),
+    detail: simText(language, term.note),
+  }));
+
+  scenario.realFlow.forEach((step, index) => addUnique(educationItems, {
+    title: copyFor(language, `Key step ${index + 1}`, `关键步骤 ${index + 1}`),
+    detail: simText(language, step),
+  }));
+
+  return {
+    scoreTitle: scoreTitleForScenario(language, scenario.id),
+    shareHint: copyFor(
+      language,
+      "Long-press to save · May you never need this knowledge",
+      "长按保存图片 · 希望这些知识永远不必用上"
+    ),
+    correctTitle: copyFor(language, "What you did right", "你做对了什么"),
+    correctItems: correctItems.slice(0, 3),
+    educationTitle: copyFor(language, "Key things to know", "你的关键科普"),
+    educationItems: educationItems.slice(0, 3),
+    qrLabel: copyFor(language, "Scan to try the beta", "扫码体验内测版"),
+    correctCount: good.length + avoidedBad.length,
+    sceneTipTitle: copyFor(
+      language,
+      "Scenario Tip",
+      "场景科普小tip"
+    ),
+    sceneTip: scenarioTipFor(language, scenario.id, resultSeed, firstLegalTip),
+  };
+}
+
+function scenarioTipFor(
+  language: AppLanguage,
+  scenarioId: string,
+  seed: string,
+  fallback?: string
+): string | undefined {
+  if (language !== "zh") return fallback;
+  const pools = simulationTips as Record<string, string[]>;
+  const pool = pools[scenarioId] ?? [];
+  if (!pool.length) return fallback;
+  let hash = 2166136261;
+  for (const char of `${scenarioId}:${seed}`) {
+    hash ^= char.charCodeAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
+  return pool[(hash >>> 0) % pool.length];
+}
+
+function knowledgeItemForRule(language: AppLanguage, rule: SimDebriefRule): KnowledgeCardItem {
+  const source = `${rule.id} ${rule.title.zh} ${rule.title.en}`.toLowerCase();
+  const item = (enTitle: string, zhTitle: string, enDetail: string, zhDetail: string) => ({
+    title: copyFor(language, enTitle, zhTitle),
+    detail: copyFor(language, enDetail, zhDetail),
+  });
+
+  if (/110|police|报警/.test(source)) return item(
+    "Police records",
+    "报警记录的作用",
+    "Each report creates a record that may support later protection requests.",
+    "每次报警形成的接处警记录，可支持后续保护令或诉讼。"
+  );
+  if (/安全|safe|shelter|庇护/.test(source)) return item(
+    "Safety comes first",
+    "安全转移优先",
+    "Move to a safe place before preserving evidence or continuing the process.",
+    "先转移到安全地点，再考虑留证和后续维权步骤。"
+  );
+  if (/证人|witness|同事|neighbor|邻居/.test(source)) return item(
+    "Witness evidence",
+    "证人证言的作用",
+    "People who saw, heard, or were told promptly may provide supporting evidence.",
+    "现场目击、听见经过或被及时告知的人，都可能提供佐证。"
+  );
+  if (/受案回执|case receipt/.test(source)) return item(
+    "Case Receipt",
+    "受案回执",
+    "It proves that police received the report and anchors later review steps.",
+    "它证明警方已受理报案，也是后续复议的重要凭据。"
+  );
+  if (/保护令|protection order/.test(source)) return item(
+    "Protection orders",
+    "人身安全保护令",
+    "A protection order can prohibit contact, harassment, following, or entry.",
+    "保护令可禁止接触、骚扰、跟踪，或进入特定住所。"
+  );
+  if (/告诫书|warning letter/.test(source)) return item(
+    "Warning Letter",
+    "家庭暴力告诫书",
+    "This official document records police intervention and strengthens the evidence chain.",
+    "告诫书记录公安干预情况，可补强后续案件的文书链。"
+  );
+  if (/病历|医院|medical|hospital/.test(source)) return item(
+    "Medical records",
+    "医疗记录的证据作用",
+    "Same-day records connect injuries, time, treatment, and the reported cause.",
+    "当天病历可连接伤情、时间、治疗过程和受伤原因。"
+  );
+  if (/法医|鉴定|forensic/.test(source)) return item(
+    "Forensic examination",
+    "伤情鉴定",
+    "A formal examination can document injury severity beyond ordinary photos.",
+    "正式鉴定能够记录伤情程度，证明力通常高于普通照片。"
+  );
+  if (/笔录|transcript|statement/.test(source)) return item(
+    "Review before signing",
+    "笔录签字核对",
+    "Check names, dates, events, and omissions before signing every page.",
+    "签字前应核对姓名、日期、事件经过和遗漏内容。"
+  );
+  if (/聊天|截图|证据|record|document|衣物|paper bag/.test(source)) return item(
+    "Preserve complete evidence",
+    "完整留存证据",
+    "Keep originals, context, timestamps, and backups instead of isolated screenshots.",
+    "应保留原始内容、完整上下文、时间信息和安全备份。"
+  );
+  if (/拒绝|refusal/.test(source)) return item(
+    "Record an explicit refusal",
+    "明确拒绝并留痕",
+    "A saved refusal helps show that the conduct was unwanted.",
+    "明确拒绝并保留记录，有助于证明相关行为违背意愿。"
+  );
+  if (/监控|surveillance/.test(source)) return item(
+    "Request footage early",
+    "及时调取监控",
+    "Many systems overwrite footage quickly, so requests should be made early.",
+    "监控常会被循环覆盖，应尽早提出保存和调取申请。"
+  );
+  if (/复议|reconsideration|不予立案/.test(source)) return item(
+    "Review after non-filing",
+    "不立案后的救济",
+    "A written non-filing decision can be challenged through review procedures.",
+    "收到不予立案文书后，可在期限内申请复议或监督。"
+  );
+  if (/投诉|hr|complaint/.test(source)) return item(
+    "Written complaints",
+    "书面投诉留痕",
+    "Written submissions preserve the time, facts, requests, and employer response.",
+    "书面投诉能固定时间、事实、具体诉求和单位回应。"
+  );
+
+  return {
+    title: copyFor(language, "A key response step", "关键应对步骤"),
+    detail: conciseKnowledgeText(simText(language, rule.detail), language),
+  };
+}
+
+function conciseKnowledgeText(text: string, language: AppLanguage): string {
+  const neutral = language === "zh" ? text.replace(/你/g, "当事人") : text.replace(/\byou\b/gi, "a person");
+  const limit = language === "zh" ? 38 : 82;
+  if (neutral.length <= limit) return neutral;
+  const punctuation = language === "zh" ? /[，。；]/ : /[,.;]/;
+  const firstClause = neutral.split(punctuation)[0];
+  return firstClause.length >= 12 && firstClause.length <= limit ? `${firstClause}。` : `${neutral.slice(0, limit - 1)}…`;
+}
+
+function conciseFeedbackTitle(text: string, language: AppLanguage): string {
+  const core = text.split(/——|--|—/)[0].trim();
+  const limit = language === "zh" ? 15 : 34;
+  return core.length <= limit ? core : core.slice(0, limit);
+}
+
+function correctSupportText(language: AppLanguage, rule: SimDebriefRule): string {
+  const source = `${rule.id} ${rule.title.zh} ${rule.detail.zh}`.toLowerCase();
+  if (/还手|对质|confront|retaliat/.test(source)) {
+    return copyFor(language, "Leaving safely is safer than confronting danger", "优先脱离现场，比正面对抗更安全");
+  }
+  if (/现场|scene|改动/.test(source)) {
+    return copyFor(language, "Preserving the scene supports later investigation", "保留原始现场，有助于后续调查取证");
+  }
+  if (/110|报警|police|报案/.test(source)) {
+    return copyFor(language, "A formal report creates a traceable police record", "正式报警能够形成可追踪的警方记录");
+  }
+  if (/安全|safe|庇护|shelter/.test(source)) {
+    return copyFor(language, "Reach safety before handling the next steps", "先到安全地点，再处理后续步骤");
+  }
+  if (/证人|witness|邻居|同事/.test(source)) {
+    return copyFor(language, "Prompt disclosure may help establish witness evidence", "及时告知他人，有助于形成证人证言");
+  }
+  if (/保护令|protection order/.test(source)) {
+    return copyFor(language, "Protection orders may restrict contact and following", "保护令可限制接触、骚扰和跟踪行为");
+  }
+  if (/病历|医院|medical|hospital/.test(source)) {
+    return copyFor(language, "Same-day care records the injury and its timing", "当天就医可以固定伤情和发生时间");
+  }
+  if (/证据|记录|聊天|截图|evidence|record/.test(source)) {
+    return copyFor(language, "Complete originals make evidence more reliable", "完整保留原件，可以提高证据可信度");
+  }
+  const text = simText(language, rule.detail).replace(/你/g, "");
+  return text.slice(0, language === "zh" ? 20 : 48).replace(/[，,；;：:]$/, "");
+}
+
+function scoreTitleForScenario(language: AppLanguage, scenarioId: string): string {
+  if (scenarioId === "sexual-harassment") {
+    return copyFor(
+      language,
+      "Sexual-harassment response · Knowledge score",
+      "性骚扰安全应对 · 知识储备得分"
+    );
+  }
+  if (scenarioId === "sexual-assault") {
+    return copyFor(
+      language,
+      "Post-assault response · Knowledge score",
+      "性侵害后续应对 · 知识储备得分"
+    );
+  }
+  return copyFor(
+    language,
+    "Domestic-violence response · Knowledge score",
+    "家庭暴力安全应对 · 知识储备得分"
+  );
+}
+
+function SimulationResultReport({
   language,
   score,
   scenarioTitle,
+  scenarioTagline,
   endingTitle,
   endingSummary,
-  good,
-  triggeredBad,
-  avoidedBad,
+  summary,
 }: {
   language: AppLanguage;
   score: SimulationScoreResult;
   scenarioTitle: string;
+  scenarioTagline: string;
   endingTitle: string;
   endingSummary: string;
-  good: SimDebriefRule[];
-  triggeredBad: SimDebriefRule[];
-  avoidedBad: SimDebriefRule[];
+  summary: DomesticScoreCardSummary;
 }) {
-  const [openActionPanel, setOpenActionPanel] = useState<"good" | "secondary" | null>(null);
-  const secondaryIsAvoided = triggeredBad.length === 0;
-  const secondaryRules = secondaryIsAvoided ? avoidedBad : triggeredBad;
-  const circumference = 2 * Math.PI * 52;
-  const scoreOffset = circumference * (1 - score.score / 100);
-  const activeBand = RESULT_BANDS.find((band) => band.id === score.band) ?? RESULT_BANDS[0];
-
-  const bandAccent =
-    score.band === "excellent"
-      ? "border-[hsl(var(--domestic-score-excellent)/0.6)] bg-[hsl(var(--domestic-score-excellent)/0.1)] text-[hsl(var(--domestic-score-excellent))]"
-      : score.band === "good"
-      ? "border-[hsl(var(--domestic-score-good)/0.6)] bg-[hsl(var(--domestic-score-good)/0.1)] text-[hsl(var(--domestic-score-good))]"
-      : score.band === "partial"
-      ? "border-[hsl(var(--domestic-score-partial)/0.6)] bg-[hsl(var(--domestic-score-partial)/0.1)] text-[hsl(var(--domestic-score-partial))]"
-      : "border-[hsl(var(--domestic-score-weak)/0.6)] bg-[hsl(var(--domestic-score-weak)/0.1)] text-[hsl(var(--domestic-score-weak))]";
-
   return (
-    <div data-testid="domestic-result-report" className="flex flex-col gap-3">
+    <div data-testid="simulation-result-report" className="flex flex-col gap-3">
       <section className="relative overflow-hidden rounded-2xl border border-primary/25 bg-card p-5">
         <div
           aria-hidden="true"
@@ -602,287 +786,16 @@ function DomesticViolenceResultReport({
         </div>
       </section>
 
-      <section className="rounded-2xl border border-border/80 bg-card p-4">
-        <div className="flex items-center gap-2 text-sm font-bold text-foreground">
-          <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />
-          {copyFor(language, "Your overall score", "你的综合得分")}
-        </div>
-
-        <div className="mt-3 flex items-baseline gap-2">
-          <span
-            data-testid="domestic-score-value"
-            className={`font-mono text-6xl font-black tabular-nums ${activeBand.textClass}`}
-          >
-            {score.score}
-          </span>
-          <span className="font-mono text-lg font-semibold tabular-nums text-muted-foreground">/ 100</span>
-        </div>
-        <span className={`mt-2 inline-flex rounded-full border px-3 py-1 text-sm font-bold ${bandAccent}`}>
-          {simText(language, score.label)}
-        </span>
-
-        <div className="mt-5 grid grid-cols-[minmax(0,1fr)_6.75rem] items-center gap-3">
-          <div className="relative mx-auto flex h-36 w-36 items-center justify-center min-[390px]:h-44 min-[390px]:w-44">
-            <svg
-              viewBox="0 0 120 120"
-              className="h-full w-full -rotate-90"
-              role="img"
-              aria-label={copyFor(language, `Score ${score.score} out of 100`, `得分 ${score.score}，满分 100`)}
-            >
-              <defs>
-                <linearGradient id="domestic-score-gradient" x1="0" y1="1" x2="1" y2="0">
-                  <stop offset="0%" stopColor="hsl(var(--domestic-score-excellent))" />
-                  <stop offset="42%" stopColor="hsl(var(--domestic-score-good))" />
-                  <stop offset="72%" stopColor="hsl(var(--domestic-score-partial))" />
-                  <stop offset="100%" stopColor="hsl(var(--domestic-score-weak))" />
-                </linearGradient>
-                <filter id="domestic-score-glow" x="-30%" y="-30%" width="160%" height="160%">
-                  <feGaussianBlur stdDeviation="2" result="glow" />
-                  <feMerge>
-                    <feMergeNode in="glow" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-              </defs>
-              <circle cx="60" cy="60" r="52" fill="none" stroke="hsl(var(--border))" strokeWidth="6" />
-              <circle
-                data-testid="domestic-score-gradient-progress"
-                cx="60"
-                cy="60"
-                r="52"
-                fill="none"
-                stroke="url(#domestic-score-gradient)"
-                strokeWidth="7"
-                strokeLinecap="round"
-                strokeDasharray={circumference}
-                strokeDashoffset={scoreOffset}
-                filter="url(#domestic-score-glow)"
-              />
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <img
-                src="/the-unmuted-mark.png"
-                alt=""
-                aria-hidden="true"
-                width="72"
-                height="72"
-                className="h-16 w-16 object-contain drop-shadow-[0_0_18px_hsl(var(--primary)/0.3)]"
-              />
-            </div>
-          </div>
-
-          <ol className="flex flex-col gap-2">
-            {RESULT_BANDS.map((band) => {
-              const active = band.id === score.band;
-              return (
-                <li
-                  key={band.id}
-                  className={`border-l pl-3 text-xs leading-4 ${band.borderClass} ${
-                    active ? "opacity-100" : "opacity-60"
-                  }`}
-                >
-                  <span className={`block font-mono tabular-nums ${band.textClass}`}>{band.range}</span>
-                  <span className={`mt-0.5 block font-bold ${band.textClass}`}>
-                    {simText(language, band.label)}
-                  </span>
-                </li>
-              );
-            })}
-          </ol>
-        </div>
-      </section>
-
-      <div className="grid grid-cols-2 items-stretch gap-3">
-        <ResultActionSummary
-          title={copyFor(language, `What you did right (${good.length})`, `你做对了（${good.length}）`)}
-          tone="good"
-          open={openActionPanel === "good"}
-          onToggle={() => setOpenActionPanel((current) => current === "good" ? null : "good")}
-        />
-        <ResultActionSummary
-          title={
-            secondaryIsAvoided
-              ? copyFor(
-                  language,
-                  `Risks you avoided this time (${avoidedBad.length})`,
-                  `这次你避开的风险（${avoidedBad.length}）`
-                )
-              : copyFor(
-                  language,
-                  `Where things went wrong (${triggeredBad.length})`,
-                  `这次出了问题的环节（${triggeredBad.length}）`
-                )
-          }
-          tone={secondaryIsAvoided ? "avoided" : "improve"}
-          open={openActionPanel === "secondary"}
-          onToggle={() => setOpenActionPanel((current) => current === "secondary" ? null : "secondary")}
-        />
-
-        {openActionPanel && (
-          <section
-            className={`col-span-2 rounded-2xl border p-4 ${
-              openActionPanel === "good"
-                ? "border-primary/25 bg-primary/5"
-                : secondaryIsAvoided
-                ? "border-amber-400/25 bg-amber-400/5"
-                : "border-rose-400/25 bg-rose-400/5"
-            }`}
-            data-testid="domestic-action-details"
-          >
-            <div className="flex flex-col gap-3">
-              {(openActionPanel === "good" ? good : secondaryRules).map((rule) => (
-                <DebriefCard
-                  key={rule.id}
-                  rule={rule}
-                  language={language}
-                  avoided={openActionPanel === "secondary" && secondaryIsAvoided}
-                  goodAccent="pink"
-                />
-              ))}
-            </div>
-          </section>
-        )}
-      </div>
+      <ScoreCard
+        language={language}
+        score={score}
+        scenarioTitle={scenarioTitle}
+        scenarioTagline={scenarioTagline}
+        endingTitle={endingTitle}
+        variant="domestic-report"
+        summary={summary}
+      />
     </div>
-  );
-}
-
-function ResultActionSummary({
-  title,
-  tone,
-  open,
-  onToggle,
-}: {
-  title: string;
-  tone: "good" | "improve" | "avoided";
-  open: boolean;
-  onToggle: () => void;
-}) {
-  const toneClass =
-    tone === "good"
-      ? "border-primary/25 bg-primary/5 text-primary"
-      : tone === "improve"
-      ? "border-rose-400/25 bg-rose-400/5 text-rose-300"
-      : "border-amber-400/25 bg-amber-400/5 text-amber-300";
-
-  const Icon = tone === "good" ? CheckCircle2 : tone === "improve" ? AlertTriangle : ShieldCheck;
-
-  return (
-    <section className={`flex min-w-0 flex-col rounded-2xl border p-3 ${toneClass}`}>
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={open}
-        className="flex min-h-10 w-full items-start justify-between gap-1 rounded-lg text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card active:translate-y-px"
-      >
-        <span className="flex min-w-0 items-start gap-2">
-          <Icon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-          <span className="text-[11px] font-black leading-4 text-foreground min-[390px]:text-xs">{title}</span>
-        </span>
-        {open ? (
-          <ChevronUp className="h-4 w-4 shrink-0" aria-hidden="true" />
-        ) : (
-          <ChevronDown className="h-4 w-4 shrink-0" aria-hidden="true" />
-        )}
-      </button>
-    </section>
-  );
-}
-
-function DomesticResultImageSection({
-  language,
-  score,
-  scenarioTitle,
-  scenarioTagline,
-  endingTitle,
-  good,
-  triggeredBad,
-  avoidedBad,
-}: {
-  language: AppLanguage;
-  score: SimulationScoreResult;
-  scenarioTitle: string;
-  scenarioTagline: string;
-  endingTitle: string;
-  good: SimDebriefRule[];
-  triggeredBad: SimDebriefRule[];
-  avoidedBad: SimDebriefRule[];
-}) {
-  const [open, setOpen] = useState(false);
-  const topGood = pickTop(score.breakdown, "good", 2).map((item) => shortLabelFor(item.flag, language));
-  const topBad = pickTop(score.breakdown, "bad", 2).map((item) => shortLabelFor(item.flag, language));
-  const primaryItems = topGood.length > 0
-    ? topGood
-    : good.slice(0, 2).map((rule) => simText(language, rule.title));
-  const improvementItems = topBad.length > 0
-    ? topBad
-    : triggeredBad.slice(0, 2).map((rule) => simText(language, rule.title));
-  const secondaryIsAvoided = improvementItems.length === 0;
-  const secondaryItems = secondaryIsAvoided
-    ? avoidedBad.slice(0, 2).map((rule) => simText(language, rule.title))
-    : improvementItems;
-  const summary: DomesticScoreCardSummary = {
-    primaryTitle: copyFor(language, `What you did right (${good.length})`, `你做对了（${good.length}）`),
-    primaryCount: good.length,
-    primaryItems,
-    secondaryTitle: secondaryIsAvoided
-      ? copyFor(
-          language,
-          `Risks you avoided this time (${avoidedBad.length})`,
-          `这次你避开的风险（${avoidedBad.length}）`
-        )
-      : copyFor(
-          language,
-          `Where things went wrong (${triggeredBad.length})`,
-          `这次出了问题的环节（${triggeredBad.length}）`
-        ),
-    secondaryCount: secondaryIsAvoided ? avoidedBad.length : triggeredBad.length,
-    secondaryItems,
-    secondaryTone: secondaryIsAvoided ? "avoided" : "improve",
-  };
-
-  return (
-    <section className="rounded-2xl border border-border/70 bg-card p-4">
-      <button
-        type="button"
-        onClick={() => setOpen((value) => !value)}
-        aria-expanded={open}
-        className="flex w-full items-center justify-between gap-3 rounded-xl text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
-      >
-        <span className="flex items-center gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <Share2 className="h-5 w-5" aria-hidden="true" />
-          </span>
-          <span>
-            <span className="block text-sm font-bold text-foreground">
-              {copyFor(language, "Save the shareable result card", "保存可分享的结果卡片")}
-            </span>
-            <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">
-              {copyFor(language, "Open the image, then long-press to save.", "展开图片后，长按即可保存。")}
-            </span>
-          </span>
-        </span>
-        {open ? (
-          <ChevronUp className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
-        ) : (
-          <ChevronDown className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
-        )}
-      </button>
-
-      {open && (
-        <div className="mt-4 border-t border-border/70 pt-4">
-          <ScoreCard
-            language={language}
-            score={score}
-            scenarioTitle={scenarioTitle}
-            scenarioTagline={scenarioTagline}
-            endingTitle={endingTitle}
-            variant="domestic-report"
-            summary={summary}
-          />
-        </div>
-      )}
-    </section>
   );
 }
 
@@ -1088,8 +1001,12 @@ function ScoreCard({
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState(false);
-  const primaryItemsKey = summary?.primaryItems.join("\u001f") ?? "";
-  const secondaryItemsKey = summary?.secondaryItems.join("\u001f") ?? "";
+  const correctItemsKey = summary?.correctItems
+    .map((item) => `${item.title}\u001e${item.detail ?? ""}`)
+    .join("\u001f") ?? "";
+  const educationItemsKey = summary?.educationItems
+    .map((item) => `${item.title}\u001e${item.detail ?? ""}`)
+    .join("\u001f") ?? "";
 
   // Auto-generate the image on mount
   useEffect(() => {
@@ -1130,13 +1047,15 @@ function ScoreCard({
     scenarioTagline,
     endingTitle,
     variant,
-    summary?.primaryTitle,
-    summary?.primaryCount,
-    primaryItemsKey,
-    summary?.secondaryTitle,
-    summary?.secondaryCount,
-    secondaryItemsKey,
-    summary?.secondaryTone,
+    summary?.scoreTitle,
+    summary?.shareHint,
+    summary?.correctTitle,
+    correctItemsKey,
+    summary?.educationTitle,
+    educationItemsKey,
+    summary?.qrLabel,
+    summary?.sceneTipTitle,
+    summary?.sceneTip,
   ]);
 
   if (busy) {
@@ -1160,20 +1079,12 @@ function ScoreCard({
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <p className="text-center text-xs font-bold text-foreground">
-        {copyFor(
-          language,
-          "👇 Long-press the image to save to your album",
-          "👇 长按下方图片，保存到相册"
-        )}
-      </p>
-      <img
-        src={imageUrl}
-        alt={copyFor(language, "Result card", "结果卡片")}
-        className="w-full rounded-2xl"
-      />
-    </div>
+    <img
+      data-testid="shareable-score-card"
+      src={imageUrl}
+      alt={copyFor(language, "Result card", "结果卡片")}
+      className="shareable-score-card w-full rounded-2xl"
+    />
   );
 }
 

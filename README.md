@@ -99,8 +99,8 @@ A scripted, chat-style simulator that walks users through the real legal process
 
 #### 完成流程后 | After Each Run
 
-- **📊 Shareable result card** — A 1080×1920 image is auto-generated with your knowledge-preparation score (0-100), decision stats, current situation summary, encouraging headline, and a QR code linking to the beta. Long-press to save to your photos, then share.
-- **📊 可分享的结果卡片** — 自动生成 1080×1920 图片，包含你的知识准备分数（0-100）、决策统计、本次情景总结、鼓励语，以及扫码体验的二维码。长按保存到相册即可分享。
+- **📊 Shareable result card** — A compact 1080×1020 image appears after every run with a scenario-specific knowledge score, optically centered logo, exact glowing progress ring, beta QR code, and one path-specific educational tip. Long-press to save.
+- **📊 可分享的结果卡片** — 每次完成后直接显示固定尺寸的 1080×1020 图片，包含对应情景的知识储备得分、视觉居中的 Logo、精确发光进度环、内测二维码，以及一条随场景和答题路径选择的科普小 Tip。长按即可保存。
 - **🎯 4-tier scoring** — 准备充分 (80+) / 基本准备 (60-79) / 部分准备 (40-59) / 需要加强 (0-39). Weighted by real-case impact.
 - **📖 Collapsible detailed analysis** — Click "查看具体分析" to expand: what you did right, what went wrong, what risks you avoided, legal tips from your path, real process (10 steps), and 14-16 term glossary.
 - **📖 折叠式详细分析** — 点击「查看具体分析」展开：你做对了什么、这次出问题的环节、这次你避开的风险、本次流程中的法律提示、真实流程（10 步）、名词解释（14-16 个）。全部可折叠。
