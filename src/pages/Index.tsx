@@ -12,6 +12,10 @@ import FeedbackWidget from "@/components/FeedbackWidget";
 import { QuickExitButton } from "@/components/QuickExit";
 import DemoWelcome from "@/components/DemoWelcome";
 import WeChatGroupButton from "@/components/WeChatGroupButton";
+import WelcomeFeedbackDialog, {
+  hasSeenWelcomePopup,
+  markWelcomePopupSeen,
+} from "@/components/WelcomeFeedbackDialog";
 import { setSessionMasterKey } from "@/lib/keyVaultService";
 import { initDemoSessionKey, seedDemoRecordsIfEmpty } from "@/lib/demoVault";
 
@@ -28,6 +32,7 @@ export default function Index() {
   const { isSilent, voiceDeterrent, customAudioUrl } = useSilentMode();
   const [entered, setEntered] = useState(false);
   const [autoLocked, setAutoLocked] = useState(false);
+  const [welcomePopupOpen, setWelcomePopupOpen] = useState(false);
 
   // Demo: initialize the session master key on app load so uploads work
   // without any password. Vault-password gates in EvidencePage still ask for
@@ -41,6 +46,16 @@ export default function Index() {
     await seedDemoRecordsIfEmpty();
     setAutoLocked(false);
     setEntered(true);
+    // First-time visitors: show the "how to give feedback" popup once.
+    // Auto-locked returning sessions skip it (they've already seen it).
+    if (!hasSeenWelcomePopup()) {
+      setWelcomePopupOpen(true);
+    }
+  };
+
+  const handleWelcomePopupChange = (next: boolean) => {
+    setWelcomePopupOpen(next);
+    if (!next) markWelcomePopupSeen();
   };
 
   // Auto-lock in demo just re-shows the welcome screen. No session state to
@@ -122,6 +137,11 @@ export default function Index() {
           <BottomNav activeTab={activeTab} onTabChange={setActiveTab} language={language} />
         </>
       )}
+      <WelcomeFeedbackDialog
+        open={welcomePopupOpen}
+        onOpenChange={handleWelcomePopupChange}
+        language={language}
+      />
     </div>
   );
 }
