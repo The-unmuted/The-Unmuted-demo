@@ -26,6 +26,7 @@ import {
 } from "@/lib/aidDirectory";
 import { CHINA_CITIES, ChinaCity, cityMatchesQuery } from "@/data/chinaCities";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { openFeedbackWidget } from "@/components/FeedbackWidget";
 
 export default function AidResourceList({
   category,
@@ -56,6 +57,10 @@ export default function AidResourceList({
         onChange={setCity}
         language={language}
       />
+
+      {/* Submit-a-local-resource CTA — kept next to the city picker so it
+          is discoverable while the user is deciding what city to view. */}
+      <SubmitLocalCTA language={language} city={city} category={category} />
 
       {/* When a city is selected but not yet in our directory */}
       {city && !cityIsCovered && (
@@ -98,9 +103,6 @@ export default function AidResourceList({
           ))}
         </div>
       )}
-
-      {/* Submit-a-local-resource CTA */}
-      <SubmitLocalCTA language={language} city={city} category={category} />
     </div>
   );
 }
@@ -339,41 +341,57 @@ function SubmitLocalCTA({
   city: ChinaCity | null;
   category: AidCategory;
 }) {
-  const subject = copyFor(
-    language,
-    `The Unmuted · Local resource submission${city ? ` — ${city.nameEn}` : ""}`,
-    `非默 · 本地资源提交${city ? ` — ${city.name}` : ""}`,
-  );
-  const bodyLines = [
-    copyFor(language, "City:", "城市："),
-    copyFor(
-      language,
-      `Category: ${category === "psych" ? "mental health" : "legal aid"}`,
-      `类别：${category === "psych" ? "心理" : "法律援助"}`,
-    ),
-    copyFor(language, "Name of the service:", "机构/热线名称："),
-    copyFor(language, "Phone / hotline:", "电话："),
-    copyFor(language, "Hours:", "服务时间："),
-    copyFor(language, "How to reach / address:", "联系方式或地址："),
-    copyFor(language, "Source (official website or news article):", "来源（官网或新闻链接）："),
-    copyFor(language, "Any notes for us:", "备注："),
-  ];
-  const mailto = `mailto:katielin0207@gmail.com?subject=${encodeURIComponent(
-    subject,
-  )}&body=${encodeURIComponent(bodyLines.join("\n\n"))}`;
+  const handleClick = () => {
+    const cityLabelZh = city ? city.name : "（请填写你所在的城市）";
+    const cityLabelEn = city ? city.nameEn : "(please fill in your city)";
+    const categoryZh = category === "psych" ? "心理" : "法律援助";
+    const categoryEn = category === "psych" ? "Mental health" : "Legal aid";
+
+    const templateZh =
+      `【本地援助资源推荐】\n\n` +
+      `城市：${cityLabelZh}\n` +
+      `类别：${categoryZh}\n` +
+      `机构/热线名称：\n` +
+      `电话：\n` +
+      `服务时间：\n` +
+      `联系方式或地址：\n` +
+      `来源（官网或新闻链接）：\n` +
+      `备注：`;
+
+    const templateEn =
+      `[Local aid resource submission]\n\n` +
+      `City: ${cityLabelEn}\n` +
+      `Category: ${categoryEn}\n` +
+      `Name of the service:\n` +
+      `Phone / hotline:\n` +
+      `Hours:\n` +
+      `How to reach / address:\n` +
+      `Source (official website or news article):\n` +
+      `Notes for us:`;
+
+    openFeedbackWidget({
+      type: "other",
+      message: copyFor(language, templateEn, templateZh),
+    });
+  };
 
   return (
-    <a
-      href={mailto}
-      className="flex items-center justify-center gap-2 rounded-2xl border border-dashed border-border/70 bg-secondary/30 px-4 py-3 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
+    <button
+      type="button"
+      onClick={handleClick}
+      className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-primary/40 bg-primary/5 px-4 py-3 text-xs font-semibold text-primary transition-colors hover:bg-primary/10 active:scale-[0.99]"
     >
       <Mail className="h-3.5 w-3.5" />
       {copyFor(
         language,
-        "Know a verified local hotline? Send it to us.",
-        "你知道本市可用的热线？告诉我们",
+        city
+          ? `Know a verified hotline in ${city.nameEn}? Tell us`
+          : "Know a verified local hotline? Tell us",
+        city
+          ? `你知道 ${city.name} 可用的热线？告诉我们`
+          : "你知道本市可用的热线？告诉我们",
       )}
-    </a>
+    </button>
   );
 }
 
