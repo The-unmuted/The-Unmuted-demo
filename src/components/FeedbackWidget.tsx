@@ -1,9 +1,18 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Mail, X, Send, CheckCircle2, Loader2 } from "lucide-react";
 import { copyFor } from "@/lib/locale";
 import { supabase } from "@/lib/supabaseClient";
 
 type FeedbackType = "bug" | "suggestion" | "other";
+
+// Any component can open the widget with a prefilled message by dispatching
+// this event, e.g. from the aid page's "submit a local hotline" box.
+const OPEN_EVENT = "unmuted:open-feedback";
+
+export function openFeedbackWidget(options?: { type?: FeedbackType; message?: string }) {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent(OPEN_EVENT, { detail: options ?? {} }));
+}
 
 interface FeedbackWidgetProps {
   language: "en" | "zh";
@@ -14,6 +23,18 @@ export default function FeedbackWidget({ language }: FeedbackWidgetProps) {
   const [type, setType] = useState<FeedbackType>("suggestion");
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
+
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const detail = (event as CustomEvent<{ type?: FeedbackType; message?: string }>).detail ?? {};
+      setType(detail.type ?? "suggestion");
+      setMessage(detail.message ?? "");
+      setStatus("idle");
+      setOpen(true);
+    };
+    window.addEventListener(OPEN_EVENT, handler as EventListener);
+    return () => window.removeEventListener(OPEN_EVENT, handler as EventListener);
+  }, []);
 
   const typeLabels: Record<FeedbackType, { en: string; zh: string }> = {
     bug:        { en: "Bug",        zh: "问题" },
