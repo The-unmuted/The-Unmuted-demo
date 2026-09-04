@@ -385,6 +385,17 @@ function EndingView({
             </div>
           )}
 
+          {/* Reordered 2026-09-03 per Wendy feedback: Real-flow + Glossary
+              are the most universally valuable sections, so they render
+              FIRST. Personal debrief (good / bad / avoided) and coach
+              legal tips follow. All three scenarios share this order. */}
+
+          <RealFlowSection language={language} steps={scenario.realFlow} />
+
+          {scenario.glossary && scenario.glossary.length > 0 && (
+            <GlossarySection language={language} terms={scenario.glossary} />
+          )}
+
           {isDomesticViolence ? (
             <h2 className="px-1 text-sm font-bold text-foreground">
               {copyFor(language, "Legal tips and practical guidance", "法律提示与实用指引")}
@@ -447,12 +458,6 @@ function EndingView({
 
           {coachHints.length > 0 && (
             <CoachHintsSection language={language} hints={coachHints} />
-          )}
-
-          <RealFlowSection language={language} steps={scenario.realFlow} />
-
-          {scenario.glossary && scenario.glossary.length > 0 && (
-            <GlossarySection language={language} terms={scenario.glossary} />
           )}
         </div>
       )}
