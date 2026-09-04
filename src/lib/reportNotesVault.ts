@@ -13,6 +13,10 @@ export type EncryptedReportNoteRecord = {
   createdAt: number;
 };
 
+export type DecryptedReportNoteRecord = EncryptedReportNoteRecord & {
+  notes: Record<string, string>;
+};
+
 const DB_NAME = "the_unmuted_report_notes_keys";
 const DB_VERSION = 1;
 const KEY_STORE = "keys";
@@ -26,6 +30,15 @@ function bufferToBase64(buffer: ArrayBuffer | Uint8Array) {
     binary += String.fromCharCode(byte);
   });
   return btoa(binary);
+}
+
+function base64ToBytes(base64: string) {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
 }
 
 function toHex(buffer: ArrayBuffer | ArrayBufferLike) {
@@ -161,4 +174,31 @@ export async function saveEncryptedReportNotes(
 
 export function loadEncryptedReportNotes() {
   return readEncryptedNotes();
+}
+
+export function deleteEncryptedReportNote(id: string) {
+  writeEncryptedNotes(readEncryptedNotes().filter((record) => record.id !== id));
+}
+
+export async function decryptReportNoteRecord(
+  record: EncryptedReportNoteRecord
+): Promise<DecryptedReportNoteRecord> {
+  const key = await getStoredNotesKey();
+  if (!key) {
+    throw new Error("NOTES_KEY_MISSING");
+  }
+
+  const decrypted = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv: base64ToBytes(record.iv) },
+    key,
+    base64ToBytes(record.encryptedPayload)
+  );
+  const payload = JSON.parse(new TextDecoder().decode(decrypted)) as {
+    notes?: Record<string, string>;
+  };
+
+  return {
+    ...record,
+    notes: payload.notes ?? {},
+  };
 }

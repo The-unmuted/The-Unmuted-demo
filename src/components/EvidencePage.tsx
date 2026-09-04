@@ -11,7 +11,15 @@ import { toast } from "sonner";
 import { useEvidenceVault } from "@/hooks/useEvidenceVault";
 import { formatBytes } from "@/lib/evidenceCrypto";
 import { AppLanguage, copyFor } from "@/lib/locale";
-import { hasReportNotes, saveEncryptedReportNotes, type EncryptedReportNoteRecord } from "@/lib/reportNotesVault";
+import {
+  deleteEncryptedReportNote,
+  decryptReportNoteRecord,
+  hasReportNotes,
+  loadEncryptedReportNotes,
+  saveEncryptedReportNotes,
+  type DecryptedReportNoteRecord,
+  type EncryptedReportNoteRecord,
+} from "@/lib/reportNotesVault";
 import { unlockWithPassword, getSessionMasterKey, type UnlockFailureReason } from "@/lib/keyVaultService";
 // DEMO branch: swapped to demoVault (IndexedDB-only, hardcoded master key).
 import {
@@ -52,6 +60,83 @@ function getMimeIcon(mime: string) {
 
 function copyToClipboard(text: string, language: AppLanguage) {
   navigator.clipboard.writeText(text).then(() => toast.success(copyFor(language, "Copied", "已复制")));
+}
+
+function createTextDownload(text: string, filename: string) {
+  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+
+  return { filename, url };
+}
+
+function triggerDownload(url: string, filename: string) {
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = filename;
+  link.rel = "noopener";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
+
+function formatReceiptTimestamp(createdAt: number) {
+  const date = new Date(createdAt);
+  const pad = (value: number) => String(value).padStart(2, "0");
+
+  return [
+    date.getFullYear(),
+    pad(date.getMonth() + 1),
+    pad(date.getDate()),
+    pad(date.getHours()),
+    pad(date.getMinutes()),
+    pad(date.getSeconds()),
+  ].join("");
+}
+
+function createEncryptedReportNotesReceiptDownload({
+  record,
+  situation,
+  fields,
+  language,
+}: {
+  record: EncryptedReportNoteRecord;
+  situation: SituationGuide;
+  fields: ReportNoteField[];
+  language: AppLanguage;
+}) {
+  const filename = `非默本地加密存证回执-${formatReceiptTimestamp(record.createdAt)}-${record.id.slice(0, 8)}.txt`;
+  const fieldLabels = fields.map((field) => copyFor(language, field.labelEn, field.labelZh));
+  const lines = [
+    copyFor(language, "The Unmuted · Local Encrypted Notes Receipt", "非默 · 本地加密存证回执"),
+    "",
+    copyFor(
+      language,
+      "This is a demo local receipt. The note text is encrypted and is not shown here in plain text.",
+      "本文件为 demo 阶段的本地回执。填写内容已加密，不在此文件中明文展示。"
+    ),
+    "",
+    `${copyFor(language, "Saved at", "保存时间")}：${new Date(record.createdAt).toLocaleString(language === "zh" ? "zh-CN" : "en-US")}`,
+    `${copyFor(language, "Scene", "场景")}：${copyFor(language, situation.titleEn, situation.titleZh)}`,
+    `${copyFor(language, "Saved fields", "已保存字段")}：${fieldLabels.join("、")}`,
+    `${copyFor(language, "Saved count", "保存项数")}：${record.noteCount}`,
+    "",
+    `${copyFor(language, "Encryption", "加密方式")}：AES-GCM-256`,
+    `${copyFor(language, "Record ID", "记录编号")}：${record.id}`,
+    `${copyFor(language, "Encrypted hash SHA-256", "加密内容指纹 SHA-256")}：${record.encryptedHash}`,
+    `${copyFor(language, "IV", "加密 IV")}：${record.iv}`,
+    "",
+    copyFor(language, "Encrypted payload:", "加密内容："),
+    record.encryptedPayload,
+    "",
+    copyFor(
+      language,
+      "Keep this file together with your app records. It is only a demo receipt and is not legal advice.",
+      "请将本文件与 App 内存证记录一起保存。本文件仅为 demo 回执，不构成法律意见。"
+    ),
+  ];
+
+  return createTextDownload(lines.join("\n"), filename);
 }
 
 function GradeBadge({ grade, language }: { grade: 1 | 2; language: AppLanguage }) {
@@ -411,8 +496,8 @@ function ReceiptCard({
           <p className="text-[11px] leading-4 text-muted-foreground">
             {copyFor(
               language,
-              "Locked and saved to your cloud vault. Even if this phone is lost, sign in with your email and password to get it back. Nobody else can open it — not even us.",
-              "已加密保存到你的云端保险柜。就算手机丢了，用邮箱和密码登录就能找回。除了你，任何人都打不开——包括我们。"
+              "Locked and saved to your encrypted vault. Nobody else can open it — not even us.",
+              "已加密保存到你的加密保险柜。除了你，任何人都打不开——包括我们。"
             )}
           </p>
         </div>
@@ -422,8 +507,8 @@ function ReceiptCard({
           <p className="text-[11px] leading-4 text-amber-400/90">
             {copyFor(
               language,
-              "No internet right now — saved on this phone, locked. It will upload to your cloud vault automatically when you're back online.",
-              "现在没有网络——已加密存在这台手机上。等有网络时会自动上传到你的云端保险柜。"
+              "No internet right now — saved on this phone, locked. It can sync when the vault connection is available.",
+              "现在没有网络——已加密存在这台手机上。等保险柜连接可用时可继续同步。"
             )}
           </p>
         </div>
@@ -657,6 +742,7 @@ export default function EvidencePage({
   // Notes sub-view state
   const [selectedSituation, setSelectedSituation] = useState<SituationId>("memory-gap");
   const [reportNotes, setReportNotes] = useState<ReportNotes>(() => emptyReportNotes());
+  const [noteRecords, setNoteRecords] = useState<EncryptedReportNoteRecord[]>(() => loadEncryptedReportNotes());
 
   const [showRecovery, setShowRecovery] = useState(false);
   const [captureQueue, setCaptureQueue] = useState<QueuedCapture[]>([]);
@@ -665,9 +751,14 @@ export default function EvidencePage({
   useEffect(() => {
     if (view !== "records") return;
     void vault.refreshHistory();
+    setNoteRecords(loadEncryptedReportNotes());
     if (vault.canUseVault) void vault.syncNow();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view, vault.canUseVault]);
+
+  const refreshNoteRecords = useCallback(() => {
+    setNoteRecords(loadEncryptedReportNotes());
+  }, []);
 
   const goHub = useCallback(() => {
     if (vault.step !== "idle") vault.reset();
@@ -1057,7 +1148,7 @@ export default function EvidencePage({
                 status={vault.steps.encrypting}
               />
               <StepRow
-                label={copyFor(language, "Saving to your cloud vault", "存入你的云端保险柜")}
+                label={copyFor(language, "Saving to your encrypted vault", "存入你的加密保险柜")}
                 sublabel={copyFor(language, "Only the locked file is stored. No one can open it but you.", "只保存加密后的文件，除了你没有人能打开")}
                 status={vault.steps.saving}
               />
@@ -1123,6 +1214,7 @@ export default function EvidencePage({
           onSituationChange={handleSituationChange}
           notes={reportNotes}
           onNotesChange={setReportNotes}
+          onSaved={refreshNoteRecords}
           language={language}
         />
       </div>
@@ -1158,7 +1250,7 @@ export default function EvidencePage({
         />
       ) : (
         <>
-          {vault.history.length === 0 && vault.legacyHistory.length === 0 ? (
+          {vault.history.length === 0 && vault.legacyHistory.length === 0 && noteRecords.length === 0 ? (
             <div className="rounded-2xl border border-border/60 bg-card/50 p-6 text-center">
               <ShieldCheck className="mx-auto mb-2 h-8 w-8 text-primary/40" />
               <p className="text-sm text-muted-foreground">
@@ -1167,10 +1259,12 @@ export default function EvidencePage({
             </div>
           ) : (
             <>
-              {vault.history.length > 0 && vault.userId && (
+              {(vault.history.length > 0 || noteRecords.length > 0) && (
                 <CloudVaultHistory
                   records={vault.history}
-                  userId={vault.userId}
+                  noteRecords={noteRecords}
+                  onNoteRecordsChange={refreshNoteRecords}
+                  userId={vault.userId ?? "demo"}
                   onOpen={vault.openFile}
                   onDelete={vault.deleteRecord}
                   onUnlocked={() => void vault.refreshHistory()}
@@ -1204,19 +1298,28 @@ function ReportGuidanceCard({
   onSituationChange,
   notes,
   onNotesChange,
+  onSaved,
   language,
 }: {
   selectedSituation: SituationId;
   onSituationChange: (situation: SituationId) => void;
   notes: ReportNotes;
   onNotesChange: React.Dispatch<React.SetStateAction<ReportNotes>>;
+  onSaved: () => void;
   language: AppLanguage;
 }) {
   const selected = getSituationGuide(selectedSituation);
   const fields = REPORT_NOTE_FIELDS[selectedSituation];
   const [savingNotes, setSavingNotes] = useState(false);
   const [savedRecord, setSavedRecord] = useState<EncryptedReportNoteRecord | null>(null);
+  const [receiptDownload, setReceiptDownload] = useState<{ filename: string; url: string } | null>(null);
   const canSave = hasReportNotes(notes);
+
+  useEffect(() => {
+    return () => {
+      if (receiptDownload) URL.revokeObjectURL(receiptDownload.url);
+    };
+  }, [receiptDownload]);
 
   const handleSaveNotes = async () => {
     if (!canSave) {
@@ -1227,7 +1330,20 @@ function ReportGuidanceCard({
     setSavingNotes(true);
     try {
       const record = await saveEncryptedReportNotes(selectedSituation, notes);
+      const savedFields = fields.filter((field) => (notes[field.id] ?? "").trim().length > 0);
+      const nextReceipt = createEncryptedReportNotesReceiptDownload({
+        record,
+        situation: selected,
+        fields: savedFields,
+        language,
+      });
+      setReceiptDownload((current) => {
+        if (current) URL.revokeObjectURL(current.url);
+        return nextReceipt;
+      });
+      triggerDownload(nextReceipt.url, nextReceipt.filename);
       setSavedRecord(record);
+      onSaved();
       toast.success(copyFor(language, "Encrypted notes saved on this device.", "填写内容已加密保存在本机。"));
     } catch (error) {
       if (error instanceof Error && error.message === "EMPTY_NOTES") {
@@ -1364,8 +1480,8 @@ function ReportGuidanceCard({
               {savedRecord
                 ? copyFor(
                     language,
-                    `Saved ${savedRecord.noteCount} encrypted notes on this device.`,
-                    `已在本机加密保存 ${savedRecord.noteCount} 项内容。`
+                    `Saved ${savedRecord.noteCount} encrypted notes. View them in Evidence Records.`,
+                    `已加密保存 ${savedRecord.noteCount} 项内容，可在存证记录中查看。`
                   )
                 : copyFor(
                     language,
@@ -1374,6 +1490,7 @@ function ReportGuidanceCard({
                   )}
             </span>
           </div>
+
         </div>
       </div>
     </section>
@@ -1417,8 +1534,8 @@ function HowItWorksDisclosure({
     ],
     [
       "☁️",
-      copyFor(language, "Private cloud vault", "云端保险柜"),
-      copyFor(language, "Encrypted files go into your private vault — the cloud only ever sees sealed content.", "加密后的文件存入你的私人保险柜，云端只能看到加密后的内容"),
+      copyFor(language, "Encrypted vault", "加密保险柜"),
+      copyFor(language, "Encrypted files go into your private vault. Demo data stays in this browser.", "加密后的文件存入你的私人保险柜；demo 数据保存在当前浏览器。"),
     ],
     [
       "🕒",
@@ -1561,9 +1678,12 @@ function LegalTipsDisclosure({
 }
 
 type VaultActionKind = "open" | "export" | "delete";
+type NoteVaultActionKind = "open" | "export" | "delete";
 
 function CloudVaultHistory({
   records,
+  noteRecords,
+  onNoteRecordsChange,
   userId,
   onOpen,
   onDelete,
@@ -1571,6 +1691,8 @@ function CloudVaultHistory({
   language,
 }: {
   records: EvidenceRecord[];
+  noteRecords: EncryptedReportNoteRecord[];
+  onNoteRecordsChange: () => void;
   userId: string;
   onOpen: (record: EvidenceRecord) => Promise<Blob | null>;
   onDelete: (record: EvidenceRecord) => Promise<boolean>;
@@ -1587,6 +1709,9 @@ function CloudVaultHistory({
   const [pendingAction, setPendingAction] = useState<
     { txId: string; kind: VaultActionKind; stage: "vault-pwd" | "delete-confirm" | "export-pwd" } | null
   >(null);
+  const [pendingNoteAction, setPendingNoteAction] = useState<
+    { id: string; kind: NoteVaultActionKind; stage: "vault-pwd" | "delete-confirm" | "export-pwd" } | null
+  >(null);
   const [pwd, setPwd] = useState("");
   const [showPwd, setShowPwd] = useState(false);
   const [verifying, setVerifying] = useState(false);
@@ -1595,6 +1720,11 @@ function CloudVaultHistory({
   const [exportPwdConfirm, setExportPwdConfirm] = useState("");
   const [showExportPwd, setShowExportPwd] = useState(false);
   const [exportPwdError, setExportPwdError] = useState<string | null>(null);
+  const [openingNoteId, setOpeningNoteId] = useState<string | null>(null);
+  const [exportingNoteId, setExportingNoteId] = useState<string | null>(null);
+  const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
+  const [openNote, setOpenNote] = useState<DecryptedReportNoteRecord | null>(null);
+  const [openGuideId, setOpenGuideId] = useState<string | null>(null);
 
   const requestAction = (record: EvidenceRecord, kind: VaultActionKind) => {
     // D-039: view (open) and export always require the vault password, even if
@@ -1611,8 +1741,19 @@ function CloudVaultHistory({
     setPwdError(null);
   };
 
+  const requestNoteAction = (record: EncryptedReportNoteRecord, kind: NoteVaultActionKind) => {
+    if (kind === "delete" && getSessionMasterKey()) {
+      setPendingNoteAction({ id: record.id, kind, stage: "delete-confirm" });
+      return;
+    }
+    setPendingNoteAction({ id: record.id, kind, stage: "vault-pwd" });
+    setPwd("");
+    setPwdError(null);
+  };
+
   const cancelAction = () => {
     setPendingAction(null);
+    setPendingNoteAction(null);
     setPwd("");
     setPwdError(null);
     setExportPwd("");
@@ -1673,6 +1814,55 @@ function CloudVaultHistory({
     cancelAction();
     if (kind === "open") await handleOpen(record);
     else await handleDelete(record);
+  };
+
+  const handleConfirmNote = async (record: EncryptedReportNoteRecord) => {
+    if (!pendingNoteAction || verifying) return;
+
+    if (pendingNoteAction.stage === "delete-confirm") {
+      cancelAction();
+      handleDeleteNote(record);
+      return;
+    }
+
+    if (pendingNoteAction.stage === "export-pwd") {
+      const p = exportPwd;
+      if (p.length < 6) {
+        setExportPwdError(copyFor(language, "At least 6 characters.", "密码至少 6 位。"));
+        return;
+      }
+      if (p !== exportPwdConfirm) {
+        setExportPwdError(copyFor(language, "The two entries don't match.", "两次输入不一致。"));
+        return;
+      }
+      cancelAction();
+      await handleExportNote(record, p);
+      return;
+    }
+
+    setVerifying(true);
+    setPwdError(null);
+    const res = await unlockWithPassword(userId, pwd);
+    setVerifying(false);
+    if (!res.ok) {
+      setPwdError(res.reason);
+      return;
+    }
+
+    if (pendingNoteAction.kind === "export") {
+      setPendingNoteAction({ id: record.id, kind: "export", stage: "export-pwd" });
+      setPwd("");
+      setPwdError(null);
+      setExportPwd("123456");
+      setExportPwdConfirm("123456");
+      setExportPwdError(null);
+      return;
+    }
+
+    const kind = pendingNoteAction.kind;
+    cancelAction();
+    if (kind === "open") await handleOpenNote(record);
+    else handleDeleteNote(record);
   };
 
   // D-022: deletion must look final — success copy never mentions recovery.
@@ -1743,10 +1933,106 @@ function CloudVaultHistory({
     );
   };
 
+  const handleOpenNote = async (record: EncryptedReportNoteRecord) => {
+    if (openNote?.id === record.id) {
+      setOpenNote(null);
+      setOpenGuideId(null);
+      return;
+    }
+
+    setOpeningNoteId(record.id);
+    try {
+      const decrypted = await decryptReportNoteRecord(record);
+      setOpenNote(decrypted);
+      setOpenGuideId(null);
+    } catch {
+      toast.error(copyFor(language, "Could not unlock this note on this device.", "这台设备暂时无法解锁这条文字记录。"));
+    } finally {
+      setOpeningNoteId(null);
+    }
+  };
+
+  const buildNoteTextBlob = (record: DecryptedReportNoteRecord) => {
+    const guide = getSituationGuide(record.situationId as SituationId);
+    const fieldMap = new Map(
+      REPORT_NOTE_FIELDS[guide.id].map((field) => [field.id, copyFor(language, field.labelEn, field.labelZh)])
+    );
+    const lines = [
+      copyFor(language, "The Unmuted · Text Evidence Note", "非默 · 文字存证记录"),
+      "",
+      `${copyFor(language, "Scene", "场景")}：${copyFor(language, guide.titleEn, guide.titleZh)}`,
+      `${copyFor(language, "Saved at", "保存时间")}：${new Date(record.createdAt).toLocaleString(language === "zh" ? "zh-CN" : "en-US")}`,
+      `${copyFor(language, "Record ID", "记录编号")}：${record.id}`,
+      `${copyFor(language, "Encrypted hash SHA-256", "加密内容指纹 SHA-256")}：${record.encryptedHash}`,
+      "",
+      copyFor(language, "Unlocked text:", "解锁后的文字内容："),
+      ...Object.entries(record.notes).flatMap(([id, value]) => [
+        "",
+        `【${fieldMap.get(id as ReportNoteId) ?? id}】`,
+        value,
+      ]),
+      "",
+      copyFor(language, "This file was decrypted locally in this browser for export.", "本文件在当前浏览器本机解密后导出。"),
+    ];
+
+    return new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
+  };
+
+  const handleExportNote = async (record: EncryptedReportNoteRecord, exportPassword: string) => {
+    setExportingNoteId(record.id);
+    try {
+      const decrypted = await decryptReportNoteRecord(record);
+      const guide = getSituationGuide(record.situationId as SituationId);
+      const textBlob = buildNoteTextBlob(decrypted);
+      const evidenceRecord = {
+        txId: record.id,
+        userId,
+        encryptedBlob: "",
+        encryptedHash: record.encryptedHash,
+        clientTime: new Date(record.createdAt).toISOString(),
+        syncStatus: "synced",
+        captureGrade: 2,
+        meta: {
+          mimeType: "text/plain;charset=utf-8",
+          originalSize: textBlob.size,
+          fileName: `非默文字存证-${copyFor(language, guide.titleEn, guide.titleZh)}-${formatReceiptTimestamp(record.createdAt)}.txt`,
+        },
+      } satisfies EvidenceRecord;
+      const pkg = await buildCourtPackage(evidenceRecord, textBlob, exportPassword);
+      const url = URL.createObjectURL(pkg);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = courtPackageName(evidenceRecord);
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success(
+        copyFor(
+          language,
+          "Court package saved. Share the export password through a secure channel.",
+          "举证包已保存。请通过安全渠道告知接收人导出密码。"
+        )
+      );
+    } catch {
+      toast.error(copyFor(language, "Could not export this note right now.", "暂时无法导出这条文字记录。"));
+    } finally {
+      setExportingNoteId(null);
+    }
+  };
+
+  const handleDeleteNote = (record: EncryptedReportNoteRecord) => {
+    setDeletingNoteId(record.id);
+    deleteEncryptedReportNote(record.id);
+    if (openNote?.id === record.id) setOpenNote(null);
+    if (openGuideId === record.id) setOpenGuideId(null);
+    onNoteRecordsChange();
+    setDeletingNoteId(null);
+    toast.success(copyFor(language, "Record deleted.", "已删除。"));
+  };
+
   return (
     <div className="space-y-2">
       <h3 className="text-sm font-bold text-foreground">
-        {copyFor(language, "Cloud Vault", "云端保险柜")}
+        {copyFor(language, "Encrypted Vault", "加密保险柜")}
       </h3>
       {records.map((r) => (
         <div key={r.txId} className="rounded-xl border border-border bg-card p-3 space-y-1.5">
@@ -1767,7 +2053,7 @@ function CloudVaultHistory({
               }`}
             >
               {r.syncStatus === "synced"
-                ? copyFor(language, "In cloud vault ✓", "已进保险柜 ✓")
+                ? copyFor(language, "Encrypted ✓", "已加密保存 ✓")
                 : copyFor(language, "Waiting to upload", "等待上传")}
             </span>
           </div>
@@ -1995,6 +2281,250 @@ function CloudVaultHistory({
           )}
         </div>
       ))}
+      {noteRecords.map((record) => {
+        const guide = getSituationGuide(record.situationId as SituationId);
+        const fieldMap = new Map(
+          REPORT_NOTE_FIELDS[guide.id].map((field) => [field.id, copyFor(language, field.labelEn, field.labelZh)])
+        );
+        const rows = openNote?.id === record.id
+          ? Object.entries(openNote.notes).map(([id, value]) => ({
+              label: fieldMap.get(id as ReportNoteId) ?? id,
+              value,
+            }))
+          : [];
+        const guideOpen = openGuideId === record.id;
+
+        return (
+          <div key={record.id} className="rounded-xl border border-border bg-card p-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <ClipboardList className="h-4 w-4 shrink-0 text-primary" />
+              <span className="text-xs font-medium text-foreground">
+                {copyFor(language, "Text note", "文字记录")} · {record.noteCount} {copyFor(language, "item(s)", "项")}
+              </span>
+              <span className="ml-auto rounded bg-sos-success/15 px-1.5 py-0.5 text-[10px] font-bold text-sos-success">
+                {copyFor(language, "Encrypted ✓", "已加密保存 ✓")}
+              </span>
+            </div>
+            <p className="font-mono text-[11px] text-muted-foreground">
+              SHA-256: {record.encryptedHash.slice(0, 16)}…
+            </p>
+            <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+              <Clock className="h-3 w-3 shrink-0" />
+              <span>{new Date(record.createdAt).toLocaleString(language === "zh" ? "zh-CN" : "en-US")}</span>
+              {pendingNoteAction?.id !== record.id && (
+                <>
+              <button
+                onClick={() => requestNoteAction(record, "export")}
+                disabled={exportingNoteId === record.id || openingNoteId === record.id || deletingNoteId === record.id}
+                className="ml-auto flex items-center gap-1 text-primary disabled:opacity-60"
+              >
+                {exportingNoteId === record.id ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Scale className="h-3 w-3" />
+                )}
+                {copyFor(language, "Court package", "导出举证包")}
+              </button>
+              <button
+                onClick={() => {
+                  if (openNote?.id === record.id) void handleOpenNote(record);
+                  else requestNoteAction(record, "open");
+                }}
+                disabled={openingNoteId === record.id || exportingNoteId === record.id || deletingNoteId === record.id}
+                className="flex items-center gap-1 text-primary disabled:opacity-60"
+              >
+                {openingNoteId === record.id ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Lock className="h-3 w-3" />
+                )}
+                {openNote?.id === record.id
+                  ? copyFor(language, "Hide", "收起")
+                  : copyFor(language, "Unlock & view", "解锁查看")}
+              </button>
+              <button
+                onClick={() => requestNoteAction(record, "delete")}
+                disabled={openingNoteId === record.id || exportingNoteId === record.id || deletingNoteId === record.id}
+                aria-label={copyFor(language, "Delete", "删除")}
+                className="text-muted-foreground hover:text-destructive transition-colors disabled:opacity-60"
+              >
+                {deletingNoteId === record.id ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Trash2 className="h-3 w-3" />
+                )}
+              </button>
+                </>
+              )}
+            </div>
+            {pendingNoteAction?.id === record.id && (
+              <div className="space-y-2 pt-1">
+                {pendingNoteAction.stage === "delete-confirm" ? (
+                  <>
+                    <p className="text-[11px] text-muted-foreground">
+                      {copyFor(language, "Delete this record?", "要删除这条记录吗？")}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleConfirmNote(record)}
+                        disabled={deletingNoteId === record.id}
+                        className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-destructive py-2 text-xs font-bold text-destructive-foreground disabled:opacity-60"
+                      >
+                        {deletingNoteId === record.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                        {copyFor(language, "Confirm delete", "确定删除")}
+                      </button>
+                      <button onClick={cancelAction} className="rounded-xl border border-border px-4 py-2 text-xs text-muted-foreground">
+                        {copyFor(language, "Cancel", "取消")}
+                      </button>
+                    </div>
+                  </>
+                ) : pendingNoteAction.stage === "export-pwd" ? (
+                  <>
+                    <p className="text-[11px] text-muted-foreground leading-4">
+                      {copyFor(
+                        language,
+                        "Set a password for this court package. The recipient needs it to open the text note.",
+                        "为这次举证包设一个密码。接收人需要这个密码才能打开文字记录。"
+                      )}
+                    </p>
+                    <div className="rounded-lg border border-primary/40 bg-primary/10 px-2.5 py-1.5 text-[10px] leading-4 text-primary">
+                      {copyFor(language, "Demo mode — pre-filled with ", "Demo 演示模式 — 已预填 ")}
+                      <code className="rounded bg-background/70 px-1 py-0.5 font-mono text-[10px] text-foreground">123456</code>
+                    </div>
+                    <div className="relative">
+                      <input
+                        value={exportPwd}
+                        onChange={(e) => setExportPwd(e.target.value)}
+                        type={showExportPwd ? "text" : "password"}
+                        placeholder={copyFor(language, "New password (min 6 chars)", "新密码（至少 6 位）")}
+                        autoFocus
+                        className="w-full rounded-xl border border-border bg-background px-3 py-2 pr-10 text-xs text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
+                      />
+                      <button onClick={() => setShowExportPwd((s) => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                        {showExportPwd ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                      </button>
+                    </div>
+                    <input
+                      value={exportPwdConfirm}
+                      onChange={(e) => setExportPwdConfirm(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleConfirmNote(record)}
+                      type={showExportPwd ? "text" : "password"}
+                      placeholder={copyFor(language, "Confirm password", "再输一次")}
+                      className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
+                    />
+                    {exportPwdError && <p className="text-[11px] leading-4 text-destructive">{exportPwdError}</p>}
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleConfirmNote(record)}
+                        disabled={!exportPwd || !exportPwdConfirm || exportingNoteId === record.id}
+                        className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-primary py-2 text-xs font-bold text-primary-foreground disabled:opacity-60"
+                      >
+                        {exportingNoteId === record.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Scale className="h-3.5 w-3.5" />}
+                        {copyFor(language, "Encrypt & export", "加密并导出")}
+                      </button>
+                      <button onClick={cancelAction} className="rounded-xl border border-border px-4 py-2 text-xs text-muted-foreground">
+                        {copyFor(language, "Cancel", "取消")}
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-[11px] text-muted-foreground">
+                      {pendingNoteAction.kind === "open"
+                        ? copyFor(language, "Enter your password to unlock this text note.", "输入密码后解锁这条文字记录。")
+                        : pendingNoteAction.kind === "export"
+                          ? copyFor(language, "Enter your password to unlock the vault before exporting.", "先输入密码解锁保险柜，下一步再设导出密码。")
+                          : copyFor(language, "Enter your password to delete this record.", "输入密码后删除这条记录。")}
+                    </p>
+                    <div className="rounded-lg border border-primary/40 bg-primary/10 px-2.5 py-1.5 text-[10px] leading-4 text-primary">
+                      {copyFor(language, "Demo mode — please enter ", "Demo 演示模式 — 请输入 ")}
+                      <code className="rounded bg-background/70 px-1 py-0.5 font-mono text-[10px] text-foreground">123456</code>
+                    </div>
+                    <div className="relative">
+                      <input
+                        value={pwd}
+                        onChange={(e) => setPwd(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleConfirmNote(record)}
+                        type={showPwd ? "text" : "password"}
+                        placeholder="123456"
+                        autoFocus
+                        className="w-full rounded-xl border border-border bg-background px-3 py-2 pr-10 text-xs text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
+                      />
+                      <button onClick={() => setShowPwd((s) => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                        {showPwd ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                      </button>
+                    </div>
+                    {pwdError && (
+                      <p className="text-[11px] leading-4 text-destructive">
+                        {pwdError === "vault-unavailable"
+                          ? copyFor(language, "Couldn't open your vault right now. Check your connection and try again.", "暂时打不开你的保险柜。请检查网络后再试。")
+                          : copyFor(language, "Incorrect password. Please try again.", "密码错误，请再试一次。")}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleConfirmNote(record)}
+                        disabled={!pwd || verifying}
+                        className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-bold disabled:opacity-60 ${
+                          pendingNoteAction.kind === "delete" ? "bg-destructive text-destructive-foreground" : "bg-primary text-primary-foreground"
+                        }`}
+                      >
+                        {verifying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Lock className="h-3.5 w-3.5" />}
+                        {pendingNoteAction.kind === "delete"
+                          ? copyFor(language, "Confirm delete", "确定删除")
+                          : pendingNoteAction.kind === "export"
+                            ? copyFor(language, "Next", "下一步")
+                            : copyFor(language, "Unlock", "解锁")}
+                      </button>
+                      <button onClick={cancelAction} disabled={verifying} className="rounded-xl border border-border px-4 py-2 text-xs text-muted-foreground disabled:opacity-60">
+                        {copyFor(language, "Cancel", "取消")}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+            {openNote?.id === record.id && (
+              <div className="space-y-2 rounded-xl border border-primary/16 bg-primary/6 px-3 py-2.5">
+                <div className="flex items-start gap-2 text-[11px] leading-4 text-muted-foreground">
+                  <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+                  <span>
+                    {copyFor(language, "Unlocked in this browser only. Nothing is uploaded.", "仅在本机浏览器解密，不会上传。")}
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-xs font-bold text-foreground">
+                    {copyFor(language, "Scene", "场景")}：{copyFor(language, guide.titleEn, guide.titleZh)}
+                  </p>
+                  {rows.map((row) => (
+                    <div key={row.label} className="rounded-lg bg-background/50 px-3 py-2">
+                      <p className="text-[11px] font-bold text-primary">{row.label}</p>
+                      <p className="mt-1 whitespace-pre-wrap text-xs leading-5 text-foreground">{row.value}</p>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setOpenGuideId((current) => (current === record.id ? null : record.id))}
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-primary"
+                >
+                  {copyFor(language, "View matching guide", "查看对应指引")}
+                  <ChevronDown className={`h-3 w-3 transition-transform ${guideOpen ? "rotate-180" : ""}`} />
+                </button>
+                {guideOpen && (
+                  <div className="space-y-1.5 rounded-lg border border-border/70 bg-background/38 px-3 py-2">
+                    {guide.items.map((item) => (
+                      <div key={item.zh} className="flex items-start gap-2 text-[11px] leading-4 text-muted-foreground">
+                        <CheckCircle2 className="mt-0.5 h-3 w-3 shrink-0 text-sos-success" />
+                        <span>{copyFor(language, item.en, item.zh)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -2211,5 +2741,3 @@ function LegacyVaultHistory({
     </div>
   );
 }
-
-
