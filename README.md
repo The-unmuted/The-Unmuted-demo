@@ -189,6 +189,7 @@ The beta version uses a hardcoded key for demonstration. The below describes how
 | `docs/decisions.md` | Technical decision log |
 | `docs/tasks.md` | Roadmap and task board |
 | `docs/changelog.md` | Shipped changes |
+| `docs/development-security.md` | Local development and dependency security SOP |
 | `src/data/simulations/*.json` | The three scenario scripts — read these to understand the simulator |
 
 ---
