@@ -3,16 +3,17 @@
  * Segmented toggle at the top; each segment renders the existing page unchanged.
  */
 import { useState } from "react";
-import { Brain, Scale } from "lucide-react";
+import { Brain, Scale, UsersRound } from "lucide-react";
 import { AppLanguage, copyFor } from "@/lib/locale";
 import PsychPage from "@/components/PsychPage";
 import LegalPage from "@/components/LegalPage";
+import SocialWorkPage from "@/components/SocialWorkPage";
 
 interface AidPageProps {
   language: AppLanguage;
 }
 
-type AidSegment = "psych" | "legal";
+type AidSegment = "psych" | "legal" | "social-work";
 
 export default function AidPage({ language }: AidPageProps) {
   const [segment, setSegment] = useState<AidSegment>("psych");
@@ -20,6 +21,7 @@ export default function AidPage({ language }: AidPageProps) {
   const segments = [
     { id: "psych" as const, english: "Mental Health", chinese: "心理", icon: Brain },
     { id: "legal" as const, english: "Legal Aid", chinese: "法律", icon: Scale },
+    { id: "social-work" as const, english: "Social Work", chinese: "社会工作", icon: UsersRound },
   ];
 
   return (
@@ -36,8 +38,10 @@ export default function AidPage({ language }: AidPageProps) {
             return (
               <button
                 key={s.id}
+                type="button"
                 role="tab"
                 aria-selected={isActive}
+                aria-controls={`aid-panel-${s.id}`}
                 onClick={() => setSegment(s.id)}
                 className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold transition-all ${
                   isActive
@@ -53,11 +57,15 @@ export default function AidPage({ language }: AidPageProps) {
         </div>
       </div>
 
-      {segment === "psych" ? (
-        <PsychPage language={language} />
-      ) : (
-        <LegalPage language={language} />
-      )}
+      <div role="tabpanel" id={`aid-panel-${segment}`}>
+        {segment === "psych" ? (
+          <PsychPage language={language} />
+        ) : segment === "legal" ? (
+          <LegalPage language={language} />
+        ) : (
+          <SocialWorkPage language={language} />
+        )}
+      </div>
     </div>
   );
 }
