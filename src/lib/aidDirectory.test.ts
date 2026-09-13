@@ -36,7 +36,7 @@ describe("aid directory data integrity", () => {
 
   it("category, kind, and tags are known values", () => {
     for (const r of AID_RESOURCES) {
-      expect(["psych", "legal"], r.id).toContain(r.category);
+      expect(["psych", "legal", "social-work"], r.id).toContain(r.category);
       expect(Object.keys(KIND_LABEL), r.id).toContain(r.kind);
       expect(r.tags.length, `${r.id} has no tags`).toBeGreaterThan(0);
       for (const t of r.tags) expect(Object.keys(TAG_LABEL), r.id).toContain(t);
@@ -73,13 +73,21 @@ describe("aid directory data integrity", () => {
   it("phones contain only digits and dashes (usable in tel: links)", () => {
     for (const r of AID_RESOURCES) {
       if (r.phone) expect(r.phone, r.id).toMatch(/^[\d-]+$/);
+      if (r.phoneAlt) expect(r.phoneAlt, r.id).toMatch(/^[\d-]+$/);
+    }
+  });
+
+  it("includes verified social-work resources", () => {
+    expect(resourcesFor("social-work").length).toBeGreaterThan(0);
+    for (const r of resourcesFor("social-work")) {
+      expect(r.id).toMatch(/^cn-social-/);
     }
   });
 });
 
 describe("filtering helpers", () => {
   it("citiesFor lists only cities that have entries, no duplicates", () => {
-    for (const category of ["psych", "legal"] as const) {
+    for (const category of ["psych", "legal", "social-work"] as const) {
       const cities = citiesFor(category);
       const names = cities.map((c) => c.city);
       expect(new Set(names).size).toBe(names.length);

@@ -71,13 +71,16 @@ for (const r of resources) {
       failures.push(`${label}: ${url} returned HTTP ${page.status}`);
       continue;
     }
-    if (url === r.sourceUrl && phoneCheckable(r.phone)) {
-      const digits = r.phone.replace(/\D/g, "");
+    if (url === r.sourceUrl) {
       const pageDigits = page.text.replace(/\D/g, "");
-      if (!pageDigits.includes(digits)) {
-        failures.push(
-          `${label}: phone ${r.phone} no longer found on source page ${url} — number may have changed`
-        );
+      for (const phone of [r.phone, r.phoneAlt]) {
+        if (!phoneCheckable(phone)) continue;
+        const digits = phone.replace(/\D/g, "");
+        if (!pageDigits.includes(digits)) {
+          failures.push(
+            `${label}: phone ${phone} no longer found on source page ${url} — number may have changed`
+          );
+        }
       }
     }
   }

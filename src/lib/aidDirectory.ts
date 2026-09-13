@@ -12,7 +12,7 @@ export type AidTag =
   | "general-rights";
 
 export type AidKind = "hotline" | "legal" | "shelter" | "rights";
-export type AidCategory = "psych" | "legal";
+export type AidCategory = "psych" | "legal" | "social-work";
 
 export interface AidResource {
   id: string;
@@ -25,6 +25,8 @@ export interface AidResource {
   name: string;
   nameEn: string;
   phone: string | null;
+  /** Optional second published number (for organizations with a hotline and office line). */
+  phoneAlt?: string | null;
   hours: string;
   hoursEn: string;
   description: string;

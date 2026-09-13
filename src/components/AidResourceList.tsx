@@ -303,7 +303,9 @@ function PlaceholderCard({
 }) {
   const kindLabel = category === "psych"
     ? copyFor(language, "mental health", "心理")
-    : copyFor(language, "legal aid", "法律援助");
+    : category === "legal"
+      ? copyFor(language, "legal aid", "法律援助")
+      : copyFor(language, "social work", "社会工作");
 
   return (
     <div className="rounded-2xl border border-dashed border-amber-500/40 bg-amber-500/5 p-4">
@@ -344,8 +346,8 @@ function SubmitLocalCTA({
   const handleClick = () => {
     const cityLabelZh = city ? city.name : "（请填写你所在的城市）";
     const cityLabelEn = city ? city.nameEn : "(please fill in your city)";
-    const categoryZh = category === "psych" ? "心理" : "法律援助";
-    const categoryEn = category === "psych" ? "Mental health" : "Legal aid";
+    const categoryZh = category === "psych" ? "心理" : category === "legal" ? "法律援助" : "社会工作";
+    const categoryEn = category === "psych" ? "Mental health" : category === "legal" ? "Legal aid" : "Social work";
 
     const templateZh =
       `【本地援助资源推荐】\n\n` +
@@ -454,14 +456,23 @@ function ResourceCard({
         )}
       </div>
 
-      <div className="mt-3 flex gap-2">
+      <div className="mt-3 flex flex-wrap gap-2">
         {r.phone && (
           <a
             href={`tel:${r.phone}`}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-primary/10 py-2.5 text-xs font-bold text-primary transition-transform active:scale-95"
+            className="min-w-[8rem] flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-primary/10 py-2.5 text-xs font-bold text-primary transition-transform active:scale-95"
           >
             <Phone className="h-3.5 w-3.5" />
             {r.phone}
+          </a>
+        )}
+        {r.phoneAlt && (
+          <a
+            href={`tel:${r.phoneAlt}`}
+            className="min-w-[8rem] flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-primary/10 py-2.5 text-xs font-bold text-primary transition-transform active:scale-95"
+          >
+            <Phone className="h-3.5 w-3.5" aria-hidden="true" />
+            {r.phoneAlt}
           </a>
         )}
         {r.websiteUrl && (
@@ -469,7 +480,7 @@ function ResourceCard({
             href={r.websiteUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-border bg-card py-2.5 text-xs font-bold text-foreground/70 transition-transform active:scale-95"
+            className="min-w-[8rem] flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-border bg-card py-2.5 text-xs font-bold text-foreground/70 transition-transform active:scale-95"
           >
             <Globe className="h-3.5 w-3.5" />
             {copyFor(language, "Website", "官网")}
