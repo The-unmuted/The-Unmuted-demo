@@ -23,4 +23,18 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": "off",
     },
   },
+  // These modules intentionally export both a component and its public
+  // helper/variant. Fast Refresh supports the component exports; splitting
+  // every helper into a new file would make the shared UI API less usable.
+  {
+    files: [
+      "src/components/ui/**/*.tsx",
+      "src/components/FeedbackWidget.tsx",
+      "src/components/WelcomeFeedbackDialog.tsx",
+      "src/lib/locale.tsx",
+    ],
+    rules: {
+      "react-refresh/only-export-components": "off",
+    },
+  },
 );

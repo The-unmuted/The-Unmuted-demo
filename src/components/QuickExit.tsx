@@ -9,7 +9,7 @@
  */
 
 import { useState } from "react";
-import { DoorOpen, ShieldQuestion, X } from "lucide-react";
+import { CloudSun, DoorOpen, ShieldQuestion, X } from "lucide-react";
 import { copyFor, type AppLanguage } from "@/lib/locale";
 
 function leaveNow(language: AppLanguage): void {
@@ -20,11 +20,39 @@ function leaveNow(language: AppLanguage): void {
   window.location.replace(url);
 }
 
+/**
+ * Returnable weather exit. Unlike QuickExitButton, this intentionally keeps
+ * the current page in browser history so the native Back gesture/button can
+ * return to the app on Safari, Chrome, Firefox, Edge, and mobile WebViews.
+ */
+function openWeather(language: AppLanguage): void {
+  const url =
+    language === "zh"
+      ? "https://www.baidu.com/s?wd=%E5%A4%A9%E6%B0%94"
+      : "https://www.google.com/search?q=weather";
+  window.location.assign(url);
+}
+
+export function WeatherExitButton({ language }: { language: AppLanguage }) {
+  return (
+    <button
+      type="button"
+      onClick={() => openWeather(language)}
+      className="group inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-sky-300/35 bg-sky-300/10 text-sky-200 shadow-[0_0_18px_hsl(196_90%_70%/0.12)] transition-[background-color,box-shadow,transform] duration-100 ease-out hover:bg-sky-300/20 hover:shadow-[0_0_22px_hsl(196_90%_70%/0.22)] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-200 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      aria-label={copyFor(language, "Open weather (Back returns here)", "打开天气（返回键可回到本站）")}
+      title={copyFor(language, "Weather · Back returns here", "天气 · 返回键可回到本站")}
+    >
+      <CloudSun className="h-4 w-4 transition-transform duration-100 ease-out group-hover:-translate-y-px" aria-hidden="true" />
+    </button>
+  );
+}
+
 export function QuickExitButton({ language }: { language: AppLanguage }) {
   return (
     <button
       onClick={() => leaveNow(language)}
-      className="inline-flex h-7 shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-border bg-card/90 px-2 text-[11px] font-bold leading-none text-muted-foreground transition-colors hover:bg-accent"
+      type="button"
+      className="inline-flex h-10 shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-border bg-card/90 px-3 text-[11px] font-bold leading-none text-muted-foreground transition-[background-color,transform] duration-100 ease-out hover:bg-accent active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       aria-label={copyFor(language, "Quick exit", "快速离开")}
     >
       <DoorOpen className="h-3.5 w-3.5" />
@@ -49,6 +77,14 @@ export function SafetyTips({
         language,
         'Tap "Exit" at the top right and this page instantly becomes a weather search — the Back button will not come back here.',
         "点右上角“离开”，页面立刻变成天气搜索，按返回键也不会回到本站。"
+      ),
+    },
+    {
+      title: copyFor(language, "Returnable weather button", "可返回的天气按钮"),
+      body: copyFor(
+        language,
+        "The small cloud button opens weather while keeping this page in browser history. Use the browser Back button or gesture to return. If your phone may be checked, use the Exit button instead.",
+        "小云朵按钮会打开天气，但会保留本站历史记录。可用浏览器返回键或返回手势回来。如果手机可能被翻看，请改用“离开”按钮。"
       ),
     },
     {

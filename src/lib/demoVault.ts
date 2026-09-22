@@ -14,9 +14,9 @@
  * copy-pasted into the production branch under any circumstance.
  */
 
-import { encryptFile, type EncryptionResult } from "./evidenceCrypto";
+import { decryptFile, encryptFile, type EncryptionResult } from "./evidenceCrypto";
 import { sealJson, openJson } from "./keyVault";
-import { setSessionMasterKey, getSessionMasterKey } from "./keyVaultService";
+import { setSessionMasterKey, getSessionMasterKey } from "./sessionKey";
 
 // Re-export types so `useEvidenceVault` doesn't need to import from two places.
 export type {
@@ -292,7 +292,6 @@ export async function openEvidenceFile(_userId: string, record: EvidenceRecord):
   const wrapped = await openJson<{ key: JsonWebKey; iv: string }>(masterKey, record.wrappedFileKey);
   // decryptFile takes a Blob (it calls .arrayBuffer() internally), so pass the
   // blob directly — do NOT pre-convert to Uint8Array (which has no .arrayBuffer()).
-  const { decryptFile } = await import("./evidenceCrypto");
   // meta.mimeType is the placeholder "application/octet-stream" when the record
   // was returned from listEvidencePartial (vault locked); fall back to the
   // encrypted blob's type so decrypted images/audio still render.

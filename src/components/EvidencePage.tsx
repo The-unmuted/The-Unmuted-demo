@@ -20,7 +20,8 @@ import {
   type DecryptedReportNoteRecord,
   type EncryptedReportNoteRecord,
 } from "@/lib/reportNotesVault";
-import { unlockWithPassword, getSessionMasterKey, type UnlockFailureReason } from "@/lib/keyVaultService";
+import { unlockWithPassword, type UnlockFailureReason } from "@/lib/keyVaultService";
+import { getSessionMasterKey } from "@/lib/sessionKey";
 // DEMO branch: swapped to demoVault (IndexedDB-only, hardcoded master key).
 import {
   listDeletedEvidence,

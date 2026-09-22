@@ -7,9 +7,10 @@
  */
 
 import { supabase } from "./supabaseClient";
+import { verifyDemoPassword } from "./demoVault";
+import { getSessionMasterKey, setSessionMasterKey } from "./sessionKey";
 import {
   setupKeyVault,
-  openWithPassword,
   openWithRecoveryCode,
   rewrapPasswordBox,
   rewrapBoxVerified,
@@ -30,15 +31,7 @@ const DIRTY_PREFIX = "unmuted_key_boxes_dirty_";
 
 // ── Session master key (memory only, cleared on logout/reload) ────────────────
 
-let sessionMasterKey: CryptoKey | null = null;
-
-export function setSessionMasterKey(key: CryptoKey | null): void {
-  sessionMasterKey = key;
-}
-
-export function getSessionMasterKey(): CryptoKey | null {
-  return sessionMasterKey;
-}
+export { getSessionMasterKey, setSessionMasterKey } from "./sessionKey";
 
 // ── Local mirror (boxes are ciphertext — safe to cache) ───────────────────────
 
@@ -114,7 +107,7 @@ export async function createVault(
   const recoveryCode = generateRecoveryCode();
   const { masterKey, passwordBox, recoveryBox } = await setupKeyVault(password, recoveryCode);
   await persistBoxes(userId, { passwordBox, recoveryBox });
-  sessionMasterKey = masterKey;
+  setSessionMasterKey(masterKey);
   return { masterKey, recoveryCode };
 }
 
@@ -163,10 +156,9 @@ export async function unlockWithPassword(_userId: string, password: string): Pro
   // on success we return the demo master key (already set by initDemoSessionKey
   // on app load, so decryption of seeded/uploaded records works either way).
   // Original Argon2id + key-box logic is preserved in the v2 branch.
-  const { verifyDemoPassword } = await import("./demoVault");
   const ok = await verifyDemoPassword(password);
   if (!ok) return { ok: false, reason: "wrong-secret" };
-  const key = sessionMasterKey;
+  const key = getSessionMasterKey();
   if (!key) return { ok: false, reason: "vault-unavailable" };
   return { ok: true, key };
 }
@@ -191,7 +183,7 @@ export async function unlockWithRecoveryCode(
       }
     }
     await persistBoxes(userId, { passwordBox, recoveryBox });
-    sessionMasterKey = key;
+    setSessionMasterKey(key);
     return { ok: true, key };
   } catch {
     return { ok: false, reason: "wrong-secret" };
@@ -200,6 +192,7 @@ export async function unlockWithRecoveryCode(
 
 /** Settings → change password (requires current session master key) */
 export async function changePassword(userId: string, newPassword: string): Promise<boolean> {
+  const sessionMasterKey = getSessionMasterKey();
   if (!sessionMasterKey) return false;
   const boxes = await loadBoxes(userId);
   if (!boxes) return false;
@@ -210,6 +203,7 @@ export async function changePassword(userId: string, newPassword: string): Promi
 
 /** Settings → issue a new recovery code (old one stops working); show once */
 export async function issueNewRecoveryCode(userId: string): Promise<string | null> {
+  const sessionMasterKey = getSessionMasterKey();
   if (!sessionMasterKey) return null;
   const boxes = await loadBoxes(userId);
   if (!boxes) return null;

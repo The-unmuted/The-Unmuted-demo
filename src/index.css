@@ -129,16 +129,23 @@
 
 @layer utilities {
   .sos-pulse {
-    animation: sosPulse 2s ease-in-out infinite;
+    opacity: 0.6;
+    transform: scale(0.96);
   }
   .screen-flash {
     animation: screenFlash 0.3s ease-out;
   }
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  .sos-pulse {
+    animation: sosPulse 2s ease-in-out infinite;
+  }
+}
+
 @keyframes sosPulse {
-  0%, 100% { box-shadow: 0 0 30px hsl(var(--sos-glow)), 0 0 60px hsl(var(--sos-glow)); }
-  50% { box-shadow: 0 0 50px hsl(var(--sos-glow)), 0 0 100px hsl(var(--sos-glow)); }
+  0%, 100% { opacity: 0.5; transform: scale(0.94); }
+  50% { opacity: 0.9; transform: scale(1.08); }
 }
 
 @keyframes screenFlash {

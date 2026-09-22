@@ -47,7 +47,6 @@ export const FLAG_WEIGHTS: Record<string, number> = {
   "gave-up-sa": -10,           // 未申请复议（错过 7 日窗口）
   "no-exam": -8,               // 未做取证检查
   "destroyed-traces": -8,      // 衣物被清洗 / 丢弃
-  "no-record": -8,             // 医院无就诊记录
   "confronted": -8,            // 警方介入前联系嫌疑人
   "alerted-him": -5,           // 打草惊蛇
   "took-money-only": -8,       // 收钱但未签字（灰色）
@@ -83,7 +82,9 @@ export const FLAG_WEIGHTS: Record<string, number> = {
   // 差行为 / 系统性错误
   "deleted-records": -8,           // 删除聊天记录
   "blocked-contact": -3,           // 拉黑（未备份即删除）
-  "no-record": -5,                 // 事发当时没记录（覆盖性侵版本同名 flag —— 数值差异不大）
+  // Shared flag used by the assault and harassment scenarios. Keep one
+  // definition so object-literal order cannot silently change the score.
+  "no-record": -5,                 // 医院无就诊记录 / 事发当时没记录
   "hr-notified-informal": -5,      // 只找 HR 口头谈
   "solo-documentation": -2,        // 只自己记录（缺乏外部记录）
   "confronted-alone": -8,          // 报警前私下对质

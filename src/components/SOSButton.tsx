@@ -8,7 +8,6 @@ import { canPublishMapAlert } from "@/lib/reportTrust";
 import { AppLanguage, copyFor } from "@/lib/locale";
 import { toast } from "sonner";
 import {
-  useEmergencyContacts,
   loadContacts,
   buildSmsUri,
   buildGroupSmsUri,
@@ -50,8 +49,6 @@ export default function SOSButton({
   // the hold period to lock on before we actually need the coordinates.
   const gpsWatchRef = useRef<number | null>(null);
   const latestPositionRef = useRef<GeolocationPosition | null>(null);
-  const { contacts } = useEmergencyContacts();
-
   const HOLD_DURATION = 2000;
 
   const triggerSOS = useCallback(async () => {
@@ -178,7 +175,7 @@ export default function SOSButton({
         )
       );
     }
-  }, [contacts, isSilent, voiceDeterrent, customAudioUrl, language]);
+  }, [isSilent, voiceDeterrent, customAudioUrl, language]);
 
   const handlePointerDown = useCallback(() => {
     if (state === "triggered" || state === "success") return;
@@ -274,13 +271,19 @@ export default function SOSButton({
       />
 
       <motion.button
+        type="button"
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}
-        className={`relative aspect-square w-[80vw] max-w-[360px] select-none overflow-visible rounded-[2rem] bg-transparent ${glowClass} transition-colors duration-500`}
+        aria-label={copyFor(language, "Hold for 2 seconds to send an emergency SMS", "长按 2 秒发送紧急短信")}
+        className={`relative aspect-square w-[80vw] max-w-[360px] select-none overflow-visible rounded-[2rem] bg-transparent ${glowClass} transition-[filter,transform] duration-100 ease-out active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-4 focus-visible:ring-offset-background`}
         whileTap={state === "idle" ? { scale: 0.95 } : {}}
         style={{ touchAction: "none" }}
       >
+        <span
+          aria-hidden="true"
+          className={`pointer-events-none absolute inset-[14%] -z-10 rounded-full bg-primary/20 blur-3xl ${state === "idle" ? "sos-pulse" : ""}`}
+        />
         <img
           src={LOGO_SRC}
           alt=""

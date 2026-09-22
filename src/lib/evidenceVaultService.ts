@@ -12,7 +12,7 @@
  */
 
 import { supabase } from "./supabaseClient";
-import { getSessionMasterKey } from "./keyVaultService";
+import { getSessionMasterKey } from "./sessionKey";
 import { sealJson, openJson } from "./keyVault";
 import { decryptFile, type EncryptionResult } from "./evidenceCrypto";
 import type { CaptureLocation } from "./captureMetadata";

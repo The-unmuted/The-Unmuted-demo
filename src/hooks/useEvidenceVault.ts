@@ -25,7 +25,7 @@ import {
   type EvidenceRecord,
   type SaveEvidenceOptions,
 } from '@/lib/demoVault';
-import { getSessionMasterKey } from '@/lib/keyVaultService';
+import { getSessionMasterKey } from '@/lib/sessionKey';
 import { loadVaultRecords, type VaultRecord } from '@/lib/localStorage';
 import { AppLanguage, copyFor } from '@/lib/locale';
 

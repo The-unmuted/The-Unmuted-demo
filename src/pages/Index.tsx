@@ -1,23 +1,24 @@
-import { useCallback, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { useSilentMode } from "@/hooks/useSilentMode";
 import { useAutoLock } from "@/hooks/useAutoLock";
 import { ShieldCheck } from "lucide-react";
-import SOSPage from "@/components/SOSPage";
 import BottomNav, { type MainTab } from "@/components/BottomNav";
-import EvidencePage from "@/components/EvidencePage";
-import AidPage from "@/components/AidPage";
-import SimulationPage from "@/components/SimulationPage";
 import { useLocale, copyFor } from "@/lib/locale";
 import FeedbackWidget from "@/components/FeedbackWidget";
-import { QuickExitButton } from "@/components/QuickExit";
+import { QuickExitButton, WeatherExitButton } from "@/components/QuickExit";
 import DemoWelcome from "@/components/DemoWelcome";
 import WeChatGroupButton from "@/components/WeChatGroupButton";
 import WelcomeFeedbackDialog, {
   hasSeenWelcomePopup,
   markWelcomePopupSeen,
 } from "@/components/WelcomeFeedbackDialog";
-import { setSessionMasterKey } from "@/lib/keyVaultService";
+import { setSessionMasterKey } from "@/lib/sessionKey";
 import { initDemoSessionKey, seedDemoRecordsIfEmpty } from "@/lib/demoVault";
+
+const SOSPage = lazy(() => import("@/components/SOSPage"));
+const EvidencePage = lazy(() => import("@/components/EvidencePage"));
+const AidPage = lazy(() => import("@/components/AidPage"));
+const SimulationPage = lazy(() => import("@/components/SimulationPage"));
 
 // DEMO branch: BetaGate deleted; VITE_BETA_CODE ignored.
 // LoginFlow removed; a single DemoWelcome screen gates entry.
@@ -77,7 +78,8 @@ export default function Index() {
             alt=""
             className="h-9 w-9 shrink-0 object-contain drop-shadow-[0_0_14px_hsl(var(--primary)/0.28)]"
           />
-          <div className="min-w-0 leading-tight">
+          <span className="sr-only">{copyFor(language, "The Unmuted", "非默")}</span>
+          <div className="hidden min-w-0 leading-tight min-[440px]:block">
             <span className="block text-[13px] font-black tracking-[0.06em] text-foreground">
               {copyFor(language, "THE UNMUTED", "非默")}
             </span>
@@ -88,11 +90,14 @@ export default function Index() {
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
           <WeChatGroupButton language={language} />
+          <WeatherExitButton language={language} />
           <QuickExitButton language={language} />
           <FeedbackWidget language={language} />
           <button
+            type="button"
             onClick={() => setLanguage(language === "en" ? "zh" : "en")}
-            className="inline-flex h-7 w-7 shrink-0 items-center justify-center whitespace-nowrap rounded-full border border-border bg-card/90 text-[11px] font-bold leading-none text-primary transition-colors hover:bg-accent"
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center whitespace-nowrap rounded-full border border-border bg-card/90 text-[11px] font-bold leading-none text-primary transition-[background-color,transform] duration-100 ease-out hover:bg-accent active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            aria-label={copyFor(language, "Switch language", "切换语言")}
           >
             {language === "en" ? "中" : "EN"}
           </button>
@@ -118,21 +123,23 @@ export default function Index() {
       ) : (
         <>
           <main className="flex min-h-0 flex-1 flex-col overflow-y-auto pb-4">
-            {activeTab === "sos" && (
-              <SOSPage
-                isSilent={isSilent}
-                voiceDeterrent={voiceDeterrent}
-                customAudioUrl={customAudioUrl}
-                language={language}
-              />
-            )}
-            {activeTab === "evidence" && (
-              <EvidencePage language={language} userEmail="demo@unmuted.local" />
-            )}
-            {activeTab === "aid" && <AidPage language={language} />}
-            {activeTab === "simulation" && (
-              <SimulationPage language={language} onGoToAid={() => setActiveTab("aid")} />
-            )}
+            <Suspense fallback={null}>
+              {activeTab === "sos" && (
+                <SOSPage
+                  isSilent={isSilent}
+                  voiceDeterrent={voiceDeterrent}
+                  customAudioUrl={customAudioUrl}
+                  language={language}
+                />
+              )}
+              {activeTab === "evidence" && (
+                <EvidencePage language={language} userEmail="demo@unmuted.local" />
+              )}
+              {activeTab === "aid" && <AidPage language={language} />}
+              {activeTab === "simulation" && (
+                <SimulationPage language={language} onGoToAid={() => setActiveTab("aid")} />
+              )}
+            </Suspense>
           </main>
           <BottomNav activeTab={activeTab} onTabChange={setActiveTab} language={language} />
         </>
@@ -145,4 +152,3 @@ export default function Index() {
     </div>
   );
 }
-

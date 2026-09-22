@@ -21,7 +21,7 @@
  * password IS the shared credential and Supabase verifies it server-side.
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabaseClient";
@@ -192,7 +192,7 @@ function AdminPanel({ session }: { session: Session }) {
 
   const email = session.user.email ?? "unknown";
 
-  const fetchRows = async () => {
+  const fetchRows = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -208,12 +208,11 @@ function AdminPanel({ session }: { session: Session }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchRows();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    void fetchRows();
+  }, [fetchRows]);
 
   const handleSignOut = async () => {
     await supabase!.auth.signOut();
