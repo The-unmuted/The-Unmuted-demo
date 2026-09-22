@@ -19,6 +19,16 @@ import {
   BookOpen,
   Sparkles,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { AppLanguage, copyFor } from "@/lib/locale";
 import {
   SIM_SCENARIOS,
@@ -68,6 +78,7 @@ interface RunState {
 
 export default function SimulationPage({ language, onGoToAid }: SimulationPageProps) {
   const [run, setRun] = useState<RunState | null>(null);
+  const [pendingScenario, setPendingScenario] = useState<SimScenario | null>(null);
   const [helpOpen, setHelpOpen] = useState(false);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const resultTopRef = useRef<HTMLDivElement | null>(null);
@@ -152,7 +163,22 @@ export default function SimulationPage({ language, onGoToAid }: SimulationPagePr
   };
 
   if (!run) {
-    return <ScenarioPicker language={language} onStart={startScenario} />;
+    return (
+      <>
+        <ScenarioPicker language={language} onStart={setPendingScenario} />
+        <SensitiveContentDialog
+          language={language}
+          scenario={pendingScenario}
+          onCancel={() => setPendingScenario(null)}
+          onContinue={() => {
+            if (!pendingScenario) return;
+            const scenario = pendingScenario;
+            setPendingScenario(null);
+            startScenario(scenario);
+          }}
+        />
+      </>
+    );
   }
 
   const currentScene = run.sceneId ? run.scenario.scenes[run.sceneId] : null;
@@ -258,6 +284,84 @@ export default function SimulationPage({ language, onGoToAid }: SimulationPagePr
       </p>
       <div ref={bottomRef} />
     </div>
+  );
+}
+
+function SensitiveContentDialog({
+  language,
+  scenario,
+  onCancel,
+  onContinue,
+}: {
+  language: AppLanguage;
+  scenario: SimScenario | null;
+  onCancel: () => void;
+  onContinue: () => void;
+}) {
+  return (
+    <AlertDialog open={scenario !== null} onOpenChange={(open) => !open && onCancel()}>
+      <AlertDialogContent className="w-[min(92vw,440px)] rounded-3xl border-primary/25 bg-card p-6 shadow-[0_24px_80px_hsl(240_70%_4%/0.65)]">
+        <AlertDialogHeader className="text-left">
+          <div className="mb-1 flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-500/12 text-amber-500">
+            <AlertTriangle className="h-5 w-5" aria-hidden="true" />
+          </div>
+          <AlertDialogTitle className="pr-6 text-xl font-black text-foreground">
+            {copyFor(language, "Sensitive content warning", "敏感内容提示")}
+          </AlertDialogTitle>
+          <AlertDialogDescription className="text-sm leading-6 text-muted-foreground">
+            {copyFor(
+              language,
+              "This practice scenario discusses abuse, harassment, coercion, trauma, and the legal process that may follow. Some details may feel upsetting or bring up difficult memories.",
+              "这个练习情景会讨论暴力、骚扰、胁迫、创伤，以及可能涉及的法律流程。部分内容可能令人不适，或触发创伤记忆。"
+            )}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+
+        <div className="rounded-2xl border border-border/70 bg-background/45 px-4 py-3 text-sm leading-6 text-foreground/85">
+          <p className="font-semibold text-foreground">
+            {scenario ? simText(language, scenario.title) : ""}
+          </p>
+          <ul className="mt-2 list-disc space-y-1.5 pl-5 text-muted-foreground">
+            <li>
+              {copyFor(
+                language,
+                "This is an educational simulation, not legal advice.",
+                "这是教育性模拟，不构成法律意见。"
+              )}
+            </li>
+            <li>
+              {copyFor(
+                language,
+                "Scenes do not depict graphic violence, and nothing you choose is saved or uploaded.",
+                "场景不会呈现暴力细节，你的选择不会被保存或上传。"
+              )}
+            </li>
+            <li>
+              {copyFor(
+                language,
+                "You can leave at any time. If you need real help, use the real-help button or call emergency services.",
+                "你可以随时退出。如果你需要真实帮助，请使用真实帮助按钮或拨打紧急服务电话。"
+              )}
+            </li>
+          </ul>
+        </div>
+
+        <AlertDialogFooter className="gap-2 sm:gap-2">
+          <AlertDialogCancel
+            onClick={onCancel}
+            className="mt-0 min-h-11 rounded-xl border-border bg-background/70 px-4 font-semibold text-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            {copyFor(language, "Back", "返回")}
+          </AlertDialogCancel>
+          <AlertDialogAction
+            onClick={onContinue}
+            className="min-h-11 rounded-xl bg-primary px-4 font-bold text-primary-foreground shadow-[0_8px_24px_hsl(var(--primary)/0.24)] hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            {copyFor(language, "Continue to scenario", "继续进入练习")}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
 

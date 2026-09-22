@@ -28,9 +28,29 @@ describe("SimulationPage", () => {
     expect(screen.getAllByText(/待法律校对/).length).toBe(3);
   });
 
+  it("shows a sensitive-content warning before entering a scenario", () => {
+    render(<SimulationPage language="zh" onGoToAid={() => {}} />);
+
+    fireEvent.click(screen.getByText("TA被家暴该怎么做"));
+
+    expect(screen.getByRole("alertdialog")).toBeTruthy();
+    expect(screen.getByText("敏感内容提示")).toBeTruthy();
+    expect(screen.getByText(/部分内容可能令人不适，或触发创伤记忆/)).toBeTruthy();
+    expect(screen.queryByText("我现在就需要真实帮助")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "返回" }));
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(screen.getByText("选择情景")).toBeTruthy();
+
+    fireEvent.click(screen.getByText("TA被家暴该怎么做"));
+    fireEvent.click(screen.getByRole("button", { name: "继续进入练习" }));
+    expect(screen.getByText("我现在就需要真实帮助")).toBeTruthy();
+  });
+
   it("plays a full path to an ending with a debrief", async () => {
     render(<SimulationPage language="zh" onGoToAid={() => {}} />);
     fireEvent.click(screen.getByText("TA被家暴该怎么做"));
+    fireEvent.click(screen.getByText("继续进入练习"));
 
     // Opening scene: three-way branch selection with real-help exit visible
     expect(screen.getByText("我现在就需要真实帮助")).toBeTruthy();
@@ -82,6 +102,7 @@ describe("SimulationPage", () => {
   it("uses the unified result card for non-domestic scenarios", async () => {
     render(<SimulationPage language="zh" onGoToAid={() => {}} />);
     fireEvent.click(screen.getByText("TA被性骚扰了该怎么做"));
+    fireEvent.click(screen.getByText("继续进入练习"));
     fireEvent.click(screen.getByText(/文字骚扰/));
     fireEvent.click(screen.getByText("删除全部聊天记录"));
     fireEvent.click(screen.getByText("不回复也不拉黑——聊天窗口留着"));
@@ -105,6 +126,7 @@ describe("SimulationPage", () => {
   it("passes the low score to the red-band result card", async () => {
     render(<SimulationPage language="zh" onGoToAid={() => {}} />);
     fireEvent.click(screen.getByText("TA被家暴该怎么做"));
+    fireEvent.click(screen.getByText("继续进入练习"));
     fireEvent.click(screen.getByText("长期——这样的事持续了几个月或几年"));
     fireEvent.click(screen.getByText("继续这样过"));
     fireEvent.click(screen.getByText("暂时不采取行动"));
@@ -118,6 +140,7 @@ describe("SimulationPage", () => {
   it("passes the high score to the green-band result card", async () => {
     render(<SimulationPage language="zh" onGoToAid={() => {}} />);
     fireEvent.click(screen.getByText("TA被家暴该怎么做"));
+    fireEvent.click(screen.getByText("继续进入练习"));
     fireEvent.click(screen.getByText("紧急——现在正在发生，或刚刚发生"));
     fireEvent.click(screen.getByText("跑到邻居家，从那里拨打 110"));
     fireEvent.click(screen.getByText("做完询问笔录，签字受案"));
@@ -136,6 +159,7 @@ describe("SimulationPage", () => {
     const onGoToAid = vi.fn();
     render(<SimulationPage language="zh" onGoToAid={onGoToAid} />);
     fireEvent.click(screen.getByText("TA被家暴该怎么做"));
+    fireEvent.click(screen.getByText("继续进入练习"));
     fireEvent.click(screen.getByText("我现在就需要真实帮助"));
     expect(screen.getByText("110")).toBeTruthy();
     expect(screen.getByText("12338")).toBeTruthy();
