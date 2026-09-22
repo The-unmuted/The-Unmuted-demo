@@ -76,9 +76,15 @@ function triggerDownload(url: string, filename: string) {
   link.href = url;
   link.download = filename;
   link.rel = "noopener";
+  link.style.position = "fixed";
+  link.style.left = "-10000px";
+  link.style.width = "1px";
+  link.style.height = "1px";
   document.body.appendChild(link);
   link.click();
-  link.remove();
+  // Keep the anchor alive for one event-loop turn. Safari and some Android
+  // WebViews can ignore a download when the element is removed immediately.
+  window.setTimeout(() => link.remove(), 100);
 }
 
 function formatReceiptTimestamp(createdAt: number) {
@@ -1338,10 +1344,7 @@ function ReportGuidanceCard({
         fields: savedFields,
         language,
       });
-      setReceiptDownload((current) => {
-        if (current) URL.revokeObjectURL(current.url);
-        return nextReceipt;
-      });
+      setReceiptDownload(nextReceipt);
       triggerDownload(nextReceipt.url, nextReceipt.filename);
       setSavedRecord(record);
       onSaved();
@@ -1488,9 +1491,37 @@ function ReportGuidanceCard({
                     language,
                     "Notes are encrypted before local saving and can attach to the evidence receipt.",
                     "内容会先加密再保存在本机，也可附加到存证回执中。"
-                  )}
+              )}
             </span>
           </div>
+
+          {receiptDownload && (
+            <div className="rounded-2xl border border-primary/20 bg-primary/8 p-3">
+              <div className="flex items-start gap-2.5">
+                <Download className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold text-foreground">
+                    {copyFor(language, "Text receipt ready", "文字回执已准备好")}
+                  </p>
+                  <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
+                    {copyFor(
+                      language,
+                      "If your browser did not start the download automatically, tap the button below.",
+                      "如果浏览器没有自动开始下载，请点击下面的按钮。"
+                    )}
+                  </p>
+                    <a
+                    href={receiptDownload.url}
+                    download={receiptDownload.filename}
+                    className="mt-2 inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground transition-[background-color,transform] duration-100 ease-out hover:bg-primary/90 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    {copyFor(language, "Download text receipt", "下载文字回执")}
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
 
         </div>
       </div>
