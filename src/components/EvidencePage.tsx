@@ -87,6 +87,14 @@ function triggerDownload(url: string, filename: string) {
   window.setTimeout(() => link.remove(), 100);
 }
 
+function triggerBlobDownload(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  triggerDownload(url, filename);
+  // Do not revoke the URL in the same tick. The browser may still be reading
+  // it after the click, especially on Safari and embedded mobile browsers.
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 function formatReceiptTimestamp(createdAt: number) {
   const date = new Date(createdAt);
   const pad = (value: number) => String(value).padStart(2, "0");
@@ -1920,12 +1928,7 @@ function CloudVaultHistory({
         return;
       }
       const pkg = await buildCourtPackage(record, blob, exportPassword);
-      const url = URL.createObjectURL(pkg);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = courtPackageName(record);
-      a.click();
-      URL.revokeObjectURL(url);
+      triggerBlobDownload(pkg, courtPackageName(record));
       toast.success(
         copyFor(
           language,
@@ -1948,14 +1951,10 @@ function CloudVaultHistory({
       );
       return;
     }
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download =
+    const filename =
       record.meta.fileName ||
       `evidence-${record.clientTime.slice(0, 10)}.${(record.meta.mimeType.split("/")[1] ?? "bin").split(";")[0]}`;
-    a.click();
-    URL.revokeObjectURL(url);
+    triggerBlobDownload(blob, filename);
     toast.success(
       copyFor(
         language,
@@ -2031,12 +2030,7 @@ function CloudVaultHistory({
         },
       } satisfies EvidenceRecord;
       const pkg = await buildCourtPackage(evidenceRecord, textBlob, exportPassword);
-      const url = URL.createObjectURL(pkg);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = courtPackageName(evidenceRecord);
-      a.click();
-      URL.revokeObjectURL(url);
+      triggerBlobDownload(pkg, courtPackageName(evidenceRecord));
       toast.success(
         copyFor(
           language,
