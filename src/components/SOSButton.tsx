@@ -276,19 +276,19 @@ export default function SOSButton({
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}
         aria-label={copyFor(language, "Hold for 2 seconds to send an emergency SMS", "长按 2 秒发送紧急短信")}
-        className={`relative aspect-square w-[80vw] max-w-[360px] select-none overflow-visible rounded-[2rem] bg-transparent ${glowClass} transition-[filter,transform] duration-100 ease-out active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-4 focus-visible:ring-offset-background`}
+        className={`relative aspect-square w-[80vw] max-w-[360px] select-none overflow-visible rounded-[2rem] bg-transparent ${glowClass} transition-[filter,transform] duration-100 ease-out active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-4 focus-visible:ring-offset-background`}
         whileTap={state === "idle" ? { scale: 0.95 } : {}}
         style={{ touchAction: "none" }}
       >
         <span
           aria-hidden="true"
-          className={`pointer-events-none absolute inset-[14%] -z-10 rounded-full bg-primary/20 blur-3xl ${state === "idle" ? "sos-pulse" : ""}`}
+          className={`pointer-events-none absolute inset-[14%] -z-10 rounded-full bg-white/20 blur-3xl ${state === "idle" ? "sos-pulse" : ""}`}
         />
         <img
           src={LOGO_SRC}
           alt=""
           aria-hidden="true"
-          className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-full w-full -translate-x-1/2 -translate-y-1/2 object-contain opacity-100 drop-shadow-[0_0_42px_hsl(320_100%_78%/0.26)] [filter:saturate(1.16)_contrast(1.05)_brightness(1.04)]"
+          className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-full w-full -translate-x-1/2 -translate-y-1/2 object-contain opacity-100 drop-shadow-[0_0_46px_hsl(0_0%_100%/0.62)] [filter:saturate(1.16)_contrast(1.05)_brightness(1.08)]"
         />
 
         {state === "pressing" && (

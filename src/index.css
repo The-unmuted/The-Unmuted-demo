@@ -41,8 +41,10 @@
     --sos-pressing: 271 100% 74%;
     --sos-success: 155 55% 60%;
     --sos-offline: 33 93% 67%;
-    --sos-glow: 320 100% 78% / 0.42;
-    --sos-pressing-glow: 271 100% 74% / 0.42;
+    /* A neutral white halo keeps the SOS control visibly interactive against
+       the pink/purple logo instead of making it read like a static mark. */
+    --sos-glow: 0 0% 100% / 0.72;
+    --sos-pressing-glow: 0 0% 100% / 0.86;
     --sos-success-glow: 155 55% 60% / 0.35;
 
     --nav-active: 320 100% 80%;
