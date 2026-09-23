@@ -5,11 +5,11 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { UserPlus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import SOSButton from "./SOSButton";
 import { NGOSuggestionSheet } from "./NGOPage";
 import { AppLanguage, copyFor } from "@/lib/locale";
-import { useEmergencyContacts, MAX_EMERGENCY_CONTACTS } from "@/hooks/useEmergencyContacts";
+import { useEmergencyContacts } from "@/hooks/useEmergencyContacts";
 import { useSosMessage, DEFAULT_TEMPLATE } from "@/hooks/useSosMessage";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -111,7 +111,6 @@ function EmergencyContactsCard({ language }: { language: AppLanguage }) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [adding, setAdding] = useState(false);
-  const atLimit = contacts.length >= MAX_EMERGENCY_CONTACTS;
 
   const handleAdd = () => {
     if (!name.trim() || !phone.trim()) return;
@@ -127,22 +126,26 @@ function EmergencyContactsCard({ language }: { language: AppLanguage }) {
         <p className="text-sm font-bold text-foreground">
           {copyFor(language, "Emergency Contacts", "紧急联系人")}
         </p>
-        {!atLimit && (
-          <button
-            onClick={() => setAdding((v) => !v)}
-            className="flex items-center gap-1 rounded-xl border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <UserPlus className="h-3.5 w-3.5" />
-            {copyFor(language, "Add", "添加")}
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => setAdding((v) => !v)}
+          aria-label={copyFor(language, "Add emergency contact", "添加紧急联系人")}
+          aria-expanded={adding}
+          title={copyFor(language, "Add emergency contact", "添加紧急联系人")}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/50 bg-primary/10 text-primary shadow-[0_0_18px_hsl(var(--primary)/0.12)] transition-all hover:border-primary hover:bg-primary/20 active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        >
+          <Plus
+            className={`h-5 w-5 transition-transform ${adding ? "rotate-45" : "rotate-0"}`}
+            aria-hidden="true"
+          />
+        </button>
       </div>
 
       <p className="text-xs leading-5 text-muted-foreground">
         {copyFor(
           language,
-          "This contact will receive an SMS with your location when you trigger SOS. Set your emergency contact in advance.",
-          "SOS 触发时，会向 TA 发送带有你位置的短信。可提前设置紧急联系人。"
+          "All saved contacts will receive an SMS with your location when you trigger SOS. Add as many trusted contacts as you need.",
+          "SOS 触发时，会向所有联系人发送带有你位置的短信。你可以添加任意数量的紧急联系人。"
         )}
       </p>
 
@@ -156,8 +159,10 @@ function EmergencyContactsCard({ language }: { language: AppLanguage }) {
           >
             <div className="space-y-2 pt-1">
               <input
+                type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                autoComplete="name"
                 placeholder={copyFor(language, "Name", "姓名")}
                 className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
               />
@@ -166,6 +171,7 @@ function EmergencyContactsCard({ language }: { language: AppLanguage }) {
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder={copyFor(language, "Phone number", "手机号")}
                 type="tel"
+                autoComplete="tel"
                 className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
               />
               <button
@@ -257,4 +263,3 @@ function SosMessageCard({ language }: { language: AppLanguage }) {
     </div>
   );
 }
-

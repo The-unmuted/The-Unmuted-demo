@@ -164,20 +164,16 @@ export function buildGroupSmsUri(
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
   const separator = isIOS ? "," : ";";
   const recipients = contacts
-    .slice(0, MAX_EMERGENCY_CONTACTS)
     .map((c) => c.phone)
     .join(separator);
   const body = encodeURIComponent(buildSmsBody(lat, lng, template, extras));
   return `sms:${recipients}?body=${body}`;
 }
 
-export const MAX_EMERGENCY_CONTACTS = 1;
-
 export function useEmergencyContacts() {
   const [contacts, setContacts] = useState<EmergencyContact[]>(() => loadContacts());
 
   const addContact = useCallback((name: string, phone: string): EmergencyContact | null => {
-    if (loadContacts().length >= MAX_EMERGENCY_CONTACTS) return null;
     const contact: EmergencyContact = {
       id: crypto.randomUUID(),
       name: name.trim(),

@@ -34,6 +34,9 @@ export interface AidResource {
   location: string | null;
   locationEn: string | null;
   websiteUrl: string | null;
+  /** Optional label for links that are an official social account or directory listing rather than a homepage. */
+  websiteLabel?: string;
+  websiteLabelEn?: string;
   sourceUrl: string | null;
   verifiedAt: string; // YYYY-MM of last human verification
 }

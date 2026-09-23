@@ -483,7 +483,11 @@ function ResourceCard({
             className="min-w-[8rem] flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-border bg-card py-2.5 text-xs font-bold text-foreground/70 transition-transform active:scale-95"
           >
             <Globe className="h-3.5 w-3.5" />
-            {copyFor(language, "Website", "官网")}
+            {copyFor(
+              language,
+              r.websiteLabelEn ?? "Website",
+              r.websiteLabel ?? "官网",
+            )}
             <ExternalLink className="h-3 w-3 opacity-50" />
           </a>
         )}

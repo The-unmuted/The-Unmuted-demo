@@ -62,12 +62,33 @@ describe("aid directory data integrity", () => {
     }
   });
 
-  it("urls are https", () => {
+  it("uses secure URLs except for one explicit official legacy endpoint", () => {
     for (const r of AID_RESOURCES) {
       for (const url of [r.websiteUrl, r.sourceUrl]) {
-        if (url) expect(url, r.id).toMatch(/^https:\/\//);
+        if (url) {
+          // Pengxing's verified government/organization contact server is an
+          // HTTP-only legacy endpoint; keep the exception explicit and narrow.
+          if (r.id === "cn-social-pengxing") {
+            expect(url, r.id).toMatch(/^http:\/\/jbfh\.pengxingsw\.org\//);
+          } else {
+            expect(url, r.id).toMatch(/^https:\/\//);
+          }
+        }
       }
     }
+  });
+
+  it("does not expose the reported dead contacts or domains", () => {
+    const urls = AID_RESOURCES.flatMap((r) => [r.websiteUrl, r.sourceUrl])
+      .filter(Boolean)
+      .join(" ");
+
+    expect(urls).not.toContain("fengcaixinli.org.cn");
+    expect(urls).not.toContain("shqingaijc.com");
+    expect(urls).not.toContain("pxfanjiabao.org");
+    expect(AID_RESOURCES.some((r) => r.id === "cn-social-qingai")).toBe(false);
+    expect(AID_RESOURCES.find((r) => r.id === "cn-psych-shanghai")?.phone).toBe("12356");
+    expect(AID_RESOURCES.find((r) => r.id === "cn-social-pengxing")?.websiteUrl).toBe("http://jbfh.pengxingsw.org/");
   });
 
   it("phones contain only digits and dashes (usable in tel: links)", () => {
