@@ -20,6 +20,7 @@ import {
   SEED_NGOS,
 } from "@/lib/ngoService";
 import type { AppLanguage } from "@/lib/locale";
+import { GERMANY_AID_RESOURCES } from "@/data/germanyAid";
 
 // ── Service type config ────────────────────────────────────────────────────────
 
@@ -330,6 +331,10 @@ export function NGOSuggestionSheet({
   language: AppLanguage;
   onClose: () => void;
 }) {
+  if (language === "de") {
+    return <GermanySupportSheet onClose={onClose} />;
+  }
+
   const suggestions = SEED_NGOS.slice(0, 3);
 
   return (
@@ -407,6 +412,92 @@ export function NGOSuggestionSheet({
           className="mt-5 w-full rounded-2xl border border-border py-3 text-sm font-semibold text-muted-foreground"
         >
           {copyFor(language, "Close", "关闭")}
+        </button>
+      </motion.div>
+    </>
+  );
+}
+
+function GermanySupportSheet({ onClose }: { onClose: () => void }) {
+  const suggestionIds = new Set([
+    "de-social-hilfetelefon-frauen",
+    "de-legal-weisser-ring",
+    "de-psych-telefonseelsorge",
+  ]);
+  const suggestions = GERMANY_AID_RESOURCES.filter((resource) => suggestionIds.has(resource.id));
+
+  return (
+    <>
+      <button
+        type="button"
+        aria-label="Unterstützung schließen"
+        className="fixed inset-0 z-40 cursor-default bg-black/50 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <motion.div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="germany-follow-up-title"
+        initial={{ y: "100%" }}
+        animate={{ y: 0 }}
+        exit={{ y: "100%" }}
+        transition={{ type: "spring", damping: 30, stiffness: 260 }}
+        className="fixed bottom-0 left-0 right-0 z-50 max-h-[85dvh] overflow-y-auto rounded-t-3xl border-t border-border bg-card px-5 pb-8 pt-5 shadow-2xl"
+      >
+        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-border" />
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <HeartHandshake className="h-5 w-5 text-primary" aria-hidden="true" />
+            <p id="germany-follow-up-title" className="text-sm font-bold text-foreground">
+              Unterstützung in Deutschland
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Schließen"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <X className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
+        <p className="mb-4 text-xs leading-5 text-muted-foreground">
+          Du bist jetzt in Sicherheit. Diese bundesweiten Stellen können dich vertraulich
+          weiter unterstützen. Bei erneuter akuter Gefahr: Polizei 110 oder Notruf 112.
+        </p>
+        <div className="space-y-3">
+          {suggestions.map((resource) => (
+            <article key={resource.id} className="rounded-2xl border border-border bg-background px-4 py-3">
+              <p className="text-sm font-semibold text-foreground">{resource.name}</p>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">{resource.hours}</p>
+              <div className={`mt-3 grid gap-2 ${resource.phone ? "grid-cols-2" : "grid-cols-1"}`}>
+                {resource.phone && (
+                  <a
+                    href={`tel:${resource.phone.replace(/\s/g, "")}`}
+                    className="flex min-h-10 items-center justify-center gap-1.5 rounded-xl bg-primary/10 px-3 text-xs font-bold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <Phone className="h-3.5 w-3.5" aria-hidden="true" />
+                    {resource.phone}
+                  </a>
+                )}
+                <a
+                  href={resource.websiteUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-border px-3 text-xs font-bold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <Globe className="h-3.5 w-3.5" aria-hidden="true" /> Website
+                </a>
+              </div>
+            </article>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="mt-5 min-h-11 w-full rounded-2xl border border-border py-3 text-sm font-semibold text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          Schließen
         </button>
       </motion.div>
     </>

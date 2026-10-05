@@ -16,7 +16,9 @@ function leaveNow(language: AppLanguage): void {
   const url =
     language === "zh"
       ? "https://www.baidu.com/s?wd=%E5%A4%A9%E6%B0%94"
-      : "https://www.google.com/search?q=weather";
+      : language === "de"
+        ? "https://www.google.com/search?q=Wetter"
+        : "https://www.google.com/search?q=weather";
   window.location.replace(url);
 }
 
@@ -29,7 +31,9 @@ function openWeather(language: AppLanguage): void {
   const url =
     language === "zh"
       ? "https://www.baidu.com/s?wd=%E5%A4%A9%E6%B0%94"
-      : "https://www.google.com/search?q=weather";
+      : language === "de"
+        ? "https://www.google.com/search?q=Wetter"
+        : "https://www.google.com/search?q=weather";
   window.location.assign(url);
 }
 

@@ -19,6 +19,8 @@ const SOSPage = lazy(() => import("@/components/SOSPage"));
 const EvidencePage = lazy(() => import("@/components/EvidencePage"));
 const AidPage = lazy(() => import("@/components/AidPage"));
 const SimulationPage = lazy(() => import("@/components/SimulationPage"));
+const GermanyAidPage = lazy(() => import("@/components/GermanyAidPage"));
+const GermanySimulationPage = lazy(() => import("@/components/GermanySimulationPage"));
 
 // DEMO branch: BetaGate deleted; VITE_BETA_CODE ignored.
 // LoginFlow removed; a single DemoWelcome screen gates entry.
@@ -34,6 +36,7 @@ export default function Index() {
   const [entered, setEntered] = useState(false);
   const [autoLocked, setAutoLocked] = useState(false);
   const [welcomePopupOpen, setWelcomePopupOpen] = useState(false);
+  const nextLanguage = language === "en" ? "zh" : language === "zh" ? "de" : "en";
 
   // Demo: initialize the session master key on app load so uploads work
   // without any password. Vault-password gates in EvidencePage still ask for
@@ -95,11 +98,22 @@ export default function Index() {
           <FeedbackWidget language={language} />
           <button
             type="button"
-            onClick={() => setLanguage(language === "en" ? "zh" : "en")}
+            onClick={() => setLanguage(nextLanguage)}
             className="inline-flex h-10 w-10 shrink-0 items-center justify-center whitespace-nowrap rounded-full border border-border bg-card/90 text-[11px] font-bold leading-none text-primary transition-[background-color,transform] duration-100 ease-out hover:bg-accent active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            aria-label={copyFor(language, "Switch language", "切换语言")}
+            aria-label={copyFor(
+              language,
+              "Switch language. English, Chinese, German.",
+              "切换语言：英语、中文、德语",
+              "Sprache wechseln: Deutsch, Englisch, Chinesisch",
+            )}
+            title={copyFor(
+              language,
+              "Switch language: English → 中文 → Deutsch",
+              "切换语言：中文 → Deutsch → English",
+              "Sprache wechseln: Deutsch → English → 中文",
+            )}
           >
-            {language === "en" ? "中" : "EN"}
+            {language === "zh" ? "中" : language.toUpperCase()}
           </button>
         </div>
       </header>
@@ -135,9 +149,15 @@ export default function Index() {
               {activeTab === "evidence" && (
                 <EvidencePage language={language} userEmail="demo@unmuted.local" />
               )}
-              {activeTab === "aid" && <AidPage language={language} />}
+              {activeTab === "aid" && (
+                language === "de" ? <GermanyAidPage /> : <AidPage language={language} />
+              )}
               {activeTab === "simulation" && (
-                <SimulationPage language={language} onGoToAid={() => setActiveTab("aid")} />
+                language === "de" ? (
+                  <GermanySimulationPage onGoToAid={() => setActiveTab("aid")} />
+                ) : (
+                  <SimulationPage language={language} onGoToAid={() => setActiveTab("aid")} />
+                )
               )}
             </Suspense>
           </main>

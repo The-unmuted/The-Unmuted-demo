@@ -41,8 +41,9 @@ export default function SettingsWidget({ language, onLogout }: SettingsWidgetPro
     const res = await unlockWithPassword(userId, currentPwd);
     if (!res.ok) {
       setPwdBusy(false);
+      const reason = "reason" in res ? res.reason : "wrong-secret";
       setPwdError(
-        res.reason === "vault-unavailable"
+        reason === "vault-unavailable"
           ? copyFor(language, "Couldn't open your vault right now. Check your connection and try again.", "暂时打不开你的保险柜。请检查网络后再试。")
           : copyFor(language, "Current password is incorrect.", "当前密码不正确。")
       );

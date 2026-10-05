@@ -1126,7 +1126,7 @@ function ScoreCard({
         setBusy(true);
         setError(false);
         const blob = await renderScoreCard({
-          language,
+          language: language === "de" ? "en" : language,
           scenarioTitle,
           scenarioTagline,
           endingTitle,

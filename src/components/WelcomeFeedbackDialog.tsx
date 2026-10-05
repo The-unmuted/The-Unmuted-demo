@@ -14,7 +14,7 @@
  * happen in the design file, not in code.
  */
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { X } from "lucide-react";
+import { Mail, MessageCircle, X } from "lucide-react";
 import { AppLanguage, copyFor } from "@/lib/locale";
 
 const POPUP_SRC = "/welcome-feedback-popup.jpg";
@@ -63,16 +63,56 @@ export default function WelcomeFeedbackDialog({
             {copyFor(language, "Welcome to The Unmuted", "欢迎使用非默")}
           </DialogPrimitive.Title>
 
-          <img
-            src={POPUP_SRC}
-            alt={copyFor(language, "Welcome to The Unmuted — tell us what you think", "欢迎使用非默 — 我们期待你的反馈")}
-            className="block h-auto w-full select-none"
-            draggable={false}
-          />
+          {language === "de" ? (
+            <div className="border border-primary/20 bg-card px-6 pb-7 pt-8 text-center text-foreground">
+              <img
+                src="/the-unmuted-mark.png"
+                alt=""
+                width={72}
+                height={72}
+                className="mx-auto h-16 w-16 object-contain drop-shadow-[0_0_22px_hsl(var(--primary)/0.32)]"
+              />
+              <h2 className="mt-4 text-xl font-black">Willkommen bei The Unmuted</h2>
+              <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-muted-foreground">
+                Danke, dass du diese frühe Version testest. Deine Hinweise helfen uns,
+                Sicherheit, Verständlichkeit und Zugänglichkeit weiter zu verbessern.
+              </p>
+              <div className="mt-5 space-y-3 text-left">
+                <div className="flex items-start gap-3 rounded-2xl border border-border/70 bg-background/45 p-4">
+                  <Mail className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+                  <div>
+                    <p className="text-sm font-bold">Feedback geben</p>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                      Nutze oben rechts die Umschlag-Schaltfläche, um Fehler oder Vorschläge zu senden.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 rounded-2xl border border-border/70 bg-background/45 p-4">
+                  <MessageCircle className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+                  <div>
+                    <p className="text-sm font-bold">Mit der Testgruppe austauschen</p>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                      Über die 👗-Schaltfläche gelangst du zur WeChat-Testgruppe.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <p className="mt-5 text-xs leading-5 text-muted-foreground">
+                Bitte verwende für Tests keine echten Beweismittel oder sensiblen persönlichen Daten.
+              </p>
+            </div>
+          ) : (
+            <img
+              src={POPUP_SRC}
+              alt={copyFor(language, "Welcome to The Unmuted — tell us what you think", "欢迎使用非默 — 我们期待你的反馈")}
+              className="block h-auto w-full select-none"
+              draggable={false}
+            />
+          )}
 
           <DialogPrimitive.Close
             aria-label={copyFor(language, "Close", "关闭")}
-            className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white shadow-lg backdrop-blur-md transition-colors hover:bg-black/80 focus:outline-none focus:ring-2 focus:ring-white/50 active:scale-95"
+            className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white shadow-lg backdrop-blur-md transition-colors hover:bg-black/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white active:scale-95"
           >
             <X className="h-5 w-5" strokeWidth={2.5} />
             <span className="sr-only">{copyFor(language, "Close", "关闭")}</span>

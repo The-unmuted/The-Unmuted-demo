@@ -148,16 +148,16 @@ export default function SOSButton({
     if (freshContacts.length === 0) {
       setState("no-contacts");
       if (!isSilent) {
-        toast(copyFor(language, "⚠️ No emergency contacts set.", "⚠️ 尚未设置紧急联系人。"));
+        toast(copyFor(language, "⚠️ No emergency contacts set.", "⚠️ 尚未设置紧急联系人。", "⚠️ Keine Notfallkontakte gespeichert."));
       }
       return;
     }
 
     // Read pre-set message template (also fresh from localStorage)
-    const situationNote = loadSosTemplate();
+    const situationNote = loadSosTemplate(language);
 
     // Open one SMS compose addressed to ALL contacts at once
-    const uri = buildGroupSmsUri(freshContacts, lat, lng, situationNote, extras);
+    const uri = buildGroupSmsUri(freshContacts, lat, lng, situationNote, extras, language);
     window.location.href = uri;
 
     setTriggeredNote(situationNote);
@@ -171,7 +171,8 @@ export default function SOSButton({
         copyFor(
           language,
           `SMS opening for ${freshContacts.length} contact${freshContacts.length > 1 ? "s" : ""}`,
-          `正在向 ${freshContacts.length} 位联系人发送短信`
+          `正在向 ${freshContacts.length} 位联系人发送短信`,
+          `SMS für ${freshContacts.length} Kontakt${freshContacts.length === 1 ? "" : "e"} wird geöffnet`
         )
       );
     }
@@ -275,7 +276,7 @@ export default function SOSButton({
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}
-        aria-label={copyFor(language, "Hold for 2 seconds to send an emergency SMS", "长按 2 秒发送紧急短信")}
+        aria-label={copyFor(language, "Hold for 2 seconds to send an emergency SMS", "长按 2 秒发送紧急短信", "2 Sekunden gedrückt halten, um eine Notfall-SMS zu öffnen")}
         className={`relative aspect-square w-[80vw] max-w-[360px] select-none overflow-visible rounded-[2rem] bg-transparent ${glowClass} transition-[filter,transform] duration-100 ease-out active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-4 focus-visible:ring-offset-background`}
         whileTap={state === "idle" ? { scale: 0.95 } : {}}
         style={{ touchAction: "none" }}
@@ -316,7 +317,7 @@ export default function SOSButton({
               <motion.div key="triggered" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center gap-2">
                 <MessageSquare className="h-14 w-14 animate-pulse text-primary-foreground" />
                 <span className="text-sm font-medium text-primary-foreground/80">
-                  {copyFor(language, "Opening SMS...", "正在打开短信...")}
+                  {copyFor(language, "Opening SMS...", "正在打开短信...", "SMS wird geöffnet …")}
                 </span>
               </motion.div>
             )}
@@ -324,7 +325,7 @@ export default function SOSButton({
               <motion.div key="success" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center gap-2">
                 <Check className="h-16 w-16 text-primary-foreground" strokeWidth={3} />
                 <span className="text-lg font-bold text-primary-foreground">
-                  {copyFor(language, "SMS Sent", "短信已发送")}
+                  {copyFor(language, "SMS Sent", "短信已发送", "SMS geöffnet")}
                 </span>
               </motion.div>
             )}
@@ -332,7 +333,7 @@ export default function SOSButton({
               <motion.div key="no-contacts" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center gap-2">
                 <AlertTriangle className="h-14 w-14 text-background" />
                 <span className="text-sm font-bold text-background">
-                  {copyFor(language, "No Contacts Set", "未设置联系人")}
+                  {copyFor(language, "No Contacts Set", "未设置联系人", "Keine Kontakte")}
                 </span>
               </motion.div>
             )}
@@ -342,16 +343,16 @@ export default function SOSButton({
 
       {state === "idle" && (
         <p className="mt-3 text-center text-xs font-semibold uppercase tracking-[0.16em] text-primary/85">
-          {copyFor(language, "SOS: Emergency Alert", "SOS：紧急求救")}
+          {copyFor(language, "SOS: Emergency Alert", "SOS：紧急求救", "SOS: NOTFALLALARM")}
         </p>
       )}
 
       <p className="mt-2 text-center text-sm text-muted-foreground">
-        {state === "idle" && copyFor(language, "Hold for 2 seconds to send SMS alert", "长按 2 秒发送短信求救")}
-        {state === "pressing" && copyFor(language, "Keep holding...", "继续按住...")}
-        {state === "triggered" && copyFor(language, "Getting location and opening SMS", "正在获取位置并打开短信")}
-        {state === "success" && copyFor(language, "SMS app opened with your location", "短信已附上你的位置")}
-        {state === "no-contacts" && copyFor(language, "Add emergency contacts below", "请在下方添加紧急联系人")}
+        {state === "idle" && copyFor(language, "Hold for 2 seconds to send SMS alert", "长按 2 秒发送短信求救", "2 Sekunden gedrückt halten, um eine Notfall-SMS zu öffnen")}
+        {state === "pressing" && copyFor(language, "Keep holding...", "继续按住...", "Weiter gedrückt halten …")}
+        {state === "triggered" && copyFor(language, "Getting location and opening SMS", "正在获取位置并打开短信", "Standort wird ermittelt und SMS geöffnet")}
+        {state === "success" && copyFor(language, "SMS app opened with your location", "短信已附上你的位置", "SMS-App mit deinem Standort geöffnet")}
+        {state === "no-contacts" && copyFor(language, "Add emergency contacts below", "请在下方添加紧急联系人", "Füge unten Notfallkontakte hinzu")}
       </p>
 
       {/* Extra contacts (2nd, 3rd…) shown as tap-able SMS links */}
@@ -367,16 +368,17 @@ export default function SOSButton({
               {copyFor(
                 language,
                 "If anyone is missing from the group SMS, send individually:",
-                "如群发短信有遗漏，可单独发送："
+                "如群发短信有遗漏，可单独发送：",
+                "Falls jemand in der Gruppen-SMS fehlt, sende die Nachricht einzeln:"
               )}
             </p>
             {extraContacts.map((c) => (
               <a
                 key={c.id}
-                href={buildSmsUri(c, coords.lat, coords.lng, triggeredNote, triggeredExtras)}
-                className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-card py-3 text-sm font-semibold text-foreground active:scale-95 transition-transform"
+                href={buildSmsUri(c, coords.lat, coords.lng, triggeredNote, triggeredExtras, language)}
+                className="flex min-h-10 items-center justify-center gap-2 rounded-2xl border border-border bg-card py-3 text-sm font-semibold text-foreground transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <PhoneCall className="h-4 w-4 text-primary" />
+                <PhoneCall className="h-4 w-4 text-primary" aria-hidden="true" />
                 {c.name}
               </a>
             ))}
@@ -391,7 +393,7 @@ export default function SOSButton({
             onClick={handleSafe}
             className="mt-6 rounded-full bg-sos-success px-8 py-3 text-base font-bold text-primary-foreground"
           >
-            {copyFor(language, "I'm Safe", "我已安全")}
+            {copyFor(language, "I'm Safe", "我已安全", "Ich bin in Sicherheit")}
           </motion.button>
         )}
       </AnimatePresence>

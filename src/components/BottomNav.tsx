@@ -10,16 +10,16 @@ interface BottomNavProps {
 }
 
 const tabs = [
-  { id: "sos"        as const, english: "Help",     chinese: "求助", icon: Shield         },
-  { id: "simulation" as const, english: "Practice", chinese: "模拟", icon: Compass        },
-  { id: "evidence"   as const, english: "Evidence", chinese: "存证", icon: Archive        },
-  { id: "aid"        as const, english: "Aid",      chinese: "援助", icon: HeartHandshake },
+  { id: "sos"        as const, english: "Help",     chinese: "求助", german: "Hilfe",  icon: Shield         },
+  { id: "simulation" as const, english: "Practice", chinese: "模拟", german: "Übung",  icon: Compass        },
+  { id: "evidence"   as const, english: "Evidence", chinese: "存证", german: "Beweise", icon: Archive        },
+  { id: "aid"        as const, english: "Aid",      chinese: "援助", german: "Beratung", icon: HeartHandshake },
 ];
 
 export default function BottomNav({ activeTab, onTabChange, language }: BottomNavProps) {
   return (
     <nav
-      aria-label={copyFor(language, "Main navigation", "主导航")}
+      aria-label={copyFor(language, "Main navigation", "主导航", "Hauptnavigation")}
       className="shrink-0 border-t border-border/80 bg-card/95 shadow-[0_-14px_38px_hsl(240_70%_4%/0.28)] backdrop-blur-xl"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
@@ -39,7 +39,7 @@ export default function BottomNav({ activeTab, onTabChange, language }: BottomNa
             >
               <Icon className="h-5 w-5" />
               <span className="whitespace-nowrap leading-none">
-                {copyFor(language, tab.english, tab.chinese)}
+                {copyFor(language, tab.english, tab.chinese, tab.german)}
               </span>
             </button>
           );

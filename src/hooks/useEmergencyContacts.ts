@@ -9,6 +9,7 @@
  */
 
 import { useState, useCallback } from "react";
+import type { AppLanguage } from "@/lib/locale";
 
 export interface EmergencyContact {
   id: string;
@@ -88,12 +89,32 @@ export function wgs84ToGcj02(lat: number, lng: number): { lat: number; lng: numb
  * - Raw GPS text uses WGS-84 (precise, copy-pasteable into any app)
  * - Gaode navigation URL uses GCJ-02 (corrected for Chinese map offset)
  */
-export function buildLocationBlock(lat: number, lng: number, extras?: LocationExtras): string {
-  if (lat === 0 && lng === 0) return "位置获取失败 / Location unavailable";
+export function buildLocationBlock(
+  lat: number,
+  lng: number,
+  extras?: LocationExtras,
+  language: AppLanguage = "en"
+): string {
+  if (lat === 0 && lng === 0) {
+    return language === "de" ? "Standort nicht verfügbar" : "位置获取失败 / Location unavailable";
+  }
 
   // GPS coordinates + accuracy (WGS-84 — raw hardware value, maximum precision)
   const accuracy = extras?.accuracy != null ? ` (±${Math.round(extras.accuracy)}m)` : "";
   const coordLine = `GPS: ${lat.toFixed(6)}, ${lng.toFixed(6)}${accuracy}`;
+
+  if (language === "de") {
+    const mapUrl =
+      `https://www.openstreetmap.org/?mlat=${lat.toFixed(6)}&mlon=${lng.toFixed(6)}` +
+      `#map=17/${lat.toFixed(6)}/${lng.toFixed(6)}`;
+    const statusParts: string[] = [];
+    if (extras?.battery != null) statusParts.push(`Akku ${extras.battery} %`);
+    if (extras?.network) statusParts.push(extras.network.toUpperCase());
+
+    const lines = [coordLine, `Karte: ${mapUrl}`];
+    if (statusParts.length) lines.push(statusParts.join(" · "));
+    return lines.join("\n");
+  }
 
   // Gaode navigation link — convert to GCJ-02 so the pin lands on the right spot
   const gcj = wgs84ToGcj02(lat, lng);
@@ -121,12 +142,21 @@ export function buildSmsBody(
   lat: number,
   lng: number,
   template?: string,
-  extras?: LocationExtras
+  extras?: LocationExtras,
+  language: AppLanguage = "en"
 ): string {
-  const locationBlock = buildLocationBlock(lat, lng, extras);
+  const locationBlock = buildLocationBlock(lat, lng, extras, language);
 
   if (template && template.trim()) {
-    return template.replace(/\{位置\}/g, locationBlock);
+    return template.replace(/\{(?:位置|Standort)\}/g, locationBlock);
+  }
+
+  if (language === "de") {
+    return (
+      `Ich brauche Hilfe und bin nicht sicher.\n${locationBlock}\n` +
+      `Bitte ruf mich sofort zurück. Wenn ich innerhalb von 5 Minuten nicht antworte, ` +
+      `verständige bitte die Polizei unter 110.`
+    );
   }
 
   // Default fallback (no template set)
@@ -144,9 +174,10 @@ export function buildSmsUri(
   lat: number,
   lng: number,
   template?: string,
-  extras?: LocationExtras
+  extras?: LocationExtras,
+  language: AppLanguage = "en"
 ): string {
-  const body = encodeURIComponent(buildSmsBody(lat, lng, template, extras));
+  const body = encodeURIComponent(buildSmsBody(lat, lng, template, extras, language));
   return `sms:${contact.phone}?body=${body}`;
 }
 
@@ -159,14 +190,15 @@ export function buildGroupSmsUri(
   lat: number,
   lng: number,
   template?: string,
-  extras?: LocationExtras
+  extras?: LocationExtras,
+  language: AppLanguage = "en"
 ): string {
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
   const separator = isIOS ? "," : ";";
   const recipients = contacts
     .map((c) => c.phone)
     .join(separator);
-  const body = encodeURIComponent(buildSmsBody(lat, lng, template, extras));
+  const body = encodeURIComponent(buildSmsBody(lat, lng, template, extras, language));
   return `sms:${recipients}?body=${body}`;
 }
 

@@ -10,7 +10,7 @@ import {
 import { toast } from "sonner";
 import { useEvidenceVault } from "@/hooks/useEvidenceVault";
 import { formatBytes } from "@/lib/evidenceCrypto";
-import { AppLanguage, copyFor } from "@/lib/locale";
+import { AppLanguage, copyFor, localeTag } from "@/lib/locale";
 import {
   deleteEncryptedReportNote,
   decryptReportNoteRecord,
@@ -120,8 +120,12 @@ function createEncryptedReportNotesReceiptDownload({
   fields: ReportNoteField[];
   language: AppLanguage;
 }) {
-  const filename = `非默本地加密存证回执-${formatReceiptTimestamp(record.createdAt)}-${record.id.slice(0, 8)}.txt`;
+  const filename = language === "de"
+    ? `The-Unmuted-Verschluesselter-Notizbeleg-${formatReceiptTimestamp(record.createdAt)}-${record.id.slice(0, 8)}.txt`
+    : `非默本地加密存证回执-${formatReceiptTimestamp(record.createdAt)}-${record.id.slice(0, 8)}.txt`;
   const fieldLabels = fields.map((field) => copyFor(language, field.labelEn, field.labelZh));
+  const separator = language === "zh" ? "：" : ": ";
+  const listSeparator = language === "zh" ? "、" : ", ";
   const lines = [
     copyFor(language, "The Unmuted · Local Encrypted Notes Receipt", "非默 · 本地加密存证回执"),
     "",
@@ -131,15 +135,15 @@ function createEncryptedReportNotesReceiptDownload({
       "本文件为 demo 阶段的本地回执。填写内容已加密，不在此文件中明文展示。"
     ),
     "",
-    `${copyFor(language, "Saved at", "保存时间")}：${new Date(record.createdAt).toLocaleString(language === "zh" ? "zh-CN" : "en-US")}`,
-    `${copyFor(language, "Scene", "场景")}：${copyFor(language, situation.titleEn, situation.titleZh)}`,
-    `${copyFor(language, "Saved fields", "已保存字段")}：${fieldLabels.join("、")}`,
-    `${copyFor(language, "Saved count", "保存项数")}：${record.noteCount}`,
+    `${copyFor(language, "Saved at", "保存时间")}${separator}${new Date(record.createdAt).toLocaleString(localeTag(language))}`,
+    `${copyFor(language, "Scene", "场景")}${separator}${copyFor(language, situation.titleEn, situation.titleZh)}`,
+    `${copyFor(language, "Saved fields", "已保存字段")}${separator}${fieldLabels.join(listSeparator)}`,
+    `${copyFor(language, "Saved count", "保存项数")}${separator}${record.noteCount}`,
     "",
-    `${copyFor(language, "Encryption", "加密方式")}：AES-GCM-256`,
-    `${copyFor(language, "Record ID", "记录编号")}：${record.id}`,
-    `${copyFor(language, "Encrypted hash SHA-256", "加密内容指纹 SHA-256")}：${record.encryptedHash}`,
-    `${copyFor(language, "IV", "加密 IV")}：${record.iv}`,
+    `${copyFor(language, "Encryption", "加密方式")}${separator}AES-GCM-256`,
+    `${copyFor(language, "Record ID", "记录编号")}${separator}${record.id}`,
+    `${copyFor(language, "Encrypted hash SHA-256", "加密内容指纹 SHA-256")}${separator}${record.encryptedHash}`,
+    `${copyFor(language, "IV", "加密 IV")}${separator}${record.iv}`,
     "",
     copyFor(language, "Encrypted payload:", "加密内容："),
     record.encryptedPayload,
@@ -499,7 +503,7 @@ function ReceiptCard({
           <p className="text-xs text-muted-foreground">
             {getMimeIcon(record.meta.mimeType)} {getMimeLabel(record.meta.mimeType, language)} ·{" "}
             {formatBytes(record.meta.originalSize)} ·{" "}
-            {new Date(record.clientTime).toLocaleString(language === "zh" ? "zh-CN" : "en-US")}
+            {new Date(record.clientTime).toLocaleString(localeTag(language))}
           </p>
         </div>
       </div>
@@ -605,7 +609,7 @@ function ReceiptCard({
                 </p>
                 <div className="rounded-lg bg-card px-3 py-2">
                   <p className="text-xs text-foreground">
-                    {new Date(record.meta.capturedAt).toLocaleString(language === "zh" ? "zh-CN" : "en-US")}
+                    {new Date(record.meta.capturedAt).toLocaleString(localeTag(language))}
                   </p>
                 </div>
               </div>
@@ -904,13 +908,14 @@ export default function EvidencePage({
             <Archive className="h-6 w-6 text-primary" />
           </div>
           <h1 className="text-xl font-black text-foreground">
-            {copyFor(language, "Evidence Vault", "存证中心")}
+            {copyFor(language, "Evidence Vault", "存证中心", "Sicherer Beweisspeicher")}
           </h1>
           <p className="mt-2 text-sm leading-5 text-muted-foreground">
             {copyFor(
               language,
               "All evidence is encrypted on your device before upload.",
-              "所有记录均在本机加密后才上传，无法被第三方读取。"
+              "所有记录均在本机加密后才上传，无法被第三方读取。",
+              "Alle Beweismittel werden vor dem Hochladen auf deinem Gerät verschlüsselt."
             )}
           </p>
         </div>
@@ -927,13 +932,14 @@ export default function EvidencePage({
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-foreground">
-                  {copyFor(language, "Capture Evidence", "即时取证")}
+                  {copyFor(language, "Capture Evidence", "即时取证", "Beweise sichern")}
                 </p>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
                   {copyFor(
                     language,
                     "Photo, video, or audio — encrypted on the spot, with time and place recorded.",
-                    "拍照、录像或录音，当场加密，并记下时间和地点。"
+                    "拍照、录像或录音，当场加密，并记下时间和地点。",
+                    "Foto, Video oder Audio – sofort verschlüsselt und mit Zeit und Ort gespeichert."
                   )}
                 </p>
               </div>
@@ -952,13 +958,14 @@ export default function EvidencePage({
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-foreground">
-                  {copyFor(language, "Situation Log", "情况记录")}
+                  {copyFor(language, "Situation Log", "情况记录", "Vorfall dokumentieren")}
                 </p>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
                   {copyFor(
                     language,
                     "Write down what happened. Encrypted and saved on this device.",
-                    "文字记录遭遇经过，加密保存在本机。"
+                    "文字记录遭遇经过，加密保存在本机。",
+                    "Schreibe auf, was passiert ist. Verschlüsselt und auf diesem Gerät gespeichert."
                   )}
                 </p>
               </div>
@@ -977,13 +984,14 @@ export default function EvidencePage({
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-foreground">
-                  {copyFor(language, "View Records", "查看存证记录")}
+                  {copyFor(language, "View Records", "查看存证记录", "Gespeicherte Beweise")}
                 </p>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
                   {copyFor(
                     language,
                     "Password required to view stored evidence.",
-                    "需输入密码才能查看已存证的记录。"
+                    "需输入密码才能查看已存证的记录。",
+                    "Zum Anzeigen gespeicherter Beweise ist ein Passwort erforderlich."
                   )}
                 </p>
               </div>
@@ -1009,10 +1017,15 @@ export default function EvidencePage({
           </button>
           <div>
             <h2 className="text-lg font-bold text-foreground">
-              {copyFor(language, "Capture Evidence", "即时取证")}
+              {copyFor(language, "Capture Evidence", "即时取证", "Beweise sichern")}
             </h2>
             <p className="text-xs text-muted-foreground">
-              {copyFor(language, "Encrypted on your device before upload.", "拍摄后立即在本机加密。")}
+              {copyFor(
+                language,
+                "Encrypted on your device before upload.",
+                "拍摄后立即在本机加密。",
+                "Vor dem Hochladen auf deinem Gerät verschlüsselt."
+              )}
             </p>
           </div>
         </div>
@@ -1043,14 +1056,14 @@ export default function EvidencePage({
             >
               <CaptureButton
                 icon={<Camera className="h-7 w-7" />}
-                label={copyFor(language, "Photo", "拍照")}
+                label={copyFor(language, "Photo", "拍照", "Foto")}
                 color="text-blue-400"
                 bgColor="bg-blue-500/10 border-blue-500/20"
                 onClick={() => photoInputRef.current?.click()}
               />
               <CaptureButton
                 icon={<Video className="h-7 w-7" />}
-                label={copyFor(language, "Video", "录像")}
+                label={copyFor(language, "Video", "录像", "Video")}
                 color="text-purple-400"
                 bgColor="bg-purple-500/10 border-purple-500/20"
                 onClick={() => videoInputRef.current?.click()}
@@ -1063,7 +1076,7 @@ export default function EvidencePage({
                     <Mic className="h-7 w-7" />
                   )
                 }
-                label={audioRecorder.recording ? `${audioRecorder.seconds}s` : copyFor(language, "Audio", "录音")}
+                label={audioRecorder.recording ? `${audioRecorder.seconds}s` : copyFor(language, "Audio", "录音", "Audio")}
                 color={audioRecorder.recording ? "text-red-400" : "text-green-400"}
                 bgColor={
                   audioRecorder.recording
@@ -1084,13 +1097,19 @@ export default function EvidencePage({
                   <Download className="h-4 w-4 shrink-0 text-muted-foreground" />
                   <div className="min-w-0">
                     <p className="text-xs font-bold text-foreground">
-                      {copyFor(language, "Import an existing photo, recording or file", "导入已有的照片、录音或文件")}
+                      {copyFor(
+                        language,
+                        "Import an existing photo, recording or file",
+                        "导入已有的照片、录音或文件",
+                        "Vorhandenes Foto, Aufnahme oder Datei importieren"
+                      )}
                     </p>
                     <p className="mt-0.5 text-[11px] leading-4 text-muted-foreground">
                       {copyFor(
                         language,
                         "Imported records are honestly labeled \"added later\" — captured-live records carry more weight.",
-                        "导入的记录会如实标注\"事后导入\"——当场拍摄的记录更有分量。"
+                        "导入的记录会如实标注\"事后导入\"——当场拍摄的记录更有分量。",
+                        "Importierte Dateien werden als „später hinzugefügt“ gekennzeichnet; direkt erfasste Dateien können aussagekräftiger sein."
                       )}
                     </p>
                   </div>
@@ -1101,7 +1120,9 @@ export default function EvidencePage({
               {captureQueue.length > 0 ? (
                 <div className="col-span-3 space-y-3">
                   <p className="text-xs font-semibold text-foreground">
-                    {copyFor(language, "Ready to upload", "待上传")}（{captureQueue.length}{copyFor(language, " item(s)", " 张")}）
+                    {language === "zh"
+                      ? `${copyFor(language, "Ready to upload", "待上传")}（${captureQueue.length}${copyFor(language, " item(s)", " 张")}）`
+                      : `${copyFor(language, "Ready to upload", "待上传")} (${captureQueue.length}${copyFor(language, " item(s)", " 张")})`}
                   </p>
                   <div className="grid grid-cols-3 gap-2">
                     {captureQueue.map((item) => (
@@ -1216,10 +1237,15 @@ export default function EvidencePage({
           </button>
           <div>
             <h2 className="text-lg font-bold text-foreground">
-              {copyFor(language, "Situation Log", "情况记录")}
+              {copyFor(language, "Situation Log", "情况记录", "Vorfall dokumentieren")}
             </h2>
             <p className="text-xs text-muted-foreground">
-              {copyFor(language, "Write down what happened. Encrypted on this device.", "文字记录遭遇，加密保存在本机。")}
+              {copyFor(
+                language,
+                "Write down what happened. Encrypted on this device.",
+                "文字记录遭遇，加密保存在本机。",
+                "Schreibe auf, was passiert ist. Verschlüsselt auf diesem Gerät."
+              )}
             </p>
           </div>
         </div>
@@ -1248,10 +1274,15 @@ export default function EvidencePage({
         </button>
         <div>
           <h2 className="text-lg font-bold text-foreground">
-            {copyFor(language, "Evidence Records", "存证记录")}
+            {copyFor(language, "Evidence Records", "存证记录", "Gespeicherte Beweise")}
           </h2>
           <p className="text-xs text-muted-foreground">
-            {copyFor(language, "Your encrypted evidence history.", "你的加密存证历史。")}
+            {copyFor(
+              language,
+              "Your encrypted evidence history.",
+              "你的加密存证历史。",
+              "Deine verschlüsselte Beweisübersicht."
+            )}
           </p>
         </div>
       </div>
@@ -1269,7 +1300,7 @@ export default function EvidencePage({
             <div className="rounded-2xl border border-border/60 bg-card/50 p-6 text-center">
               <ShieldCheck className="mx-auto mb-2 h-8 w-8 text-primary/40" />
               <p className="text-sm text-muted-foreground">
-                {copyFor(language, "No evidence records yet.", "暂无存证记录。")}
+                {copyFor(language, "No evidence records yet.", "暂无存证记录。", "Noch keine Beweise gespeichert.")}
               </p>
             </div>
           ) : (
@@ -1634,47 +1665,57 @@ function LegalTipsDisclosure({
   const items: Array<[string, string, string]> = [
     [
       "🚔",
-      copyFor(language, "Police records are strongest", "报警记录最有力"),
+      copyFor(
+        language,
+        "Police records are strongest",
+        "报警记录最有力",
+        "Polizeiliche und medizinische Dokumentation"
+      ),
       copyFor(
         language,
         "Police reports and dispatch records are among the strongest evidence in court. For sexual assault, report promptly and get a forensic exam — avoid washing yourself or the clothing involved first. For domestic violence, also ask for a written warning (告诫书). Call the police when it is safe to do so.",
-        "报警回执与出警记录是法院最认可的证据之一。遭遇性侵害的，尽快报警并接受人身检查最关键，报警前尽量不要洗澡或清洗衣物；属于家庭暴力的，还可要求公安出具告诫书。在安全的情况下尽量报警。"
+        "报警回执与出警记录是法院最认可的证据之一。遭遇性侵害的，尽快报警并接受人身检查最关键，报警前尽量不要洗澡或清洗衣物；属于家庭暴力的，还可要求公安出具告诫书。在安全的情况下尽量报警。",
+        "Polizeiliche Vorgangsnummern, Strafanzeigen und ärztliche Dokumentation können wichtig sein. Nach sexualisierter Gewalt ist auch eine vertrauliche Spurensicherung ohne sofortige Anzeige möglich; wenn es sicher und zumutbar ist, vorher möglichst nicht duschen oder Kleidung waschen. Bei akuter Gefahr gilt 110, bei medizinischem Notfall 112."
       ),
     ],
     [
       "📷",
-      copyFor(language, "Injury photos", "伤情拍摄"),
+      copyFor(language, "Injury photos", "伤情拍摄", "Verletzungen dokumentieren"),
       copyFor(
         language,
         "Photograph injuries with your face and the wound in the same frame, from several angles. Seek medical care promptly and keep all records — a forensic injury assessment carries the most weight.",
-        "拍摄伤情时让面部与伤处同框，多角度拍摄。尽快就医并保留病历，伤情鉴定的证明力最强。"
+        "拍摄伤情时让面部与伤处同框，多角度拍摄。尽快就医并保留病历，伤情鉴定的证明力最强。",
+        "Fotografiere Verletzungen möglichst aus mehreren Blickwinkeln, mit Datum und einem Größenvergleich. Lass Verletzungen zeitnah ärztlich dokumentieren und bewahre Befunde, Rechnungen und Entlassungsberichte auf."
       ),
     ],
     [
       "💬",
-      copyFor(language, "Chat records", "聊天记录"),
+      copyFor(language, "Chat records", "聊天记录", "Chats und digitale Nachrichten"),
       copyFor(
         language,
         "Screenshots should include the other party's name/avatar and full context. Never delete the original conversation on your phone — courts may ask to verify it.",
-        "截图需包含对方昵称/头像和完整上下文。不要删除手机里的原始对话，法院可能需要核对原始载体。"
+        "截图需包含对方昵称/头像和完整上下文。不要删除手机里的原始对话，法院可能需要核对原始载体。",
+        "Sichere vollständige Verläufe mit Datum, Uhrzeit, Kontoname und Zusammenhang. Bewahre die Originalnachrichten und – wenn möglich – Exporte oder Sicherungskopien auf; einzelne Screenshots können wichtigen Kontext auslassen."
       ),
     ],
     [
       "🎙",
-      copyFor(language, "Audio & video", "录音录像"),
+      copyFor(language, "Audio & video", "录音录像", "Audio und Video"),
       copyFor(
         language,
         "When recording, try to capture the date, place and who is present. Recordings made to protect your own rights are generally admissible.",
-        "录制时尽量说明或体现时间、地点和在场人。为维护自身权益的录音一般可作为证据。"
+        "录制时尽量说明或体现时间、地点和在场人。为维护自身权益的录音一般可作为证据。",
+        "Sichere rechtmäßig erhaltene Sprach- und Video-Nachrichten unverändert. Heimliche Tonaufnahmen nichtöffentlich gesprochener Worte können nach § 201 StGB strafbar sein; hole vor einer heimlichen Aufnahme rechtlichen Rat ein und bringe dich nicht in Gefahr."
       ),
     ],
     [
       "🤝",
-      copyFor(language, "Other evidence", "其他证据"),
+      copyFor(language, "Other evidence", "其他证据", "Weitere Beweismittel"),
       copyFor(
         language,
         "Witness statements, and help records from neighborhood committees, the Women's Federation (妇联) or hospitals also count as evidence.",
-        "证人证言，以及居委会、妇联、医院的求助与接访记录同样可以作为证据。"
+        "证人证言，以及居委会、妇联、医院的求助与接访记录同样可以作为证据。",
+        "Auch Zeug:innen, ärztliche Unterlagen, Beratungsstellen- oder Frauenhauskontakte, Polizeivorgänge, Standort- und Fahrtdaten sowie ein zeitnah geführtes Ereignisprotokoll können relevant sein. Bewahre Originale und Metadaten auf."
       ),
     ],
   ];
@@ -1832,7 +1873,7 @@ function CloudVaultHistory({
     const res = await unlockWithPassword(userId, pwd);
     setVerifying(false);
     if (!res.ok) {
-      setPwdError(res.reason);
+      setPwdError("reason" in res ? res.reason : "wrong-secret");
       return;
     }
     onUnlocked(); // refresh history so locked records get full metadata
@@ -1885,7 +1926,7 @@ function CloudVaultHistory({
     const res = await unlockWithPassword(userId, pwd);
     setVerifying(false);
     if (!res.ok) {
-      setPwdError(res.reason);
+      setPwdError("reason" in res ? res.reason : "wrong-secret");
       return;
     }
 
@@ -1985,21 +2026,24 @@ function CloudVaultHistory({
 
   const buildNoteTextBlob = (record: DecryptedReportNoteRecord) => {
     const guide = getSituationGuide(record.situationId as SituationId);
+    const separator = language === "zh" ? "：" : ": ";
     const fieldMap = new Map(
       REPORT_NOTE_FIELDS[guide.id].map((field) => [field.id, copyFor(language, field.labelEn, field.labelZh)])
     );
     const lines = [
       copyFor(language, "The Unmuted · Text Evidence Note", "非默 · 文字存证记录"),
       "",
-      `${copyFor(language, "Scene", "场景")}：${copyFor(language, guide.titleEn, guide.titleZh)}`,
-      `${copyFor(language, "Saved at", "保存时间")}：${new Date(record.createdAt).toLocaleString(language === "zh" ? "zh-CN" : "en-US")}`,
-      `${copyFor(language, "Record ID", "记录编号")}：${record.id}`,
-      `${copyFor(language, "Encrypted hash SHA-256", "加密内容指纹 SHA-256")}：${record.encryptedHash}`,
+      `${copyFor(language, "Scene", "场景")}${separator}${copyFor(language, guide.titleEn, guide.titleZh)}`,
+      `${copyFor(language, "Saved at", "保存时间")}${separator}${new Date(record.createdAt).toLocaleString(localeTag(language))}`,
+      `${copyFor(language, "Record ID", "记录编号")}${separator}${record.id}`,
+      `${copyFor(language, "Encrypted hash SHA-256", "加密内容指纹 SHA-256")}${separator}${record.encryptedHash}`,
       "",
       copyFor(language, "Unlocked text:", "解锁后的文字内容："),
       ...Object.entries(record.notes).flatMap(([id, value]) => [
         "",
-        `【${fieldMap.get(id as ReportNoteId) ?? id}】`,
+        language === "zh"
+          ? `【${fieldMap.get(id as ReportNoteId) ?? id}】`
+          : `[${fieldMap.get(id as ReportNoteId) ?? id}]`,
         value,
       ]),
       "",
@@ -2015,10 +2059,13 @@ function CloudVaultHistory({
       const decrypted = await decryptReportNoteRecord(record);
       const guide = getSituationGuide(record.situationId as SituationId);
       const textBlob = buildNoteTextBlob(decrypted);
+      const localizedGuideName = copyFor(language, guide.titleEn, guide.titleZh)
+        .replace(/[\\/:*?"<>|]/g, "-");
       const evidenceRecord = {
         txId: record.id,
-        userId,
-        encryptedBlob: "",
+        wrappedFileKey: "",
+        encryptedMeta: "",
+        originalHash: record.encryptedHash,
         encryptedHash: record.encryptedHash,
         clientTime: new Date(record.createdAt).toISOString(),
         syncStatus: "synced",
@@ -2026,7 +2073,9 @@ function CloudVaultHistory({
         meta: {
           mimeType: "text/plain;charset=utf-8",
           originalSize: textBlob.size,
-          fileName: `非默文字存证-${copyFor(language, guide.titleEn, guide.titleZh)}-${formatReceiptTimestamp(record.createdAt)}.txt`,
+          fileName: language === "de"
+            ? `The-Unmuted-Textnotiz-${localizedGuideName}-${formatReceiptTimestamp(record.createdAt)}.txt`
+            : `非默文字存证-${localizedGuideName}-${formatReceiptTimestamp(record.createdAt)}.txt`,
         },
       } satisfies EvidenceRecord;
       const pkg = await buildCourtPackage(evidenceRecord, textBlob, exportPassword);
@@ -2088,7 +2137,7 @@ function CloudVaultHistory({
           </p>
           <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
             <Clock className="h-3 w-3 shrink-0" />
-            <span>{new Date(r.clientTime).toLocaleString(language === "zh" ? "zh-CN" : "en-US")}</span>
+            <span>{new Date(r.clientTime).toLocaleString(localeTag(language))}</span>
             {pendingAction?.txId !== r.txId && (
               <>
                 <button
@@ -2336,7 +2385,7 @@ function CloudVaultHistory({
             </p>
             <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
               <Clock className="h-3 w-3 shrink-0" />
-              <span>{new Date(record.createdAt).toLocaleString(language === "zh" ? "zh-CN" : "en-US")}</span>
+              <span>{new Date(record.createdAt).toLocaleString(localeTag(language))}</span>
               {pendingNoteAction?.id !== record.id && (
                 <>
               <button
@@ -2520,7 +2569,7 @@ function CloudVaultHistory({
                 </div>
                 <div className="space-y-2">
                   <p className="text-xs font-bold text-foreground">
-                    {copyFor(language, "Scene", "场景")}：{copyFor(language, guide.titleEn, guide.titleZh)}
+                    {copyFor(language, "Scene", "场景")}{language === "zh" ? "：" : ": "}{copyFor(language, guide.titleEn, guide.titleZh)}
                   </p>
                   {rows.map((row) => (
                     <div key={row.label} className="rounded-lg bg-background/50 px-3 py-2">
@@ -2583,7 +2632,7 @@ function DeletedRecordsRecovery({
     if (res.ok) {
       setRecords(await listDeletedEvidence(userId).catch(() => []));
     } else {
-      setPwdError(res.reason);
+      setPwdError("reason" in res ? res.reason : "wrong-secret");
     }
     setChecking(false);
   };
@@ -2750,7 +2799,7 @@ function LegacyVaultHistory({
           </p>
           <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
             <Clock className="h-3 w-3 shrink-0" />
-            <span>{new Date(r.createdAt).toLocaleString(language === "zh" ? "zh-CN" : "en-US")}</span>
+            <span>{new Date(r.createdAt).toLocaleString(localeTag(language))}</span>
             {!r.isSimulated && (
               <a
                 href={r.chainExplorerUrl}

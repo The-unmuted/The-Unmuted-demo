@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Mail, X, Send, CheckCircle2, Loader2 } from "lucide-react";
-import { copyFor } from "@/lib/locale";
+import { copyFor, type AppLanguage } from "@/lib/locale";
 import { supabase } from "@/lib/supabaseClient";
 
 type FeedbackType = "bug" | "suggestion" | "other";
@@ -15,7 +15,7 @@ export function openFeedbackWidget(options?: { type?: FeedbackType; message?: st
 }
 
 interface FeedbackWidgetProps {
-  language: "en" | "zh";
+  language: AppLanguage;
 }
 
 export default function FeedbackWidget({ language }: FeedbackWidgetProps) {
@@ -67,11 +67,12 @@ export default function FeedbackWidget({ language }: FeedbackWidgetProps) {
     <>
       {/* Trigger button — sits next to language toggle */}
       <button
+        type="button"
         onClick={() => setOpen(true)}
-        aria-label="Feedback"
-        className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border bg-card/90 text-primary transition-colors hover:bg-accent"
+        aria-label={copyFor(language, "Feedback", "反馈")}
+        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-card/90 text-primary transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       >
-        <Mail className="h-3 w-3" />
+        <Mail className="h-4 w-4" aria-hidden="true" />
       </button>
 
       {/* Backdrop */}
@@ -84,17 +85,24 @@ export default function FeedbackWidget({ language }: FeedbackWidgetProps) {
 
       {/* Modal */}
       {open && (
-        <div className="fixed left-1/2 top-1/2 z-50 w-[min(90vw,360px)] -translate-x-1/2 -translate-y-1/2 rounded-3xl border border-border bg-card p-5 shadow-2xl">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={copyFor(language, "Send feedback", "发送反馈")}
+          className="fixed left-1/2 top-1/2 z-50 w-[min(90vw,360px)] -translate-x-1/2 -translate-y-1/2 rounded-3xl border border-border bg-card p-5 shadow-2xl"
+        >
           {/* Header */}
           <div className="mb-4 flex items-center justify-between">
             <p className="text-sm font-bold text-foreground">
               {copyFor(language, "Send feedback", "发送反馈")}
             </p>
             <button
+              type="button"
               onClick={() => setOpen(false)}
-              className="rounded-full p-1 text-muted-foreground hover:bg-accent"
+              aria-label={copyFor(language, "Close", "关闭")}
+              className="flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <X className="h-4 w-4" />
+              <X className="h-4 w-4" aria-hidden="true" />
             </button>
           </div>
 
@@ -111,6 +119,7 @@ export default function FeedbackWidget({ language }: FeedbackWidgetProps) {
               <div className="mb-3 flex gap-2">
                 {(["bug", "suggestion", "other"] as FeedbackType[]).map((t) => (
                   <button
+                    type="button"
                     key={t}
                     onClick={() => setType(t)}
                     className={`flex-1 rounded-2xl border py-2 text-xs font-semibold transition-colors ${
@@ -126,6 +135,7 @@ export default function FeedbackWidget({ language }: FeedbackWidgetProps) {
 
               {/* Message */}
               <textarea
+                aria-label={copyFor(language, "Describe your feedback…", "请描述你的反馈…")}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder={copyFor(language, "Describe your feedback…", "请描述你的反馈…")}
@@ -141,6 +151,7 @@ export default function FeedbackWidget({ language }: FeedbackWidgetProps) {
 
               {/* Submit */}
               <button
+                type="button"
                 onClick={handleSubmit}
                 disabled={!message.trim() || status === "sending"}
                 className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3 text-sm font-bold text-primary-foreground disabled:opacity-50"

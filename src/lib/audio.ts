@@ -1,3 +1,5 @@
+import type { AppLanguage } from "@/lib/locale";
+
 let audioCtx: AudioContext | null = null;
 
 function getAudioContext() {
@@ -27,7 +29,7 @@ export function playBeep(frequency = 880, duration = 0.15) {
 let deterrentAudio: HTMLAudioElement | null = null;
 let isDeterrentPlaying = false;
 
-export function startDeterrentAudio(customAudioUrl: string | null, language: "en" | "zh" = "en") {
+export function startDeterrentAudio(customAudioUrl: string | null, language: AppLanguage = "en") {
   if (isDeterrentPlaying) return;
   isDeterrentPlaying = true;
 
@@ -61,25 +63,28 @@ export function isDeterrentPlaying_() {
 }
 
 // Speech fallback when no custom audio
-function startSpeechFallback(language: "en" | "zh") {
+function startSpeechFallback(language: AppLanguage) {
   if (!("speechSynthesis" in window)) return;
 
   const speak = () => {
     if (!isDeterrentPlaying) return;
     const text = language === "zh"
       ? "警告！警告！此区域已被监控，你的位置已被记录并上传。警察已收到通知，请立即离开！"
-      : "Warning! This area is being monitored. Your location has been recorded and uploaded. Police have been notified. Please leave immediately!";
+      : language === "de"
+        ? "Achtung! Halten Sie Abstand und verlassen Sie diesen Ort sofort!"
+        : "Warning! This area is being monitored. Your location has been recorded and uploaded. Police have been notified. Please leave immediately!";
     const utterance = new SpeechSynthesisUtterance(
       text
     );
-    utterance.lang = language === "zh" ? "zh-CN" : "en-US";
+    utterance.lang = language === "zh" ? "zh-CN" : language === "de" ? "de-DE" : "en-US";
     utterance.rate = 1.0;
     utterance.pitch = 0.6;
     utterance.volume = 1.0;
 
     const voices = speechSynthesis.getVoices();
+    const voiceLanguage = language === "zh" ? "zh" : language === "de" ? "de" : "en";
     const maleVoice = voices.find(
-      (v) => v.lang.startsWith(language === "zh" ? "zh" : "en") && v.name.toLowerCase().includes("male")
+      (v) => v.lang.startsWith(voiceLanguage) && v.name.toLowerCase().includes("male")
     );
     if (maleVoice) utterance.voice = maleVoice;
 

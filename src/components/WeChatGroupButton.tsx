@@ -36,7 +36,10 @@ export default function WeChatGroupButton({ language }: { language: AppLanguage 
           <span aria-hidden="true" className="drop-shadow-[0_0_8px_hsl(var(--primary)/0.55)] transition-transform duration-100 ease-out group-hover:-translate-y-px">👗</span>
         </button>
       </DialogTrigger>
-      <DialogContent className="max-h-[90dvh] max-w-sm overflow-y-auto rounded-3xl border-primary/25 bg-card p-6 pr-14 shadow-[0_24px_80px_hsl(240_70%_4%/0.65)] [&>button:last-child]:right-3 [&>button:last-child]:top-3 [&>button:last-child]:flex [&>button:last-child]:h-10 [&>button:last-child]:w-10 [&>button:last-child]:items-center [&>button:last-child]:justify-center [&>button:last-child]:rounded-full [&>button:last-child]:bg-background [&>button:last-child]:opacity-100 [&>button:last-child]:transition-[background-color,transform] [&>button:last-child]:duration-100 [&>button:last-child]:ease-out [&>button:last-child]:hover:bg-accent [&>button:last-child]:active:scale-95 [&>button:last-child]:focus-visible:outline-none [&>button:last-child]:focus-visible:ring-2 [&>button:last-child]:focus-visible:ring-ring [&>button:last-child]:focus-visible:ring-offset-2">
+      <DialogContent
+        closeLabel={copyFor(language, "Close", "关闭")}
+        className="max-h-[90dvh] max-w-sm overflow-y-auto rounded-3xl border-primary/25 bg-card p-6 pr-14 shadow-[0_24px_80px_hsl(240_70%_4%/0.65)] [&>button:last-child]:right-3 [&>button:last-child]:top-3 [&>button:last-child]:flex [&>button:last-child]:h-10 [&>button:last-child]:w-10 [&>button:last-child]:items-center [&>button:last-child]:justify-center [&>button:last-child]:rounded-full [&>button:last-child]:bg-background [&>button:last-child]:opacity-100 [&>button:last-child]:transition-[background-color,transform] [&>button:last-child]:duration-100 [&>button:last-child]:ease-out [&>button:last-child]:hover:bg-accent [&>button:last-child]:active:scale-95 [&>button:last-child]:focus-visible:outline-none [&>button:last-child]:focus-visible:ring-2 [&>button:last-child]:focus-visible:ring-ring [&>button:last-child]:focus-visible:ring-offset-2"
+      >
         <DialogHeader className="text-center sm:text-left">
           <DialogTitle className="text-center">
             {copyFor(language, "Join our WeChat tester group", "加入非默用户测试群")}

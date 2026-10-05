@@ -38,6 +38,8 @@ import type {
 } from "./evidenceVaultService";
 import { generateTxId } from "./evidenceVaultService";
 
+type DemoSaveEvidenceOptions = SaveEvidenceOptions & { mimeType?: string };
+
 export const DEMO_USER_ID = "demo-user";
 export const DEMO_PASSWORD = "123456";
 
@@ -178,7 +180,7 @@ async function setMeta(key: string, value: string): Promise<void> {
 export async function saveEvidence(
   _userId: string,
   enc: EncryptionResult,
-  opts: SaveEvidenceOptions = {}
+  opts: DemoSaveEvidenceOptions = {}
 ): Promise<EvidenceRecord> {
   const masterKey = getSessionMasterKey();
   if (!masterKey) throw new Error("vault-locked");
@@ -413,7 +415,7 @@ export async function seedDemoRecordsIfEmpty(): Promise<void> {
   const masterKey = getSessionMasterKey();
   if (!masterKey) throw new Error("session master key not set — call initDemoSessionKey first");
 
-  const seeds: Array<{ blob: Blob; opts: SaveEvidenceOptions; grade: 1 | 2 }> = [
+  const seeds: Array<{ blob: Blob; opts: DemoSaveEvidenceOptions; grade: 1 | 2 }> = [
     {
       blob: await buildPlaceholderImage("现场取证 · 楼道门口", "#4a5b8f"),
       opts: {
