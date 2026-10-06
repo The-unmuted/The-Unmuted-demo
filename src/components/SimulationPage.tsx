@@ -9,8 +9,6 @@ import {
   LifeBuoy,
   RotateCcw,
   ArrowLeft,
-  CheckCircle2,
-  XCircle,
   AlertTriangle,
   Phone,
   ListOrdered,
@@ -45,6 +43,7 @@ import {
 } from "@/lib/simulation";
 import simulationTips from "@/data/simulationTips.json";
 import {
+  FLAG_WEIGHTS,
   collectCoachHints,
   computeSimulationScore,
   type SimulationScoreResult,
@@ -73,6 +72,7 @@ interface RunState {
   sceneId: string | null;
   flags: Set<string>;
   visitedSceneIds: string[];
+  selectedChoiceIds: string[];
   ending: SimEnding | null;
 }
 
@@ -84,7 +84,7 @@ export default function SimulationPage({ language, onGoToAid }: SimulationPagePr
   const resultTopRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (run?.ending && run.scenario.id === "domestic-violence") {
+    if (run?.ending) {
       resultTopRef.current?.scrollIntoView?.({ behavior: "smooth", block: "start" });
       return;
     }
@@ -112,7 +112,8 @@ export default function SimulationPage({ language, onGoToAid }: SimulationPagePr
     sceneId: string,
     log: ChatItem[],
     flags: Set<string>,
-    visited: string[]
+    visited: string[],
+    selectedChoiceIds: string[]
   ): RunState => {
     let current = sceneId;
     let visitedNext = [...visited, sceneId];
@@ -120,10 +121,26 @@ export default function SimulationPage({ language, onGoToAid }: SimulationPagePr
       const scene = scenario.scenes[current];
       log = [...log, ...sceneItems(scenario, current)];
       if (!scene.auto)
-        return { scenario, log, sceneId: current, flags, visitedSceneIds: visitedNext, ending: null };
+        return {
+          scenario,
+          log,
+          sceneId: current,
+          flags,
+          visitedSceneIds: visitedNext,
+          selectedChoiceIds,
+          ending: null,
+        };
       const next = resolveAuto(scene, flags);
       if (!next)
-        return { scenario, log, sceneId: current, flags, visitedSceneIds: visitedNext, ending: null };
+        return {
+          scenario,
+          log,
+          sceneId: current,
+          flags,
+          visitedSceneIds: visitedNext,
+          selectedChoiceIds,
+          ending: null,
+        };
       if (isEndingTarget(next))
         return {
           scenario,
@@ -131,6 +148,7 @@ export default function SimulationPage({ language, onGoToAid }: SimulationPagePr
           sceneId: null,
           flags,
           visitedSceneIds: visitedNext,
+          selectedChoiceIds,
           ending: scenario.endings[endingIdOf(next)],
         };
       current = next;
@@ -140,13 +158,14 @@ export default function SimulationPage({ language, onGoToAid }: SimulationPagePr
 
   const startScenario = (scenario: SimScenario) => {
     const log: ChatItem[] = [{ kind: "narration", text: simText(language, scenario.intro) }];
-    setRun(enterScene(scenario, scenario.entry, log, new Set(), []));
+    setRun(enterScene(scenario, scenario.entry, log, new Set(), [], []));
   };
 
-  const choose = (choice: SimChoice) => {
+  const choose = (choice: SimChoice, choiceIndex: number) => {
     if (!run || !run.sceneId) return;
     const flags = new Set(run.flags);
     choice.flags?.forEach((f) => flags.add(f));
+    const selectedChoiceIds = [...run.selectedChoiceIds, choiceId(run.sceneId, choiceIndex)];
     let log: ChatItem[] = [...run.log, { kind: "me", text: simText(language, choice.text) }];
     if (choice.feedback) log = [...log, { kind: "feedback", text: simText(language, choice.feedback) }];
     if (isEndingTarget(choice.next)) {
@@ -155,10 +174,20 @@ export default function SimulationPage({ language, onGoToAid }: SimulationPagePr
         log,
         flags,
         sceneId: null,
+        selectedChoiceIds,
         ending: run.scenario.endings[endingIdOf(choice.next)],
       });
     } else {
-      setRun(enterScene(run.scenario, choice.next, log, flags, run.visitedSceneIds));
+      setRun(
+        enterScene(
+          run.scenario,
+          choice.next,
+          log,
+          flags,
+          run.visitedSceneIds,
+          selectedChoiceIds
+        )
+      );
     }
   };
 
@@ -182,8 +211,6 @@ export default function SimulationPage({ language, onGoToAid }: SimulationPagePr
   }
 
   const currentScene = run.sceneId ? run.scenario.scenes[run.sceneId] : null;
-  const isDomesticViolenceResult = run.ending !== null && run.scenario.id === "domestic-violence";
-
   return (
     <div className="flex flex-col gap-3 px-4 py-4">
       {/* Top bar: back + real-help exit */}
@@ -233,10 +260,9 @@ export default function SimulationPage({ language, onGoToAid }: SimulationPagePr
         </div>
       )}
 
-      {/* The domestic-violence ending becomes a focused report instead of
-          appearing beneath the entire chat transcript. Other scenarios retain
-          the existing result flow until their redesign is approved. */}
-      {!isDomesticViolenceResult && (
+      {/* Every ending becomes a focused report instead of appearing beneath
+          the full chat transcript. This keeps all scenario results consistent. */}
+      {!run.ending && (
         <div className="flex flex-col gap-2.5">
           {run.log.map((item, i) => (
             <ChatBubble key={i} item={item} />
@@ -250,7 +276,7 @@ export default function SimulationPage({ language, onGoToAid }: SimulationPagePr
           {currentScene.choices.map((choice, i) => (
             <button
               key={i}
-              onClick={() => choose(choice)}
+              onClick={() => choose(choice, i)}
               className="rounded-2xl border border-primary/35 bg-primary/5 px-4 py-3 text-left text-sm font-semibold leading-5 text-foreground transition-all hover:bg-primary/10 active:scale-[0.99]"
             >
               {simText(language, choice.text)}
@@ -268,6 +294,7 @@ export default function SimulationPage({ language, onGoToAid }: SimulationPagePr
             ending={run.ending}
             flags={run.flags}
             visitedSceneIds={run.visitedSceneIds}
+            selectedChoiceIds={run.selectedChoiceIds}
             onRetry={() => startScenario(run.scenario)}
             onExit={() => setRun(null)}
             onGoToAid={onGoToAid}
@@ -405,12 +432,17 @@ function ChatBubble({ item }: { item: ChatItem }) {
   }
 }
 
+function choiceId(sceneId: string, choiceIndex: number): string {
+  return `${sceneId}:${choiceIndex}`;
+}
+
 function EndingView({
   language,
   scenario,
   ending,
   flags,
   visitedSceneIds,
+  selectedChoiceIds,
   onRetry,
   onExit,
   onGoToAid,
@@ -420,6 +452,7 @@ function EndingView({
   ending: SimEnding;
   flags: Set<string>;
   visitedSceneIds: string[];
+  selectedChoiceIds: string[];
   onRetry: () => void;
   onExit: () => void;
   onGoToAid: () => void;
@@ -433,7 +466,15 @@ function EndingView({
 
   const score = computeSimulationScore(flags);
   const coachHints = collectCoachHints(scenario, visitedSceneIds);
-  const isDomesticViolence = scenario.id === "domestic-violence";
+  const isReflection = scenario.resultMode === "reflection";
+  const resultInsights = buildResultInsights(
+    scenario,
+    visitedSceneIds,
+    flags,
+    selectedChoiceIds,
+    language,
+    isReflection
+  );
   const scoreCardSummary = buildScoreCardSummary(
     language,
     scenario,
@@ -457,20 +498,32 @@ function EndingView({
 
   return (
     <div className="mt-2 flex flex-col gap-3">
-      <SimulationResultReport
-        language={language}
-        score={score}
-        scenarioTitle={simText(language, scenario.title)}
-        scenarioTagline={simText(language, scenario.tagline)}
-        endingTitle={simText(language, ending.title)}
-        endingSummary={simText(language, ending.summary)}
-        summary={scoreCardSummary}
-      />
+      {isReflection ? (
+        <ReflectionResultReport
+          language={language}
+          scenarioTitle={simText(language, scenario.title)}
+          endingTitle={simText(language, ending.title)}
+          endingSummary={simText(language, ending.summary)}
+          protectiveItems={resultInsights.protective}
+        />
+      ) : (
+        <SimulationResultReport
+          language={language}
+          score={score}
+          scenarioTitle={simText(language, scenario.title)}
+          scenarioTagline={simText(language, scenario.tagline)}
+          endingTitle={simText(language, ending.title)}
+          endingSummary={simText(language, ending.summary)}
+          summary={scoreCardSummary}
+          protectiveItems={resultInsights.protective}
+          avoidedRiskItems={resultInsights.avoidedRisks}
+        />
+      )}
 
       {!showAnalysis && (
         <button
           onClick={handleShowAnalysis}
-          className="mt-1 flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3.5 text-sm font-bold text-primary-foreground"
+          className="mt-1 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3.5 text-base font-bold text-primary-foreground shadow-[0_10px_30px_hsl(var(--primary)/0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
           {copyFor(language, "View detailed analysis", "查看具体分析")}
           <ChevronDown className="h-4 w-4" />
@@ -479,89 +532,19 @@ function EndingView({
 
       {showAnalysis && (
         <div ref={analysisRef} className="flex flex-col gap-3">
-          {!isDomesticViolence && (
-            <div className="rounded-2xl border border-border/70 bg-card p-4">
-              <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-                {copyFor(language, "This run's ending", "本次结局")}
-              </div>
-              <h2 className="text-base font-black text-foreground">{simText(language, ending.title)}</h2>
-              <p className="mt-2 text-sm leading-6 text-foreground/85">{simText(language, ending.summary)}</p>
-            </div>
-          )}
-
-          {/* Reordered 2026-09-03 per Wendy feedback: Real-flow + Glossary
-              are the most universally valuable sections, so they render
-              FIRST. Personal debrief (good / bad / avoided) and coach
-              legal tips follow. All three scenarios share this order. */}
-
           <RealFlowSection language={language} steps={scenario.realFlow} />
 
           {scenario.glossary && scenario.glossary.length > 0 && (
             <GlossarySection language={language} terms={scenario.glossary} />
           )}
 
-          {isDomesticViolence ? (
-            <h2 className="px-1 text-sm font-bold text-foreground">
-              {copyFor(language, "Legal tips and practical guidance", "法律提示与实用指引")}
-            </h2>
-          ) : (
-            <>
-              {/* Debrief section heading */}
-              <h2 className="px-1 text-sm font-bold text-foreground">
-                {copyFor(language, "Debrief", "复盘")}
-              </h2>
-
-              {/* Good items — triggered */}
-              {good.length > 0 && (
-                <CollapsibleSection
-                  label={copyFor(language, `What you did right (${good.length})`, `你做对了（${good.length}）`)}
-                  accent="emerald"
-                  defaultOpen={false}
-                >
-                  <div className="flex flex-col gap-3">
-                    {good.map((r) => <DebriefCard key={r.id} rule={r} language={language} />)}
-                  </div>
-                </CollapsibleSection>
-              )}
-
-              {/* Bad items — triggered (user made these mistakes) */}
-              {triggeredBad.length > 0 && (
-                <CollapsibleSection
-                  label={copyFor(language, `Where things went wrong (${triggeredBad.length})`, `这次出了问题的环节（${triggeredBad.length}）`)}
-                  accent="rose"
-                  defaultOpen={false}
-                >
-                  <div className="flex flex-col gap-3">
-                    {triggeredBad.map((r) => <DebriefCard key={r.id} rule={r} language={language} />)}
-                  </div>
-                </CollapsibleSection>
-              )}
-
-              {/* Bad items — avoided (user didn't trigger, but should know about) */}
-              {avoidedBad.length > 0 && (
-                <CollapsibleSection
-                  label={copyFor(language, `Risks you avoided this time (${avoidedBad.length})`, `这次你避开的风险（${avoidedBad.length}）`)}
-                  accent="amber"
-                  defaultOpen={false}
-                >
-                  <div className="flex flex-col gap-3">
-                    {avoidedBad.map((r) => <DebriefCard key={r.id} rule={r} language={language} avoided />)}
-                  </div>
-                </CollapsibleSection>
-              )}
-
-              {triggered.length === 0 && allBad.length === 0 && (
-                <div className="rounded-2xl border border-border/70 bg-card p-4">
-                  <p className="text-sm text-muted-foreground">
-                    {copyFor(language, "No debrief entries for this run.", "这条路线没有产生复盘条目。")}
-                  </p>
-                </div>
-              )}
-            </>
-          )}
-
           {coachHints.length > 0 && (
-            <CoachHintsSection language={language} hints={coachHints} />
+            <>
+            <h2 className="px-1 text-lg font-black text-foreground">
+              {copyFor(language, "Practical guidance and helpful reminders", "实用提示与参考建议")}
+            </h2>
+              <CoachHintsSection language={language} hints={coachHints} />
+            </>
           )}
         </div>
       )}
@@ -569,24 +552,306 @@ function EndingView({
       <div className="flex flex-col gap-2">
         <button
           onClick={onRetry}
-          className="flex items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3 text-sm font-bold text-primary-foreground"
+          className="flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3 text-base font-bold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
           <RotateCcw className="h-4 w-4" />
           {copyFor(language, "Try a different path", "换一条路再走一遍")}
         </button>
         <button
           onClick={onGoToAid}
-          className="rounded-2xl border border-primary/40 bg-primary/5 px-4 py-3 text-sm font-bold text-primary"
+          className="min-h-12 rounded-2xl border border-primary/40 bg-primary/5 px-4 py-3 text-base font-bold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
           {copyFor(language, "See real aid resources", "查看真实的援助资源")}
         </button>
         <button
           onClick={onExit}
-          className="rounded-2xl px-4 py-2 text-sm font-semibold text-muted-foreground"
+          className="min-h-11 rounded-2xl px-4 py-2 text-base font-semibold text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
           {copyFor(language, "Back to scenarios", "返回情景选择")}
         </button>
       </div>
+    </div>
+  );
+}
+
+function ReflectionResultReport({
+  language,
+  scenarioTitle,
+  endingTitle,
+  endingSummary,
+  protectiveItems,
+}: {
+  language: AppLanguage;
+  scenarioTitle: string;
+  endingTitle: string;
+  endingSummary: string;
+  protectiveItems: ResultInsightItem[];
+}) {
+  return (
+    <section
+      data-testid="simulation-reflection-report"
+      className="relative overflow-hidden rounded-[28px] border border-[#c084fc]/25 bg-[linear-gradient(180deg,#15142f_0%,#09091d_100%)] p-5 shadow-[0_24px_70px_rgba(5,4,22,0.42)] sm:p-7"
+    >
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-10 -top-14 h-52 w-52 rounded-full bg-[#f472b6]/15 blur-3xl"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-20 -left-20 h-52 w-52 rounded-full bg-[#c084fc]/10 blur-3xl"
+      />
+      <div className="relative z-10">
+        <div className="flex items-center gap-2 text-sm font-bold tracking-[0.1em] text-[#f472b6]">
+          <Sparkles className="h-4 w-4" aria-hidden="true" />
+          {copyFor(language, "Trauma-informed reflection", "创伤知情复盘")}
+        </div>
+        <h1 className="mt-5 text-2xl font-black leading-[1.3] tracking-tight text-white">
+          {copyFor(language, "Your response does not need a score.", "你的反应不需要被打分。")}
+        </h1>
+        <p className="mt-4 text-base leading-7 text-white/75">
+          {copyFor(
+            language,
+            "Questioning, blame, pressure, or disclosure without consent does not prove that you did anything wrong. You may pause, leave, set a boundary, or seek different support.",
+            "质疑、责备、逼迫，或未经同意泄露你的经历，都不能证明你做错了什么。你可以暂停、离开、设定边界，也可以转向其他支持。"
+          )}
+        </p>
+        <ResultInsightPanels
+          language={language}
+          protectiveItems={protectiveItems}
+          avoidedRiskItems={[]}
+          reflection
+        />
+
+        <div className="mt-6 border-t border-white/10 pt-5">
+          <span className="inline-flex rounded-full border border-[#f472b6]/35 bg-[#f472b6]/10 px-3 py-1.5 text-sm font-bold text-[#f5a6d0]">
+            {scenarioTitle}
+          </span>
+          <p className="mt-4 text-sm font-bold tracking-[0.08em] text-white/50">
+            {copyFor(language, "THIS RUN'S ENDING", "本次结局")}
+          </p>
+          <h2 className="mt-2 text-[22px] font-black leading-8 text-white">{endingTitle}</h2>
+          <p className="mt-2 text-base leading-7 text-white/75">{endingSummary}</p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+interface ResultInsightItem {
+  id: string;
+  title: string;
+  detail: string;
+}
+
+interface ResultInsights {
+  protective: ResultInsightItem[];
+  avoidedRisks: ResultInsightItem[];
+}
+
+function buildResultInsights(
+  scenario: SimScenario,
+  visitedSceneIds: string[],
+  selectedFlags: ReadonlySet<string>,
+  selectedChoiceIds: string[],
+  language: AppLanguage,
+  reflection: boolean
+): ResultInsights {
+  const protective: ResultInsightItem[] = [];
+  const avoidedRisks: ResultInsightItem[] = [];
+  const triggeredRules = evaluateDebrief(scenario, selectedFlags);
+  const selectedChoices = new Set(selectedChoiceIds);
+  const seenProtective = new Set<string>();
+  const seenRisks = new Set<string>();
+
+  const detailFor = (
+    choice: SimChoice,
+    sceneId: string,
+    rule: SimDebriefRule | undefined,
+    fallbackEn: string,
+    fallbackZh: string
+  ) => {
+    if (rule) return simText(language, rule.detail);
+    if (choice.feedback) return simText(language, choice.feedback);
+    const sceneCoach = scenario.scenes[sceneId]?.coach;
+    if (sceneCoach) return simText(language, sceneCoach);
+    return copyFor(language, fallbackEn, fallbackZh);
+  };
+
+  for (const sceneId of new Set(visitedSceneIds)) {
+    const scene = scenario.scenes[sceneId];
+    for (const [choiceIndex, choice] of (scene?.choices ?? []).entries()) {
+      const choiceFlags = choice.flags ?? [];
+      const selected = selectedChoices.has(choiceId(sceneId, choiceIndex));
+      const matchingGood = triggeredRules.find(
+        (rule) =>
+          rule.kind === "good" &&
+          rule.has?.some((flag) => choiceFlags.includes(flag))
+      );
+      const hasProtectiveFlag = choiceFlags.some((flag) => (FLAG_WEIGHTS[flag] ?? 0) > 0);
+      const isReflectionChoice =
+        reflection &&
+        sceneId !== scenario.entry &&
+        !choiceFlags.some((flag) => flag.startsWith("sv-path-"));
+
+      if (selected && (hasProtectiveFlag || matchingGood || isReflectionChoice)) {
+        const title = insightTitle(simText(language, choice.text), language);
+        const key = `${title}\u001f${choiceFlags.join("|")}`;
+        if (!seenProtective.has(key)) {
+          seenProtective.add(key);
+          protective.push({
+            id: `protective-${sceneId}-${choiceIndex}`,
+            title,
+            detail: detailFor(
+              choice,
+              sceneId,
+              matchingGood,
+              "This choice supported safety, autonomy, evidence, or access to help on the path you took.",
+              "这个选择在本次路径中帮助维护安全、决定权、证据或获得支持的机会。"
+            ),
+          });
+        }
+      }
+
+      if (reflection || selected) continue;
+      const negativeFlags = choiceFlags.filter((flag) => (FLAG_WEIGHTS[flag] ?? 0) < 0);
+      if (negativeFlags.length === 0) continue;
+      const matchingBad = scenario.debrief.find(
+        (rule) =>
+          rule.kind === "bad" &&
+          rule.has?.some((flag) => negativeFlags.includes(flag))
+      );
+      const title = insightTitle(simText(language, choice.text), language);
+      const key = `${title}\u001f${negativeFlags.join("|")}`;
+      if (!seenRisks.has(key)) {
+        seenRisks.add(key);
+        avoidedRisks.push({
+          id: `avoided-${sceneId}-${choiceIndex}`,
+          title,
+          detail: detailFor(
+            choice,
+            sceneId,
+            matchingBad,
+            "You avoided this alternative on the path you actually visited.",
+            "你在实际走过的这条路径中避开了这个选项及其可能带来的风险。"
+          ),
+        });
+      }
+    }
+  }
+
+  return { protective, avoidedRisks };
+}
+
+function insightTitle(text: string, language: AppLanguage): string {
+  const normalized = text.replace(/\s+/g, " ").trim();
+  const limit = language === "zh" ? 32 : 76;
+  return normalized.length <= limit ? normalized : `${normalized.slice(0, limit - 1)}…`;
+}
+
+function ResultInsightPanels({
+  language,
+  protectiveItems,
+  avoidedRiskItems,
+  reflection = false,
+}: {
+  language: AppLanguage;
+  protectiveItems: ResultInsightItem[];
+  avoidedRiskItems: ResultInsightItem[];
+  reflection?: boolean;
+}) {
+  const [openPanel, setOpenPanel] = useState<"protective" | "avoided" | null>(null);
+  const activeItems = openPanel === "avoided" ? avoidedRiskItems : protectiveItems;
+  const activeTitle = openPanel === "avoided"
+    ? copyFor(language, "Risks you avoided on this path", "本次路径中避开的风险")
+    : reflection
+      ? copyFor(language, "Boundaries and support on this path", "本次路径中的边界与支持")
+      : copyFor(language, "Protective choices on this path", "本次路径中的保护性选择");
+
+  const toggle = (panel: "protective" | "avoided") => {
+    setOpenPanel((current) => current === panel ? null : panel);
+  };
+
+  const panelButton = (
+    panel: "protective" | "avoided",
+    label: string,
+    count: number
+  ) => {
+    const open = openPanel === panel;
+    const controls = `result-${panel}-details`;
+    return (
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls={controls}
+        onClick={() => toggle(panel)}
+        className="group flex min-h-[104px] w-full items-center justify-between gap-3 rounded-2xl border border-[#f472b6]/35 bg-[#f472b6]/10 px-4 py-4 text-left transition-colors hover:border-[#f472b6]/60 hover:bg-[#f472b6]/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f5a6d0] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d0c25]"
+      >
+        <span>
+          <span className="block text-sm font-bold leading-5 text-white/65">{label}</span>
+          <span className="mt-1 block text-3xl font-black leading-none text-[#f472b6]">{count}</span>
+        </span>
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[#f5a6d0] transition-transform group-hover:scale-105">
+          {open ? (
+            <ChevronUp className="h-5 w-5" aria-hidden="true" />
+          ) : (
+            <ChevronDown className="h-5 w-5" aria-hidden="true" />
+          )}
+        </span>
+      </button>
+    );
+  };
+
+  return (
+    <div className="mt-6">
+      <div className={reflection ? "grid grid-cols-1" : "grid grid-cols-2 gap-3"}>
+        {panelButton(
+          "protective",
+          reflection
+            ? copyFor(language, "Boundaries and support", "边界与支持选择")
+            : copyFor(language, "Protective choices", "保护性选择"),
+          protectiveItems.length
+        )}
+        {!reflection && panelButton(
+          "avoided",
+          copyFor(language, "Risks avoided", "避开风险"),
+          avoidedRiskItems.length
+        )}
+      </div>
+
+      {openPanel && (
+        <div
+          id={`result-${openPanel}-details`}
+          className="mt-3 rounded-2xl border border-white/10 bg-[#211d46]/75 p-4 shadow-inner"
+        >
+          <h3 className="text-base font-black leading-6 text-[#f5a6d0]">{activeTitle}</h3>
+          {activeItems.length > 0 ? (
+            <ol className="mt-3 space-y-3">
+              {activeItems.map((item, index) => (
+                <li
+                  key={item.id}
+                  className="flex gap-3 rounded-xl border border-white/[0.08] bg-white/[0.04] p-3.5"
+                >
+                  <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#f472b6]/15 text-sm font-black text-[#f5a6d0]">
+                    {index + 1}
+                  </span>
+                  <div>
+                    <p className="text-base font-bold leading-6 text-white">{item.title}</p>
+                    <p className="mt-1.5 text-[15px] leading-7 text-white/70">{item.detail}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="mt-2 text-[15px] leading-7 text-white/65">
+              {copyFor(
+                language,
+                "No separate items were identified on this path. This is not a judgment about your response.",
+                "这条路径没有单独列出的项目，这不代表对你的反应作出评价。"
+              )}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -646,12 +911,11 @@ function buildScoreCardSummary(
       "Long-press to save · May you never need this knowledge",
       "长按保存图片 · 希望这些知识永远不必用上"
     ),
-    correctTitle: copyFor(language, "What you did right", "你做对了什么"),
+    correctTitle: copyFor(language, "Protective choices", "保护性选择"),
     correctItems: correctItems.slice(0, 3),
-    educationTitle: copyFor(language, "Key things to know", "你的关键科普"),
+    educationTitle: copyFor(language, "Key guidance", "关键提示"),
     educationItems: educationItems.slice(0, 3),
     qrLabel: copyFor(language, "Scan to try the beta", "扫码体验内测版"),
-    correctCount: good.length + avoidedBad.length,
     sceneTipTitle: copyFor(
       language,
       "Scenario Tip",
@@ -837,6 +1101,13 @@ function scoreTitleForScenario(language: AppLanguage, scenarioId: string): strin
       "性侵害后续应对 · 知识储备得分"
     );
   }
+  if (scenarioId === "technology-facilitated-gender-violence") {
+    return copyFor(
+      language,
+      "Technology-facilitated abuse · Safety knowledge score",
+      "技术促成的性别暴力 · 安全知识得分"
+    );
+  }
   return copyFor(
     language,
     "Domestic-violence response · Knowledge score",
@@ -852,6 +1123,8 @@ function SimulationResultReport({
   endingTitle,
   endingSummary,
   summary,
+  protectiveItems,
+  avoidedRiskItems,
 }: {
   language: AppLanguage;
   score: SimulationScoreResult;
@@ -860,37 +1133,49 @@ function SimulationResultReport({
   endingTitle: string;
   endingSummary: string;
   summary: DomesticScoreCardSummary;
+  protectiveItems: ResultInsightItem[];
+  avoidedRiskItems: ResultInsightItem[];
 }) {
   return (
     <div data-testid="simulation-result-report" className="flex flex-col gap-3">
-      <section className="relative overflow-hidden rounded-2xl border border-primary/25 bg-card p-5">
+      <section className="relative overflow-hidden rounded-[28px] border border-[#c084fc]/25 bg-[linear-gradient(180deg,#15142f_0%,#09091d_100%)] p-5 shadow-[0_24px_70px_rgba(5,4,22,0.42)] sm:p-7">
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-primary/10 blur-3xl"
+          className="pointer-events-none absolute -right-10 -top-14 h-52 w-52 rounded-full bg-[#f472b6]/15 blur-3xl"
         />
-        <div className="relative">
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-primary">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -bottom-20 -left-20 h-52 w-52 rounded-full bg-[#c084fc]/10 blur-3xl"
+        />
+        <div className="relative z-10">
+          <div className="flex items-center gap-2 text-sm font-bold tracking-[0.1em] text-[#f472b6]">
             <Sparkles className="h-4 w-4" aria-hidden="true" />
             {copyFor(language, "Scenario simulation · result report", "情景模拟 · 结果报告")}
           </div>
-          <h1 className="mt-5 max-w-sm text-2xl font-black leading-tight tracking-tight text-foreground">
+          <h1 className="mt-5 max-w-xl text-2xl font-black leading-[1.3] tracking-tight text-white">
             {simText(language, score.headline)}
           </h1>
-          <p className="mt-3 text-sm leading-6 text-foreground/75">
+          <p className="mt-4 text-base leading-7 text-white/75">
             {simText(language, score.detail)}
           </p>
 
-          <div className="mt-5 border-t border-border/70 pt-4">
+          <ResultInsightPanels
+            language={language}
+            protectiveItems={protectiveItems}
+            avoidedRiskItems={avoidedRiskItems}
+          />
+
+          <div className="mt-6 border-t border-white/10 pt-5">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full border border-primary/35 bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
+              <span className="rounded-full border border-[#f472b6]/35 bg-[#f472b6]/10 px-3 py-1.5 text-sm font-bold text-[#f5a6d0]">
                 {scenarioTitle}
               </span>
-              <span className="text-xs font-semibold text-muted-foreground">
+              <span className="text-sm font-semibold text-white/50">
                 {copyFor(language, "This run's ending", "本次结局")}
               </span>
             </div>
-            <h2 className="mt-3 text-lg font-black leading-6 text-foreground">{endingTitle}</h2>
-            <p className="mt-2 text-sm leading-6 text-foreground/80">{endingSummary}</p>
+            <h2 className="mt-3 text-[22px] font-black leading-8 text-white">{endingTitle}</h2>
+            <p className="mt-2 text-base leading-7 text-white/75">{endingSummary}</p>
           </div>
         </div>
       </section>
@@ -911,15 +1196,16 @@ function SimulationResultReport({
 function RealFlowSection({ language, steps }: { language: AppLanguage; steps: { en: string; zh: string }[] }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="rounded-2xl border border-border/70 bg-card p-4">
+    <div className="rounded-2xl border border-primary/25 bg-card/90 p-4">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between gap-2"
+        aria-expanded={open}
+        className="flex min-h-11 w-full items-center justify-between gap-3 rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       >
         <div className="flex items-center gap-2">
-          <ListOrdered className="h-4 w-4 text-muted-foreground" />
-          <span className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">
-            {copyFor(language, `Real process — the right steps (${steps.length})`, `真实流程——正确的做法（${steps.length}）`)}
+          <ListOrdered className="h-5 w-5 shrink-0 text-primary" />
+          <span className="text-base font-bold leading-6 text-foreground">
+            {copyFor(language, `Real-world process and options (${steps.length})`, `真实流程与参考步骤（${steps.length}）`)}
           </span>
         </div>
         {open ? (
@@ -932,10 +1218,10 @@ function RealFlowSection({ language, steps }: { language: AppLanguage; steps: { 
         <ol className="mt-3 flex flex-col gap-3">
           {steps.map((step, i) => (
             <li key={i} className="flex gap-3">
-              <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-[11px] font-black text-primary">
+              <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/15 text-sm font-black text-primary">
                 {i + 1}
               </span>
-              <p className="text-sm leading-6 text-foreground/85">{simText(language, step)}</p>
+              <p className="text-base leading-7 text-foreground/85">{simText(language, step)}</p>
             </li>
           ))}
         </ol>
@@ -947,14 +1233,15 @@ function RealFlowSection({ language, steps }: { language: AppLanguage; steps: { 
 function GlossarySection({ language, terms }: { language: AppLanguage; terms: SimGlossaryTerm[] }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="rounded-2xl border border-border/70 bg-card p-4">
+    <div className="rounded-2xl border border-primary/25 bg-card/90 p-4">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between gap-2"
+        aria-expanded={open}
+        className="flex min-h-11 w-full items-center justify-between gap-3 rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       >
         <div className="flex items-center gap-2">
-          <BookOpen className="h-4 w-4 text-muted-foreground" />
-          <span className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">
+          <BookOpen className="h-5 w-5 shrink-0 text-primary" />
+          <span className="text-base font-bold leading-6 text-foreground">
             {copyFor(language, "Term glossary", "名词解释")}
           </span>
         </div>
@@ -967,62 +1254,13 @@ function GlossarySection({ language, terms }: { language: AppLanguage; terms: Si
       {open && (
         <div className="mt-3 flex flex-col gap-3">
           {terms.map((g, i) => (
-            <div key={i} className="rounded-xl border border-border/50 bg-secondary/30 px-3 py-2.5">
-              <p className="text-sm font-bold text-foreground">{simText(language, g.term)}</p>
-              <p className="mt-1 text-xs leading-5 text-foreground/75">{simText(language, g.note)}</p>
+            <div key={i} className="rounded-xl border border-border/50 bg-secondary/30 px-3.5 py-3">
+              <p className="text-base font-bold leading-6 text-foreground">{simText(language, g.term)}</p>
+              <p className="mt-1.5 text-[15px] leading-7 text-foreground/75">{simText(language, g.note)}</p>
             </div>
           ))}
         </div>
       )}
-    </div>
-  );
-}
-
-function DebriefCard({
-  rule,
-  language,
-  avoided = false,
-  goodAccent = "green",
-}: {
-  rule: SimDebriefRule;
-  language: AppLanguage;
-  avoided?: boolean;
-  goodAccent?: "green" | "pink";
-}) {
-  const isGood = rule.kind === "good";
-  // Darker, higher-contrast backgrounds — the previous /5 tints were nearly invisible
-  // against the dark-purple app background. Now: solid dark card + strong colored border.
-  const cardClass = isGood
-    ? goodAccent === "pink"
-      ? "border-l-4 border-l-primary border-y border-r border-border/60 bg-secondary/50"
-      : "border-l-4 border-l-emerald-500 border-y border-r border-border/60 bg-secondary/50"
-    : avoided
-    ? "border-l-4 border-l-amber-500 border-y border-r border-border/60 bg-secondary/50 opacity-90"
-    : "border-l-4 border-l-rose-500 border-y border-r border-border/60 bg-secondary/50";
-  const icon = isGood ? (
-    <CheckCircle2
-      className={`mt-0.5 h-4 w-4 shrink-0 ${goodAccent === "pink" ? "text-primary" : "text-emerald-500"}`}
-    />
-  ) : avoided ? (
-    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
-  ) : (
-    <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-500" />
-  );
-  return (
-    <div className={`rounded-xl p-3 ${cardClass}`}>
-      <div className="flex items-start gap-2">
-        {icon}
-        <div>
-          <p className="text-sm font-bold text-foreground">{simText(language, rule.title)}</p>
-          <p className="mt-1 text-xs leading-5 text-foreground/85">{simText(language, rule.detail)}</p>
-          {rule.basis && (
-            <p className="mt-1.5 text-[11px] leading-4 text-muted-foreground/90">
-              {copyFor(language, "Basis: ", "依据：")}
-              {simText(language, rule.basis)}
-            </p>
-          )}
-        </div>
-      </div>
     </div>
   );
 }
@@ -1209,10 +1447,11 @@ function CoachHintsSection({
     <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between"
+        aria-expanded={open}
+        className="flex min-h-11 w-full items-center justify-between gap-3 rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       >
-        <h3 className="text-xs font-bold uppercase tracking-[0.12em] text-primary">
-          💡 {copyFor(language, `Legal tips from your path (${hints.length})`, `本次流程中的法律提示（${hints.length} 条）`)}
+        <h3 className="text-base font-bold leading-6 text-primary">
+          💡 {copyFor(language, `Practical tips from your path (${hints.length})`, `本次流程中的实用提示（${hints.length} 条）`)}
         </h3>
         {open ? (
           <ChevronUp className="h-4 w-4 text-primary" />
@@ -1225,49 +1464,13 @@ function CoachHintsSection({
           {hints.map((h, i) => (
             <p
               key={h.sceneId + i}
-              className="rounded-xl bg-card/60 px-3 py-2 text-xs leading-5 text-foreground/85"
+              className="rounded-xl bg-card/60 px-3.5 py-3 text-[15px] leading-7 text-foreground/85"
             >
               {simText(language, h.text)}
             </p>
           ))}
         </div>
       )}
-    </div>
-  );
-}
-
-function CollapsibleSection({
-  label,
-  accent,
-  defaultOpen = false,
-  children,
-}: {
-  label: string;
-  accent: "emerald" | "rose" | "amber";
-  defaultOpen?: boolean;
-  children: React.ReactNode;
-}) {
-  const [open, setOpen] = useState(defaultOpen);
-  const accentText =
-    accent === "emerald" ? "text-emerald-500" :
-    accent === "rose" ? "text-rose-500" :
-    "text-amber-500";
-  return (
-    <div className="rounded-2xl border border-border/70 bg-card p-4">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between gap-2"
-      >
-        <span className={`text-xs font-bold uppercase tracking-[0.12em] ${accentText}`}>
-          {label}
-        </span>
-        {open ? (
-          <ChevronUp className={`h-4 w-4 ${accentText}`} />
-        ) : (
-          <ChevronDown className={`h-4 w-4 ${accentText}`} />
-        )}
-      </button>
-      {open && <div className="mt-3">{children}</div>}
     </div>
   );
 }

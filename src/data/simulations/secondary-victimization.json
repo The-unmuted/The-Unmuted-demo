@@ -1,0 +1,357 @@
+{
+  "id": "secondary-victimization",
+  "resultMode": "reflection",
+  "_comment": "创伤知情教育模拟。参考幸存者中心原则与支持者指南；不评价、不量化幸存者的创伤反应或求助选择。内容待公益律师与创伤专业人员复核。",
+  "title": {
+    "en": "When Seeking Help Causes More Harm",
+    "zh": "向亲友求助后遭遇“二次伤害”怎么办"
+  },
+  "tagline": {
+    "en": "Practise boundaries when someone doubts, blames, pressures, exposes, or overwhelms a survivor.",
+    "zh": "当求助换来质疑、责备、逼迫、泄露或过度追问时，练习保护自己的边界。"
+  },
+  "intro": {
+    "en": "This scenario begins after a survivor tells someone what happened. It does not ask you to prove the experience or retell details. There is no score: freezing, leaving, delaying a decision, or changing whom you trust are all understandable responses.",
+    "zh": "这个情景从幸存者向他人讲述经历之后开始，不要求你证明事情发生过，也不要求复述细节。这里没有分数：僵住、离开、暂缓决定或更换求助对象，都是可以理解的反应。"
+  },
+  "entry": "opening",
+  "scenes": {
+    "opening": {
+      "narration": {
+        "en": "You told someone you hoped would be safe. What response do you want to practise handling?",
+        "zh": "你向一个原本以为可以信任的人讲了经历。你想练习应对哪一种反应？"
+      },
+      "coach": {
+        "en": "A harmful response may come from ignorance, prejudice, control, coercion, or institutional misconduct. You are not responsible for educating the person who hurt you.",
+        "zh": "伤人的回应可能来自无知，也可能来自偏见、控制、胁迫或机构失当。你没有义务教育伤害你的人。"
+      },
+      "choices": [
+        {
+          "text": { "en": "They question or blame me", "zh": "对方质疑或责怪我" },
+          "flags": ["sv-path-blame"],
+          "next": "blame"
+        },
+        {
+          "text": { "en": "They pressure me to report — or not to report", "zh": "对方逼我立刻报案，或逼我不要报案" },
+          "flags": ["sv-path-pressure"],
+          "next": "pressure"
+        },
+        {
+          "text": { "en": "They tell others or confront the person without my consent", "zh": "对方未经同意告诉别人，或擅自去对质" },
+          "flags": ["sv-path-disclosure"],
+          "next": "disclosure"
+        },
+        {
+          "text": { "en": "A helper repeatedly demands details or asks humiliating questions", "zh": "机构人员反复逼问细节，或提出羞辱性问题" },
+          "flags": ["sv-path-institution"],
+          "next": "institution"
+        },
+        {
+          "text": { "en": "Friends pull away because they do not know what to say", "zh": "朋友因为不知道说什么而疏远" },
+          "flags": ["sv-path-withdrawal"],
+          "next": "withdrawal"
+        }
+      ]
+    },
+    "blame": {
+      "narration": {
+        "en": "They ask: “Why didn't you fight back? Why did you wait? Maybe you misunderstood.”",
+        "zh": "对方问：“你为什么不反抗？为什么现在才说？是不是你误会了？”"
+      },
+      "coach": {
+        "en": "Freezing, appeasing, fragmented memory, and delayed disclosure are recognised trauma responses. None of them means consent, and visible injury is not a condition for being believed.",
+        "zh": "僵住、顺从求生、记忆片段化和延迟披露都可能是创伤反应。它们不等于同意；是否有明显伤痕也不应成为被相信的前提。"
+      },
+      "choices": [
+        {
+          "text": { "en": "Say: “I need you to listen, not decide whether it happened.”", "zh": "说：“我需要你倾听，不是判断这件事有没有发生。”" },
+          "feedback": { "en": "You name what support means to you.", "zh": "你明确说出了自己需要怎样的支持。" },
+          "flags": ["sv-named-need"],
+          "next": "blame-next"
+        },
+        {
+          "text": { "en": "End the conversation without explaining", "zh": "不再解释，结束这次谈话" },
+          "feedback": { "en": "You step away. A boundary does not require a debate.", "zh": "你离开了。设定边界不需要先赢得一场辩论。" },
+          "flags": ["sv-ended-conversation"],
+          "next": "blame-next"
+        },
+        {
+          "text": { "en": "I freeze and cannot answer", "zh": "我僵住了，什么也说不出来" },
+          "feedback": { "en": "Not answering is not agreement. You can decide what you need later.", "zh": "没有回答不等于认同。你可以之后再决定自己需要什么。" },
+          "flags": ["sv-froze"],
+          "next": "blame-next"
+        }
+      ]
+    },
+    "blame-next": {
+      "narration": { "en": "The conversation has left you feeling smaller and less safe.", "zh": "这次谈话让你感到更不安全，也更孤立。" },
+      "choices": [
+        {
+          "text": { "en": "Contact a different trusted person or professional service", "zh": "转向另一位可信任的人或专业服务" },
+          "flags": ["sv-changed-support"],
+          "next": "end:support-choice"
+        },
+        {
+          "text": { "en": "Pause all conversations and give myself time", "zh": "暂停谈论这件事，先给自己时间" },
+          "flags": ["sv-paused"],
+          "next": "end:pause"
+        }
+      ]
+    },
+    "pressure": {
+      "narration": {
+        "en": "One person insists you report immediately. Another says reporting would “ruin the other person's future.” Both speak as if the decision belongs to them.",
+        "zh": "一个人逼你立刻报案，另一个人说报案会“毁掉对方的前途”。两个人都把决定当成了自己的。"
+      },
+      "coach": {
+        "en": "Except where a specific mandatory-reporting duty applies, support should preserve the survivor's agency. Encouragement becomes harmful when it turns into threats, guilt, or control.",
+        "zh": "除非法律对特定情形另有强制报告要求，支持应当保留幸存者的自主决定。鼓励一旦变成威胁、内疚施压或控制，就会造成新的伤害。"
+      },
+      "choices": [
+        {
+          "text": { "en": "Say: “Give me information and options, not an ultimatum.”", "zh": "说：“请给我信息和选项，不要替我下最后通牒。”" },
+          "flags": ["sv-protected-agency"],
+          "next": "pressure-next"
+        },
+        {
+          "text": { "en": "Ask someone neutral about medical, legal, and support options", "zh": "向中立的专业人员了解医疗、法律和支持选项" },
+          "flags": ["sv-sought-options"],
+          "next": "pressure-next"
+        },
+        {
+          "text": { "en": "Leave the decision for another day", "zh": "把决定留到以后再做" },
+          "flags": ["sv-paused"],
+          "next": "pressure-next"
+        }
+      ]
+    },
+    "pressure-next": {
+      "narration": { "en": "You can ask for practical help without handing over control of the decision.", "zh": "你可以获得实际帮助，同时不把决定权交出去。" },
+      "choices": [
+        {
+          "text": { "en": "Ask them to accompany me only if and when I choose", "zh": "请对方只在我决定后、按我需要的方式陪同" },
+          "flags": ["sv-defined-role"],
+          "next": "end:agency"
+        },
+        {
+          "text": { "en": "Choose another supporter who can respect my pace", "zh": "换一个能够尊重我节奏的支持者" },
+          "flags": ["sv-changed-support"],
+          "next": "end:support-choice"
+        }
+      ]
+    },
+    "disclosure": {
+      "narration": {
+        "en": "You learn that they told relatives, posted hints online, or contacted the suspected offender without asking you.",
+        "zh": "你发现对方把经历告诉了亲属、在网上暗示，或未经询问就联系了涉嫌侵害者。"
+      },
+      "coach": {
+        "en": "A survivor's story is not community property. Unwanted disclosure can create privacy, retaliation, safety, and evidence risks.",
+        "zh": "幸存者的经历不是可以随意传播的公共信息。未经同意的泄露可能带来隐私、报复、人身安全和证据风险。"
+      },
+      "choices": [
+        {
+          "text": { "en": "State: “Do not tell or contact anyone without my permission.”", "zh": "明确说：“未经我允许，不要告诉或联系任何人。”" },
+          "flags": ["sv-privacy-boundary"],
+          "next": "disclosure-next"
+        },
+        {
+          "text": { "en": "Save what was shared and ask for it to be removed", "zh": "保存泄露记录，并要求删除或停止传播" },
+          "flags": ["sv-preserved-disclosure", "sv-privacy-boundary"],
+          "next": "disclosure-next"
+        },
+        {
+          "text": { "en": "Reduce or end contact with them", "zh": "减少或结束与对方的联系" },
+          "flags": ["sv-reduced-contact"],
+          "next": "disclosure-next"
+        }
+      ]
+    },
+    "disclosure-next": {
+      "narration": { "en": "You consider what would help you feel safer now.", "zh": "你开始考虑，现在怎样做能让自己更安全。" },
+      "choices": [
+        {
+          "text": { "en": "Review account privacy and tell one trusted person what happened", "zh": "检查账号隐私设置，并把情况告诉一位可信任的人" },
+          "flags": ["sv-safety-plan"],
+          "next": "end:privacy"
+        },
+        {
+          "text": { "en": "Ask a professional service about privacy or retaliation risks", "zh": "向专业机构咨询隐私或报复风险" },
+          "flags": ["sv-sought-options"],
+          "next": "end:privacy"
+        }
+      ]
+    },
+    "institution": {
+      "narration": {
+        "en": "During an interview, a helper repeats intimate questions, uses blaming language, or asks irrelevant questions about clothing and past relationships.",
+        "zh": "在一次询问中，工作人员反复追问私密细节，使用责备性语言，或询问与事实无关的穿着和过往关系。"
+      },
+      "coach": {
+        "en": "Relevant fact-finding may still be difficult, but humiliation and repetitive irrelevant questioning are not the same as necessary clarification. You may ask why a question is relevant and what procedural support is available.",
+        "zh": "必要的事实核实有时确实艰难，但羞辱和反复追问无关内容并不等于必要询问。你可以询问问题与案件有何关联，以及能获得哪些程序支持。"
+      },
+      "choices": [
+        {
+          "text": { "en": "Ask for a pause and for the question's relevance to be explained", "zh": "要求暂停，并请对方说明问题与案件的关联" },
+          "flags": ["sv-requested-pause"],
+          "next": "institution-next"
+        },
+        {
+          "text": { "en": "Ask whether a lawyer, advocate, or trusted support person may attend", "zh": "询问能否由律师、支持人员或可信任的人陪同" },
+          "flags": ["sv-requested-advocate"],
+          "next": "institution-next"
+        },
+        {
+          "text": { "en": "I cannot continue the interview right now", "zh": "我现在无法继续这次询问" },
+          "flags": ["sv-ended-conversation"],
+          "next": "institution-next"
+        }
+      ]
+    },
+    "institution-next": {
+      "narration": { "en": "Before continuing, you can ask about records, corrections, complaints, and available support.", "zh": "继续之前，你可以询问记录、更正、投诉和支持安排。" },
+      "choices": [
+        {
+          "text": { "en": "Review the written record and correct inaccurate wording before signing", "zh": "签字前核对书面记录并更正不准确表述" },
+          "flags": ["sv-reviewed-record"],
+          "next": "end:advocate"
+        },
+        {
+          "text": { "en": "Ask for a different interviewer or complaint channel", "zh": "要求更换询问人员或了解投诉渠道" },
+          "flags": ["sv-requested-change"],
+          "next": "end:advocate"
+        }
+      ]
+    },
+    "withdrawal": {
+      "narration": {
+        "en": "A friend stops replying. Another changes the subject whenever you mention what happened.",
+        "zh": "一位朋友不再回复，另一位每当你提起经历就立刻转移话题。"
+      },
+      "coach": {
+        "en": "Their discomfort does not make your needs excessive. Good support can be simple: believe, listen, ask what is needed, protect privacy, and stay patient.",
+        "zh": "对方感到不知所措，不代表你的需要“太多”。有效支持可以很简单：相信、倾听、询问需要、保护隐私并保持耐心。"
+      },
+      "choices": [
+        {
+          "text": { "en": "Ask directly whether they can listen for ten minutes", "zh": "直接问对方能否倾听十分钟" },
+          "flags": ["sv-named-need"],
+          "next": "withdrawal-next"
+        },
+        {
+          "text": { "en": "Stop asking this person and try another support route", "zh": "不再向这个人求助，转向其他支持渠道" },
+          "flags": ["sv-changed-support"],
+          "next": "withdrawal-next"
+        },
+        {
+          "text": { "en": "Take a break from reaching out", "zh": "暂停求助，先休息一下" },
+          "flags": ["sv-paused"],
+          "next": "withdrawal-next"
+        }
+      ]
+    },
+    "withdrawal-next": {
+      "narration": { "en": "Support can come from more than one person and can change over time.", "zh": "支持不必只来自一个人，也可以随着时间调整。" },
+      "choices": [
+        {
+          "text": { "en": "Build a small support circle with different roles", "zh": "建立一个分工不同的小型支持圈" },
+          "flags": ["sv-support-circle"],
+          "next": "end:support-choice"
+        },
+        {
+          "text": { "en": "Use a professional hotline or service when I am ready", "zh": "准备好时使用专业热线或服务" },
+          "flags": ["sv-sought-options"],
+          "next": "end:pause"
+        }
+      ]
+    }
+  },
+  "endings": {
+    "support-choice": {
+      "title": { "en": "You changed the source of support", "zh": "你更换了支持来源" },
+      "summary": { "en": "A person who doubts, blames, exposes, or controls you does not have to remain your main support. Seeking someone safer is not betrayal or failure.", "zh": "质疑、责备、泄露或控制你的人，不必继续成为你的主要支持者。转向更安全的人不是背叛，也不是失败。" }
+    },
+    "pause": {
+      "title": { "en": "You protected your pace", "zh": "你保护了自己的节奏" },
+      "summary": { "en": "Pausing is a decision, too. You may return to information, support, medical care, or legal options when you are ready; a delay never transfers responsibility to you.", "zh": "暂停本身也是一种决定。准备好时，你仍可以重新了解支持、医疗或法律选项；延迟不会把责任转移到你身上。" }
+    },
+    "agency": {
+      "title": { "en": "The decision returned to you", "zh": "决定权回到了你手里" },
+      "summary": { "en": "Supporters may share information and help with practical steps, but pressure and guilt are not support. Your safety, needs, and informed choice matter.", "zh": "支持者可以提供信息和实际帮助，但逼迫和内疚施压不是支持。你的安全、需要和知情选择都很重要。" }
+    },
+    "privacy": {
+      "title": { "en": "You set a privacy and safety boundary", "zh": "你设定了隐私与安全边界" },
+      "summary": { "en": "Unauthorised disclosure was not your fault. Preserving records, limiting contact, and asking for professional advice can help you decide what to do next.", "zh": "未经同意的泄露不是你的错。保存记录、限制接触并寻求专业意见，可以帮助你决定下一步。" }
+    },
+    "advocate": {
+      "title": { "en": "You asked for procedural support", "zh": "你提出了程序支持需求" },
+      "summary": { "en": "You may ask about breaks, relevance, corrections, accompaniment, and complaint routes. Availability and procedure vary, but asking does not make you difficult.", "zh": "你可以询问暂停、问题关联性、记录更正、陪同和投诉渠道。各地程序可能不同，但提出这些要求并不代表你“难配合”。" }
+    }
+  },
+  "debrief": [
+    {
+      "id": "sv-good-named-need",
+      "kind": "good",
+      "has": ["sv-named-need"],
+      "title": { "en": "You named the support you needed", "zh": "你说出了自己需要的支持" },
+      "detail": { "en": "“I need you to listen, not judge” gives a willing supporter a clear role. You never owe this explanation to someone who keeps causing harm.", "zh": "“我需要你倾听，不是评判”能让愿意支持的人知道该怎么做。面对持续伤害你的人，你没有义务反复解释。" }
+    },
+    {
+      "id": "sv-good-boundary",
+      "kind": "good",
+      "has": ["sv-privacy-boundary"],
+      "title": { "en": "You stated a privacy boundary", "zh": "你明确了隐私边界" },
+      "detail": { "en": "The survivor decides who is told, what is shared, and when, subject to any specific legal duty that may apply.", "zh": "原则上应由幸存者决定告诉谁、透露什么、何时透露；特定法律强制报告义务另当别论。" }
+    },
+    {
+      "id": "sv-good-agency",
+      "kind": "good",
+      "has": ["sv-protected-agency"],
+      "title": { "en": "You protected your agency", "zh": "你保护了自己的决定权" },
+      "detail": { "en": "Information, accompaniment, and practical help can support a choice. Threats, guilt, and ultimatums replace it.", "zh": "信息、陪同和实际帮助能支持选择；威胁、内疚施压和最后通牒则会取代选择。" }
+    },
+    {
+      "id": "sv-good-support",
+      "kind": "good",
+      "has": ["sv-changed-support"],
+      "title": { "en": "You moved toward safer support", "zh": "你转向了更安全的支持" },
+      "detail": { "en": "A different friend, hotline, social worker, counsellor, lawyer, or medical professional may be a better fit. You can combine forms of support.", "zh": "另一位朋友、热线、社工、心理人员、律师或医务人员可能更适合。不同类型的支持也可以组合使用。" }
+    },
+    {
+      "id": "sv-good-advocate",
+      "kind": "good",
+      "has": ["sv-requested-advocate"],
+      "title": { "en": "You asked about accompaniment", "zh": "你询问了陪同支持" },
+      "detail": { "en": "Whether accompaniment is permitted depends on the setting and procedure. Ask before the interview and request an explanation if it is refused.", "zh": "能否陪同取决于具体机构与程序。可在询问前提出；如被拒绝，可要求说明适用规则。" }
+    },
+    {
+      "id": "sv-good-record",
+      "kind": "good",
+      "has": ["sv-reviewed-record"],
+      "title": { "en": "You reviewed the written record", "zh": "你核对了书面记录" },
+      "detail": { "en": "Correct inaccurate or incomplete wording before signing, and ask what copies or receipts can be provided under the applicable procedure.", "zh": "签字前更正不准确或不完整的表述，并询问依适用程序可以取得哪些副本或回执。" }
+    }
+  ],
+  "realFlow": [
+    { "en": "Stabilise first — pause, leave, or contact someone safer if the conversation is causing harm.", "zh": "先恢复安全感——如果谈话正在造成伤害，可以暂停、离开或联系更安全的人。" },
+    { "en": "Name the boundary only if useful — for example: listen without judging; do not disclose; do not contact anyone for me.", "zh": "只在对你有帮助时表达边界——例如：请倾听而不要评判；不要泄露；不要替我联系任何人。" },
+    { "en": "Choose support by role — emotional listening, practical accompaniment, medical care, legal information, social work, or crisis help.", "zh": "按需要选择支持——情绪倾听、实际陪同、医疗、法律信息、社工或危机援助。" },
+    { "en": "For an institutional interview, ask about pauses, question relevance, accompaniment, record correction, copies, and complaint channels.", "zh": "面对机构询问，可了解暂停、问题关联性、陪同、记录更正、副本和投诉渠道。" },
+    { "en": "If private information was disclosed, preserve the disclosure record, assess safety, request removal where appropriate, and seek professional advice if needed.", "zh": "如隐私被泄露，保存泄露记录、评估安全风险、在适当时要求删除，并按需寻求专业意见。" }
+  ],
+  "glossary": [
+    {
+      "term": { "en": "Secondary victimisation", "zh": "二次伤害／二次受害" },
+      "note": { "en": "Additional harm caused by blaming, disbelief, forced disclosure, controlling decisions, humiliating procedures, or repeated unnecessary retelling after the original violence.", "zh": "在原有暴力之后，由责备、不相信、强迫披露、控制决定、羞辱性程序或不必要的反复讲述造成的额外伤害。" }
+    },
+    {
+      "term": { "en": "Trauma-informed support", "zh": "创伤知情支持" },
+      "note": { "en": "Support that prioritises safety, trust, choice, collaboration, privacy, and avoiding re-traumatisation.", "zh": "优先考虑安全、信任、选择、协作和隐私，并尽量避免再次触发创伤的支持方式。" }
+    },
+    {
+      "term": { "en": "Freeze / appease response", "zh": "僵住／顺从求生反应" },
+      "note": { "en": "Automatic survival responses. They do not mean consent and are not proof that the harm was welcomed.", "zh": "自动发生的求生反应，不等于同意，也不能证明受害者欢迎伤害。" }
+    }
+  ]
+}

@@ -1,0 +1,364 @@
+{
+  "id": "technology-facilitated-gender-violence",
+  "_comment": "技术促成的性别暴力教育模拟。依据民法典人格权编、2024年《网络暴力信息治理规定》及2026年施行的《治安管理处罚法》；具体定性和处理结果取决于事实，内容待公益律师校对。2026年反网络暴力法仍为征求意见稿，不作为现行法律引用。",
+  "title": {
+    "en": "Technology-Facilitated Gender-Based Violence",
+    "zh": "技术促成的性别暴力"
+  },
+  "tagline": {
+    "en": "Practise safety, account recovery, evidence preservation, and reporting without redistributing harmful content.",
+    "zh": "练习安全评估、账号恢复、证据保存与投诉报案，同时避免再次传播伤害内容。"
+  },
+  "intro": {
+    "en": "Digital abuse can cross platforms and connect to offline danger. This non-graphic practice covers intimate-image threats, sexual deepfakes, doxxing, cyberstalking, and grooming of a minor. Outcomes are not guaranteed, and nothing you choose is saved.",
+    "zh": "数字暴力可能跨平台扩散，也可能连接现实中的人身风险。这个非图像化练习涵盖私密影像威胁、色情深度伪造、开盒围攻、网络跟踪和对未成年人的网络诱骗。任何处理结果都不作保证，你的选择也不会被保存。"
+  },
+  "entry": "opening",
+  "scenes": {
+    "opening": {
+      "narration": {
+        "en": "Which situation do you want to practise?",
+        "zh": "你想练习应对哪一种情况？"
+      },
+      "coach": {
+        "en": "If there is immediate physical danger, continued following, extortion, or a credible threat, move to safety and call 110. Online evidence can be preserved without forwarding intimate material.",
+        "zh": "如存在迫在眉睫的人身危险、持续尾随、敲诈或可信威胁，应先转移到安全处并拨打 110。保存网络证据不等于转发私密内容。"
+      },
+      "choices": [
+        {
+          "text": { "en": "Someone threatens to share intimate images unless I comply or pay", "zh": "有人用散布私密影像威胁我服从或付款" },
+          "flags": ["tech-path-sextortion"],
+          "next": "sextortion"
+        },
+        {
+          "text": { "en": "A sexual deepfake or impersonation account is spreading", "zh": "色情深度伪造或冒名账号正在传播" },
+          "flags": ["tech-path-deepfake"],
+          "next": "deepfake"
+        },
+        {
+          "text": { "en": "My personal information was exposed in a gendered pile-on", "zh": "我的个人信息被开盒，并遭到性别化围攻" },
+          "flags": ["tech-path-doxxing"],
+          "next": "doxxing"
+        },
+        {
+          "text": { "en": "An account was taken over or someone is tracking my location", "zh": "账号被接管，或有人通过设备持续定位我" },
+          "flags": ["tech-path-stalking"],
+          "next": "stalking"
+        },
+        {
+          "text": { "en": "An adult used games, gifts, or romance to ask a minor for intimate material", "zh": "成年人通过游戏、礼物或恋爱关系向未成年人索要私密内容" },
+          "flags": ["tech-path-minor"],
+          "next": "minor"
+        }
+      ]
+    },
+    "sextortion": {
+      "narration": {
+        "en": "A message says: “Pay tonight or I send it to your family and workplace.” It includes a small preview and a payment account.",
+        "zh": "一条消息写着：“今晚付款，否则发给你的家人和单位。”消息附有小幅预览和收款账号。"
+      },
+      "coach": {
+        "en": "Paying does not guarantee deletion and may lead to repeated demands. Preserve the threat, account identity, URL, timestamp, surrounding context, and payment demand; do not repost the image to ask others whether it is real.",
+        "zh": "付款不能保证删除，还可能引来持续索要。应保存威胁内容、账号身份、网址、时间、上下文和付款要求；不要为了询问真伪而再次转发影像。"
+      },
+      "choices": [
+        {
+          "text": { "en": "Record the threat and account details, then contact police from a safe place", "zh": "记录威胁和账号信息，在安全地点联系警方" },
+          "flags": ["tech-preserved-context", "tech-called-police"],
+          "next": "sextortion-platform"
+        },
+        {
+          "text": { "en": "Ask a trusted person to sit with me while I preserve evidence and make reports", "zh": "请可信任的人陪我保存证据并投诉报案" },
+          "flags": ["tech-trusted-support", "tech-preserved-context"],
+          "next": "sextortion-platform"
+        },
+        {
+          "text": { "en": "Forward the image to several group chats and ask everyone for advice", "zh": "把影像转发到多个群里，让大家帮忙判断" },
+          "feedback": { "en": "More copies now exist outside your control.", "zh": "更多副本已经出现在你无法控制的地方。" },
+          "flags": ["tech-redistributed-content"],
+          "next": "sextortion-platform"
+        }
+      ]
+    },
+    "sextortion-platform": {
+      "narration": { "en": "The account is still active and the deadline is approaching.", "zh": "账号仍然活跃，对方设定的期限越来越近。" },
+      "coach": {
+        "en": "Platforms should provide reporting and evidence tools and may remove, block, preserve records, or cooperate with authorities. Action can be requested, but removal speed and recovery are not guaranteed.",
+        "zh": "平台应提供投诉和证据功能，并可采取删除、屏蔽、留存记录或配合调查等措施。可以提出请求，但处理速度和恢复结果不能保证。"
+      },
+      "choices": [
+        {
+          "text": { "en": "Use the platform's abuse report and save the confirmation number", "zh": "通过平台侵害投诉入口举报，并保存受理编号" },
+          "flags": ["tech-platform-report", "tech-saved-confirmation"],
+          "next": "end:tech-response"
+        },
+        {
+          "text": { "en": "Block immediately without saving the account, threat, or payment demand", "zh": "未保存账号、威胁和收款要求就立刻拉黑" },
+          "flags": ["tech-blocked-before-preserving"],
+          "next": "end:tech-support"
+        }
+      ]
+    },
+    "deepfake": {
+      "narration": {
+        "en": "A friend sends a link to an account using your name and face on fabricated sexual images. Other accounts have begun reposting it.",
+        "zh": "朋友发来链接：一个账号使用你的姓名和面部制作虚假色情图像，其他账号已经开始转载。"
+      },
+      "coach": {
+        "en": "Civil Code Article 1019 addresses the use of technology to forge another person's likeness. Privacy and personality-right rules may also apply. Criminal or public-security classification depends on the facts.",
+        "zh": "民法典第 1019 条明确涉及利用技术手段伪造他人肖像；隐私权和人格权规则也可能适用。是否涉及刑事或治安责任取决于具体事实。"
+      },
+      "choices": [
+        {
+          "text": { "en": "Save URLs, account IDs, timestamps, search results, and repost relationships without resharing the images", "zh": "不转发影像，保存网址、账号 ID、时间、搜索结果和转载关系" },
+          "flags": ["tech-preserved-context", "tech-avoided-redistribution"],
+          "next": "deepfake-action"
+        },
+        {
+          "text": { "en": "Publicly repost every image to prove they are fake", "zh": "公开转发全部影像来证明它们是假的" },
+          "feedback": { "en": "The rebuttal may unintentionally increase reach and create more copies.", "zh": "澄清可能反而扩大传播，并制造更多副本。" },
+          "flags": ["tech-redistributed-content"],
+          "next": "deepfake-action"
+        }
+      ]
+    },
+    "deepfake-action": {
+      "narration": { "en": "You need the platform to act while also preserving a usable record.", "zh": "你需要平台尽快处理，同时保留可用记录。" },
+      "choices": [
+        {
+          "text": { "en": "Submit impersonation, sexual-content, privacy, and likeness complaints; keep every receipt", "zh": "分别提交冒名、色情内容、隐私和肖像侵权投诉，并保存全部回执" },
+          "flags": ["tech-platform-report", "tech-saved-confirmation"],
+          "next": "end:tech-response"
+        },
+        {
+          "text": { "en": "Ask a lawyer or 12348 about a notice-and-takedown request and further remedies", "zh": "咨询律师或 12348，了解通知删除及其他救济" },
+          "flags": ["tech-legal-advice"],
+          "next": "end:tech-support"
+        }
+      ]
+    },
+    "doxxing": {
+      "narration": {
+        "en": "A post exposes your phone number, workplace, home area, and degrading gendered comments. Strangers are calling and threatening to visit.",
+        "zh": "一条帖子公布了你的电话、单位、居住区域和性别侮辱内容，陌生人开始来电，并威胁上门。"
+      },
+      "coach": {
+        "en": "Treat online threats as an offline safety issue when location or routines are exposed. The current Public Security Administration Punishments Law addresses repeated threatening messages, harassment or following that disrupts life, dissemination of private information, and unlawful provision of personal information in different provisions.",
+        "zh": "当位置或生活规律被暴露时，应把网络威胁当作现实安全问题评估。现行治安管理处罚法分别规定了反复发送威胁信息、滋扰纠缠或跟踪影响正常生活、散布隐私以及非法提供个人信息等行为。"
+      },
+      "choices": [
+        {
+          "text": { "en": "Move to a safer location, tell a trusted person, and call 110 about the threats", "zh": "转移到更安全的地点，通知可信任的人，并就威胁拨打 110" },
+          "flags": ["tech-safety-plan", "tech-trusted-support", "tech-called-police"],
+          "next": "doxxing-evidence"
+        },
+        {
+          "text": { "en": "Argue with every account from my main profile", "zh": "用主账号逐个与围攻账号争辩" },
+          "flags": ["tech-public-escalation"],
+          "next": "doxxing-evidence"
+        }
+      ]
+    },
+    "doxxing-evidence": {
+      "narration": { "en": "Posts are being edited and deleted while new accounts appear.", "zh": "部分帖子正在编辑或删除，同时不断有新账号出现。" },
+      "choices": [
+        {
+          "text": { "en": "Preserve URLs, account IDs, times, threat context, call logs, and complaint receipts", "zh": "保存网址、账号 ID、时间、威胁上下文、来电记录和投诉回执" },
+          "flags": ["tech-preserved-context", "tech-saved-confirmation"],
+          "next": "end:tech-response"
+        },
+        {
+          "text": { "en": "Use platform privacy and anti-harassment controls, then ask for evidence preservation", "zh": "启用平台隐私和防骚扰功能，并提出证据留存请求" },
+          "flags": ["tech-account-safety", "tech-platform-report"],
+          "next": "end:tech-response"
+        }
+      ]
+    },
+    "stalking": {
+      "narration": {
+        "en": "A former partner mentions places you visited and messages from your account appear as read. You suspect shared passwords, active sessions, or location sharing.",
+        "zh": "前伴侣提到你去过的地点，你账号里的消息也莫名显示已读。你怀疑存在共享密码、陌生登录或位置共享。"
+      },
+      "coach": {
+        "en": "Changing settings on a monitored device can alert the person. If possible, use a safe device they cannot access and consider physical safety before cutting off access.",
+        "zh": "在受监控设备上修改设置可能惊动对方。条件允许时，应使用对方无法接触的安全设备，并在切断访问前先评估现实人身安全。"
+      },
+      "choices": [
+        {
+          "text": { "en": "Use a safe device to check email, recovery methods, active sessions, and location sharing", "zh": "用安全设备检查邮箱、找回方式、登录会话和位置共享" },
+          "flags": ["tech-safe-device", "tech-account-safety"],
+          "next": "stalking-next"
+        },
+        {
+          "text": { "en": "Announce immediately that I know they are monitoring me", "zh": "立刻告诉对方我已经发现被监控" },
+          "flags": ["tech-alerted-stalker"],
+          "next": "stalking-next"
+        }
+      ]
+    },
+    "stalking-next": {
+      "narration": { "en": "You can secure accounts in an order that reduces the chance of re-entry.", "zh": "你可以按顺序加固账号，减少对方再次进入的机会。" },
+      "choices": [
+        {
+          "text": { "en": "Secure the main email first, end unknown sessions, change unique passwords, and enable MFA", "zh": "先保护主邮箱，结束陌生会话，更换独立密码并启用多因素验证" },
+          "flags": ["tech-account-safety", "tech-mfa"],
+          "next": "end:tech-secured"
+        },
+        {
+          "text": { "en": "Preserve login alerts and location evidence, then make a safety and reporting plan", "zh": "保留登录提醒和定位证据，再制定安全与报案计划" },
+          "flags": ["tech-preserved-context", "tech-safety-plan"],
+          "next": "end:tech-secured"
+        }
+      ]
+    },
+    "minor": {
+      "narration": {
+        "en": "An adult met a child through an online game, sent gifts and game skins, claimed a romantic relationship, and asked for intimate images through a messaging account.",
+        "zh": "一名成年人通过网络游戏认识未成年人，赠送礼物和游戏皮肤，以恋爱关系建立信任，并通过聊天账号索要私密影像。"
+      },
+      "coach": {
+        "en": "Do not ask the child to resend the material, and do not download or forward sexual images of a minor. Preserve non-content identifiers such as account IDs, URLs, timestamps, surrounding messages, gift/payment records, and platform report confirmations.",
+        "zh": "不要要求孩子重新发送材料，也不要下载或转发涉及未成年人的性影像。应保存账号 ID、网址、时间、上下文消息、礼物或付款记录、平台投诉回执等不需要复制影像的标识信息。"
+      },
+      "choices": [
+        {
+          "text": { "en": "Tell the child: “You are not in trouble. Do not resend anything. We will get help.”", "zh": "告诉孩子：“你没有做错，不要重新发送任何内容，我们一起寻求帮助。”" },
+          "flags": ["tech-minor-no-blame", "tech-avoided-redistribution"],
+          "next": "minor-next"
+        },
+        {
+          "text": { "en": "Ask the child to forward every image to my phone so I can keep evidence", "zh": "要求孩子把全部影像转发到我手机作为证据" },
+          "feedback": { "en": "This creates another copy of sexual material involving a minor and can deepen harm.", "zh": "这会制造涉及未成年人的性材料副本，并可能加深伤害。" },
+          "flags": ["tech-minor-reshare-request"],
+          "next": "minor-next"
+        }
+      ]
+    },
+    "minor-next": {
+      "narration": { "en": "The account and game profile may contain records that platforms can preserve for authorities.", "zh": "聊天账号和游戏资料可能包含可由平台为调查机关保存的记录。" },
+      "choices": [
+        {
+          "text": { "en": "Use safe identifiers to report to the platform and police, involving a safe guardian or child-protection professional", "zh": "用安全标识信息向平台和警方报告，并联系安全的监护人或未成年人保护专业人员" },
+          "flags": ["tech-platform-report", "tech-called-police", "tech-child-support"],
+          "next": "end:tech-minor"
+        },
+        {
+          "text": { "en": "Confront the adult publicly from the child's account", "zh": "直接用孩子的账号公开与成年人对质" },
+          "flags": ["tech-alerted-offender"],
+          "next": "end:tech-minor"
+        }
+      ]
+    }
+  },
+  "endings": {
+    "tech-response": {
+      "title": { "en": "You created a safer, traceable response", "zh": "你建立了更安全、可追踪的应对路径" },
+      "summary": { "en": "You reduced redistribution and preserved identifiers, context, and receipts. Platforms and authorities may still respond at different speeds, so keep confirmations and reassess physical safety if threats change.", "zh": "你减少了再次传播，并保存了标识、上下文和回执。平台和有关机关的处理速度可能不同，应继续保存确认信息，并在威胁变化时重新评估人身安全。" }
+    },
+    "tech-support": {
+      "title": { "en": "You can add support without surrendering control", "zh": "你可以引入支持，同时保留决定权" },
+      "summary": { "en": "A trusted person, 12338, 12348, a social worker, lawyer, platform, or police can each play a different role. No single route guarantees removal or a legal outcome.", "zh": "可信任的人、12338、12348、社工、律师、平台或警方可以承担不同角色。任何单一路径都不能保证删除内容或获得特定法律结果。" }
+    },
+    "tech-secured": {
+      "title": { "en": "You separated digital recovery from physical safety", "zh": "你把数字恢复与现实安全一起考虑了" },
+      "summary": { "en": "Using a safe device, securing the primary email, ending sessions, reviewing recovery methods and location sharing, and enabling MFA can reduce continued access. Keep watching for retaliation or offline following.", "zh": "使用安全设备、先保护主邮箱、结束会话、检查找回方式和位置共享并启用多因素验证，有助于减少持续访问。也要留意报复或现实尾随风险。" }
+    },
+    "tech-minor": {
+      "title": { "en": "The child is not responsible for the adult's conduct", "zh": "责任不在孩子，而在实施诱骗的成年人" },
+      "summary": { "en": "Do not shame, interrogate, or request resending. Preserve safe identifiers and surrounding records, and use child-protection, platform, and police channels without creating more copies of sexual material.", "zh": "不要责备、盘问或要求重新发送。应保存安全标识和上下文记录，通过未成年人保护、平台和警方渠道处理，同时避免制造更多性材料副本。" }
+    }
+  },
+  "debrief": [
+    {
+      "id": "tech-good-context",
+      "kind": "good",
+      "has": ["tech-preserved-context"],
+      "title": { "en": "You preserved context, not just one screenshot", "zh": "你保存了上下文，而不只是一张截图" },
+      "detail": { "en": "Useful records can include account names and IDs, URLs, timestamps, surrounding messages, payment demands, call logs, repost relationships, and login alerts. Keep originals where possible.", "zh": "可用记录可包括账号名称和 ID、网址、时间、上下文消息、付款要求、来电记录、转载关系和登录提醒。条件允许时应保留原始文件。" },
+      "basis": { "en": "The Network Violence Information Governance Provisions require relevant platforms to support evidence preservation and complaints; admissibility and weight remain case-specific.", "zh": "《网络暴力信息治理规定》要求相关平台提供证据留存和投诉支持；具体证据资格与证明力仍需结合个案判断。" }
+    },
+    {
+      "id": "tech-good-no-redistribution",
+      "kind": "good",
+      "has": ["tech-avoided-redistribution"],
+      "title": { "en": "You avoided redistributing harmful content", "zh": "你避免了再次传播伤害内容" },
+      "detail": { "en": "URLs, IDs, timestamps, reports, and contextual screenshots can often document a route without forwarding intimate material to friends or public channels.", "zh": "网址、账号 ID、时间、投诉记录和上下文截图，通常能记录线索而无需把私密内容转发给朋友或公开渠道。" }
+    },
+    {
+      "id": "tech-good-platform",
+      "kind": "good",
+      "has": ["tech-platform-report"],
+      "title": { "en": "You created a platform record", "zh": "你留下了平台处理记录" },
+      "detail": { "en": "Save the complaint category, submitted URLs, confirmation number, time, and response. If rejected, use escalation or appeal routes where available.", "zh": "保存投诉类别、提交的网址、受理编号、时间和回复。如被驳回，可使用平台提供的升级或申诉渠道。" },
+      "basis": { "en": "Network Violence Information Governance Provisions Articles 15 and 23–27 address intervention, user protection, evidence support, complaint channels, and protection of minors.", "zh": "《网络暴力信息治理规定》第 15 条、第 23 至 27 条涉及处置、用户保护、证据支持、投诉入口和未成年人保护。" }
+    },
+    {
+      "id": "tech-good-account",
+      "kind": "good",
+      "has": ["tech-account-safety"],
+      "title": { "en": "You treated account recovery as a safety process", "zh": "你把账号恢复当作安全流程" },
+      "detail": { "en": "Use a safe device if possible; secure the primary email, recovery methods, active sessions, unique passwords, MFA, connected apps, and location sharing.", "zh": "条件允许时使用安全设备；依次检查主邮箱、找回方式、活跃会话、独立密码、多因素验证、关联应用和位置共享。" }
+    },
+    {
+      "id": "tech-good-minor",
+      "kind": "good",
+      "has": ["tech-minor-no-blame"],
+      "title": { "en": "You removed blame from the child", "zh": "你没有把责任推给孩子" },
+      "detail": { "en": "An adult's grooming, gifts, claimed romance, or requests remain the adult's responsibility. Calm support makes it more likely the child can accept help.", "zh": "成年人的诱骗、赠礼、假借恋爱或索要行为，责任都在成年人。冷静、非责备的支持更有利于孩子接受帮助。" }
+    },
+    {
+      "id": "tech-risk-redistribution",
+      "kind": "bad",
+      "has": ["tech-redistributed-content"],
+      "title": { "en": "Public resharing can amplify the harm", "zh": "公开转发可能扩大伤害" },
+      "detail": { "en": "A rebuttal can still increase reach and create new copies. Preserve identifiers and use targeted reports, legal advice, or authority channels instead.", "zh": "即使为了澄清，转发也可能扩大触达并制造新副本。可改为保存标识，并使用定向投诉、法律咨询或有关机关渠道。" }
+    },
+    {
+      "id": "tech-risk-minor-copy",
+      "kind": "bad",
+      "has": ["tech-minor-reshare-request"],
+      "title": { "en": "Do not create another copy of a minor's sexual material", "zh": "不要制造涉及未成年人性材料的新副本" },
+      "detail": { "en": "Do not download, forward, or ask the child to resend. Preserve account IDs, URLs, timestamps, contextual messages, and report confirmations, then seek professional help.", "zh": "不要下载、转发或要求孩子重新发送。应保存账号 ID、网址、时间、上下文消息和投诉回执，再寻求专业帮助。" }
+    },
+    {
+      "id": "tech-risk-block-first",
+      "kind": "bad",
+      "has": ["tech-blocked-before-preserving"],
+      "title": { "en": "Blocking before preservation may hide useful identifiers", "zh": "先拉黑可能使部分标识难以找回" },
+      "detail": { "en": "Blocking can be an important safety tool. When it is safe and quick to do so, record the account, threat, URL, and payment demand first; never delay safety for perfect evidence.", "zh": "拉黑是重要安全工具。在安全且能快速完成时，可先记录账号、威胁、网址和付款要求；绝不要为了追求完美证据而推迟安全行动。" }
+    },
+    {
+      "id": "tech-risk-alert",
+      "kind": "bad",
+      "has": ["tech-alerted-stalker"],
+      "title": { "en": "Confrontation can change the safety risk", "zh": "直接对质可能改变安全风险" },
+      "detail": { "en": "A person with device or location access may retaliate or erase traces. Use a safe device and make a physical-safety plan before cutting off access when possible.", "zh": "掌握设备或位置访问权的人可能报复或删除痕迹。条件允许时，先使用安全设备并制定现实安全计划，再切断访问。" }
+    }
+  ],
+  "realFlow": [
+    { "en": "Assess immediate danger — if threats connect to physical access, stalking, extortion, or imminent harm, move to safety and call 110.", "zh": "评估即时危险——如威胁涉及现实接触、尾随、敲诈或迫近伤害，先转移到安全处并拨打 110。" },
+    { "en": "Preserve identifiers and context — account names and IDs, URLs, timestamps, surrounding messages, payment demands, login alerts, and original files where safe.", "zh": "保存标识与上下文——账号名称和 ID、网址、时间、上下文消息、付款要求、登录提醒，以及安全情况下的原始文件。" },
+    { "en": "Avoid redistribution — do not repost intimate content; never download, forward, or request resending of sexual material involving a minor.", "zh": "避免再次传播——不要转发私密内容；涉及未成年人性材料时，不下载、不转发、不要求重新发送。" },
+    { "en": "Secure accounts from a safe device — primary email first, recovery methods, active sessions, unique passwords, MFA, connected apps, and location sharing.", "zh": "从安全设备加固账号——先处理主邮箱，再检查找回方式、活跃会话、独立密码、多因素验证、关联应用和位置共享。" },
+    { "en": "Report through relevant platform categories and save confirmations; request preservation, removal, blocking, privacy protection, or minor-protection handling as appropriate.", "zh": "通过对应平台类别投诉并保存回执；按情况请求留存、删除、屏蔽、隐私保护或未成年人保护处置。" },
+    { "en": "Add professional routes as needed — police, 12338, 12348, social work, child protection, medical or psychological support. Results vary by facts and jurisdiction.", "zh": "按需增加专业渠道——警方、12338、12348、社工、未成年人保护、医疗或心理支持。具体结果因事实与地区而异。" }
+  ],
+  "glossary": [
+    {
+      "term": { "en": "Technology-facilitated gender-based violence", "zh": "技术促成的性别暴力" },
+      "note": { "en": "Gender-based harm carried out or amplified through digital tools, platforms, devices, data, algorithms, or networked distribution.", "zh": "通过数字工具、平台、设备、数据、算法或网络传播实施或放大的性别暴力。" }
+    },
+    {
+      "term": { "en": "Notice and takedown", "zh": "通知删除" },
+      "note": { "en": "A Civil Code mechanism for notifying an online service about alleged infringement and requesting necessary measures. What must be supplied and how the service responds depend on the case.", "zh": "民法典下向网络服务提供者通知涉嫌侵权并要求采取必要措施的机制。所需材料与平台处理方式取决于个案。" }
+    },
+    {
+      "term": { "en": "Sexual deepfake", "zh": "色情深度伪造" },
+      "note": { "en": "Fabricated sexual content made to resemble a real person. Civil Code Article 1019 prohibits using technology to forge another person's likeness.", "zh": "利用技术制作、使内容看起来像某个真实人物的虚假色情内容。民法典第 1019 条禁止利用技术手段伪造他人肖像。" }
+    },
+    {
+      "term": { "en": "Current platform governance rule", "zh": "现行平台治理规则" },
+      "note": { "en": "The Network Violence Information Governance Provisions took effect on 1 August 2024. A separate 2026 Anti-Cyberviolence Law text is still a consultation draft and is not cited here as enacted law.", "zh": "《网络暴力信息治理规定》自 2024 年 8 月 1 日施行。2026 年另行公布的反网络暴力法文本仍是征求意见稿，本场景不把它当作已生效法律。" }
+    }
+  ]
+}

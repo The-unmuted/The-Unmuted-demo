@@ -36,7 +36,6 @@ export interface DomesticScoreCardSummary {
   educationTitle: string;
   educationItems: KnowledgeCardItem[];
   qrLabel: string;
-  correctCount?: number;
   sceneTipTitle?: string;
   sceneTip?: string;
 }
@@ -144,10 +143,10 @@ async function renderDomesticResultCard(opts: RenderOpts): Promise<Blob> {
   ctx.textAlign = "left";
   ctx.textBaseline = "top";
   ctx.fillStyle = COLOR.text;
-  ctx.font = `bold 29px ${FONT_ZH}`;
+  ctx.font = `bold 34px ${FONT_ZH}`;
   ctx.fillText(summary?.scoreTitle ?? (lang === "zh" ? "安全应对 · 知识储备得分" : "Safety response · Knowledge score"), 134, contentY + 31);
   ctx.fillStyle = COLOR.textMuted;
-  ctx.font = `500 20px ${FONT_ZH}`;
+  ctx.font = `500 23px ${FONT_ZH}`;
   ctx.fillText(summary?.shareHint ?? (lang === "zh" ? "长按保存图片 · 希望这些知识永远不必用上" : "Long-press to save · May you never need this knowledge"), 134, contentY + 73);
 
   const bandColor = bandColorFor(opts.score.band);
@@ -189,14 +188,14 @@ async function renderDomesticResultCard(opts: RenderOpts): Promise<Blob> {
   ctx.textAlign = "left";
   ctx.textBaseline = "top";
   ctx.fillStyle = COLOR.textMuted;
-  ctx.font = `500 19px ${FONT_ZH}`;
+  ctx.font = `500 22px ${FONT_ZH}`;
   drawWrappedText(
     ctx,
     lang === "zh" ? opts.score.detail.zh : opts.score.detail.en,
     scoreX,
     contentY + 455,
     280,
-    28,
+    32,
     3
   );
 
@@ -215,13 +214,13 @@ function drawCompactSummary(
   const tip = summary?.educationItems[0];
   ctx.textAlign = "left";
   ctx.textBaseline = "top";
-  ctx.font = `bold 22px ${FONT_ZH}`;
+  ctx.font = `bold 28px ${FONT_ZH}`;
   ctx.fillStyle = COLOR.brandPink;
-  ctx.fillText(`ⓘ  ${summary?.sceneTipTitle ?? (lang === "zh" ? "场景科普小tip" : "Scenario tip")}`, x + 32, y + 18);
+  ctx.fillText(`ⓘ  ${summary?.sceneTipTitle ?? (lang === "zh" ? "场景科普小tip" : "Scenario tip")}`, x + 32, y + 10);
   ctx.fillStyle = COLOR.textMuted;
-  ctx.font = `500 17px ${FONT_ZH}`;
+  ctx.font = `500 21px ${FONT_ZH}`;
   const tipText = normalizeTipText(summary?.sceneTip ?? tip?.detail ?? tip?.title ?? "");
-  drawWrappedText(ctx, tipText, x + 32, y + 58, width - 64, 23, 3);
+  drawWrappedText(ctx, tipText, x + 32, y + 51, width - 64, 29, 3);
 }
 
 function normalizeTipText(text: string): string {

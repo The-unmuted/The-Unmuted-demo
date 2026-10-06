@@ -4,8 +4,8 @@
  * 设计原则：
  * 1. 起点 50 分（中性）——即使什么都不做也不会得 0。
  * 2. 「good」flag 按权重加分；「bad」flag 按权重扣分。
- * 3. 创伤反应类的 bad（洗澡、延迟披露、沉默）只扣少量分，配合复盘文本
- *    「这是创伤反应，不是你的错」，避免评分变成道德审判。
+ * 3. 创伤反应（洗澡、延迟披露、沉默、僵住）不扣分。评分只反映可学习的
+ *    安全与程序知识，不评价幸存者在创伤中的本能反应。
  * 4. 系统性错误（签谅解书、放弃复议）扣分较重，因为知识缺口是可弥补的。
  * 5. 最终分数 clamp 到 [0, 100]。
  */
@@ -18,9 +18,9 @@ import type { SimScenario } from "./simulation";
  */
 export const FLAG_WEIGHTS: Record<string, number> = {
   // ─── 高价值好行为（+10）
-  "immediate-action": 10,      // 72 小时内行动
-  "medical-exam": 10,          // 医院取证（最强物证）
-  "reported": 10,              // 监控还在时报案
+  "immediate-action": 10,      // 尽早了解可用选项（旧路线兼容）
+  "medical-exam": 10,          // 完成当地可提供且本人同意的检查（旧路线兼容）
+  "reported": 10,              // 正式报案
   "asked-receipt-sa": 10,      // 索要受案回执（后续所有渠道的前提）
   "refused-settlement": 10,    // 拒绝私和
   "has-lawyer": 8,             // 委托律师
@@ -38,25 +38,25 @@ export const FLAG_WEIGHTS: Record<string, number> = {
   "prosecutor-supervision": 5, // 申请侦查监督
   "civil-claim-material": 5,   // 附带民事只主张物质损失
   "psych-support": 5,          // 寻求心理支持
-  "reported-late-sa": 5,       // 晚报案（依然被受理）
+  "reported-late-sa": 5,       // 事隔一段时间后仍选择报案
   "attended-trial": 3,         // 出庭
-  "medical-certificate-only": 3, // 只开证明书（弱于取证但强于无记录）
+  "medical-certificate-only": 3, // 留下医疗记录（旧路线兼容）
 
   // ─── 系统性错误 / 高代价（-10）
   "private-settlement": -15,   // 签了谅解书（最大陷阱）
   "gave-up-sa": -10,           // 未申请复议（错过 7 日窗口）
-  "no-exam": -8,               // 未做取证检查
-  "destroyed-traces": -8,      // 衣物被清洗 / 丢弃
+  "no-exam": 0,                // 不把拒绝/无法检查当作错误
+  "destroyed-traces": 0,       // 不因创伤后的处理方式扣分
   "confronted": -8,            // 警方介入前联系嫌疑人
   "alerted-him": -5,           // 打草惊蛇
   "took-money-only": -8,       // 收钱但未签字（灰色）
   "civil-claim-emotional": -3, // 附带民事主张精神抚慰金（几乎必被驳）
 
-  // ─── 创伤反应类（-2 或 -3）— 语气：不指责但如实反映证据代价
-  "washed": -3,                // 洗澡
-  "delayed-night": -2,         // 当晚未行动
-  "long-delay": -3,            // 长期沉默
-  "silence": -2,               // 尚未决定
+  // ─── 创伤反应类（不计分）
+  "washed": 0,
+  "delayed-night": 0,
+  "long-delay": 0,
+  "silence": 0,
 
   // ─── 性骚扰情景（sexual-harassment.json）新增 flag ───
   // 高价值好行为
@@ -97,9 +97,62 @@ export const FLAG_WEIGHTS: Record<string, number> = {
   "pro-se": -3,                    // 自我代理（技术风险）
   "moved-out": -3,                 // 只搬家不报警
   "let-go": -2,                    // 选择放下
-  // 创伤反应类（低扣分 —— 复盘文本明确说「不是你的错」）
-  "frozen": -2,                    // 僵住
-  "forced-normalcy": -2,           // 强作镇定
+  // 创伤反应类（不计分）
+  "frozen": 0,
+  "forced-normalcy": 0,
+
+  // ─── 公交/地铁陌生人骚扰 ───
+  "transit-reached-staff": 8,
+  "transit-bystander-help": 5,
+  "transit-used-intercom": 8,
+  "transit-safe-exit": 5,
+  "transit-recorded-details": 8,
+  "transit-witness-contact": 8,
+  "transit-followed": 5,
+  "transit-left-safely": 3,
+  "transit-chased-alone": -10,
+
+  // ─── 性侵害重构后的创伤知情步骤 ───
+  "sa-reached-safety": 10,
+  "sa-emergency-contact": 5,
+  "sa-asked-local-procedure": 8,
+  "sa-medical-care": 8,
+  "sa-informed-choice": 5,
+  "sa-honest-memory": 8,
+  "sa-contemporaneous-note": 5,
+  "sa-avoid-suggestion": 5,
+  "sa-digital-records": 8,
+  "sa-witness-map": 5,
+  "sa-believed-friend": 8,
+  "sa-asked-support": 5,
+  "sa-offered-accompaniment": 5,
+  "sa-preserved-originals": 5,
+  "sa-reviewed-transcript": 8,
+  "sa-submitted-record-map": 8,
+  "sa-demanded-details": -5,
+  "sa-disclosed-without-consent": -8,
+  "sa-signed-inaccurate": -8,
+
+  // ─── 技术促成的性别暴力 ───
+  "tech-preserved-context": 10,
+  "tech-called-police": 8,
+  "tech-trusted-support": 5,
+  "tech-platform-report": 8,
+  "tech-saved-confirmation": 5,
+  "tech-avoided-redistribution": 8,
+  "tech-legal-advice": 5,
+  "tech-safety-plan": 8,
+  "tech-account-safety": 8,
+  "tech-safe-device": 8,
+  "tech-mfa": 5,
+  "tech-minor-no-blame": 8,
+  "tech-child-support": 8,
+  "tech-redistributed-content": -10,
+  "tech-blocked-before-preserving": -3,
+  "tech-public-escalation": -5,
+  "tech-alerted-stalker": -8,
+  "tech-minor-reshare-request": -15,
+  "tech-alerted-offender": -8,
 
   // ─── 家暴情景（domestic-violence.json）─────────
   // 高价值好行为
@@ -219,12 +272,12 @@ const BANDS: Record<
  */
 export const FLAG_SHORT_LABELS: Record<string, { en: string; zh: string }> = {
   // good
-  "immediate-action": { en: "Acted within the 72-hour evidence window", zh: "在 72 小时证据窗口内行动" },
+  "immediate-action": { en: "Asked about options promptly", zh: "尽早了解了可用选项" },
   "called-friend": { en: "Reached out to someone you trust", zh: "向信任的人求助陪同" },
   "kept-clothes": { en: "Preserved clothing in a paper bag", zh: "用纸袋保存了衣物" },
-  "medical-exam": { en: "Completed the forensic examination", zh: "完成了医院取证检查" },
-  "medical-certificate-only": { en: "Obtained a medical certificate", zh: "取得了《疾病证明书》" },
-  "reported": { en: "Reported while CCTV still existed", zh: "在监控还在时报案" },
+  "medical-exam": { en: "Used an available medical examination option", zh: "使用了当地可提供的医疗检查选项" },
+  "medical-certificate-only": { en: "Kept a medical-care record", zh: "保留了医疗记录" },
+  "reported": { en: "Made a formal report", zh: "进行了正式报案" },
   "asked-receipt-sa": { en: "Obtained the Case Receipt", zh: "索要并保留了《受案回执》" },
   "requested-cctv": { en: "Requested police to retrieve CCTV", zh: "请警方调取监控" },
   "linked-samples": { en: "Linked sealed samples to the case file", zh: "请警方调入医院封存检材" },
@@ -239,7 +292,7 @@ export const FLAG_SHORT_LABELS: Record<string, { en: string; zh: string }> = {
   "attended-trial": { en: "Attended the trial", zh: "出席了庭审" },
   "civil-claim-material": { en: "Claimed material losses in the case", zh: "附带民事主张物质损失" },
   "psych-support": { en: "Sought psychological support", zh: "拨打 12338 寻求心理支持" },
-  "reported-late-sa": { en: "Filed a late report — still valid", zh: "选择晚报案（依然有效）" },
+  "reported-late-sa": { en: "Reported after time had passed", zh: "事隔一段时间后仍选择报案" },
   // bad
   "washed": { en: "Showered before evidence could be collected", zh: "在取证前洗澡（本能反应）" },
   "destroyed-traces": { en: "Clothing was washed/discarded", zh: "衣物被清洗或丢弃" },
@@ -291,6 +344,55 @@ export const FLAG_SHORT_LABELS: Record<string, { en: string; zh: string }> = {
   "let-go": { en: "Chose to let it go", zh: "选择放下这件事" },
   "frozen": { en: "Froze in the moment — normal trauma response", zh: "当下僵住——正常创伤反应" },
   "forced-normalcy": { en: "Forced a normal appearance to escape", zh: "强作镇定以便脱身" },
+
+  // ─── 公交/地铁、性侵害重构、技术性别暴力 ───
+  "transit-reached-staff": { en: "Moved toward staff or other people", zh: "向工作人员或人群移动" },
+  "transit-bystander-help": { en: "Asked a specific bystander for help", zh: "明确请一位乘客帮忙" },
+  "transit-used-intercom": { en: "Used the emergency intercom", zh: "使用了紧急通话装置" },
+  "transit-safe-exit": { en: "Exited at a staffed, well-lit stop", zh: "在有人值守的明亮站点离开" },
+  "transit-recorded-details": { en: "Recorded transit-specific details", zh: "记录了线路与车厢等线索" },
+  "transit-witness-contact": { en: "Asked a witness for contact details", zh: "询问了证人联系方式" },
+  "transit-followed": { en: "Treated continued following as danger", zh: "把持续跟踪当作安全风险" },
+  "transit-left-safely": { en: "Left the situation safely", zh: "安全离开了现场" },
+  "transit-chased-alone": { en: "Followed an unknown person alone", zh: "独自追踪陌生人" },
+  "sa-reached-safety": { en: "Prioritised immediate safety", zh: "优先处理了即时安全" },
+  "sa-emergency-contact": { en: "Contacted emergency services", zh: "联系了紧急服务" },
+  "sa-asked-local-procedure": { en: "Checked local medical options", zh: "核实了本地医疗与取证选项" },
+  "sa-medical-care": { en: "Sought care for health needs", zh: "为健康需要寻求医疗" },
+  "sa-informed-choice": { en: "Kept the decision informed", zh: "保留了知情决定" },
+  "sa-honest-memory": { en: "Separated memory from uncertainty", zh: "区分了记忆与不确定内容" },
+  "sa-contemporaneous-note": { en: "Recorded remembered details", zh: "记录了确实记得的内容" },
+  "sa-avoid-suggestion": { en: "Avoided filling gaps by suggestion", zh: "避免替记忆补充空白" },
+  "sa-digital-records": { en: "Preserved possible digital records", zh: "保存了可能的数字记录" },
+  "sa-witness-map": { en: "Mapped possible witnesses", zh: "列出了可能的证人" },
+  "sa-believed-friend": { en: "Responded without blame", zh: "以相信和不责备回应" },
+  "sa-asked-support": { en: "Asked what support was wanted", zh: "询问对方需要什么支持" },
+  "sa-offered-accompaniment": { en: "Offered survivor-led accompaniment", zh: "按幸存者选择提供陪同" },
+  "sa-preserved-originals": { en: "Kept original records unchanged", zh: "保持原始记录不变" },
+  "sa-reviewed-transcript": { en: "Reviewed the transcript", zh: "核对了询问笔录" },
+  "sa-submitted-record-map": { en: "Submitted a record map", zh: "提交了记录清单" },
+  "sa-demanded-details": { en: "Demanded a full retelling", zh: "要求幸存者完整复述" },
+  "sa-disclosed-without-consent": { en: "Disclosed without consent", zh: "未经同意披露经历" },
+  "sa-signed-inaccurate": { en: "Signed inaccurate wording", zh: "签署了不准确表述" },
+  "tech-preserved-context": { en: "Preserved identifiers and context", zh: "保存了标识与上下文" },
+  "tech-called-police": { en: "Reported an immediate threat", zh: "就即时威胁联系警方" },
+  "tech-trusted-support": { en: "Brought in trusted support", zh: "获得了可信任的支持" },
+  "tech-platform-report": { en: "Created a platform complaint record", zh: "留下了平台投诉记录" },
+  "tech-saved-confirmation": { en: "Saved complaint confirmations", zh: "保存了投诉受理回执" },
+  "tech-avoided-redistribution": { en: "Avoided redistributing harmful content", zh: "避免了再次传播伤害内容" },
+  "tech-legal-advice": { en: "Asked about legal options", zh: "咨询了法律选项" },
+  "tech-safety-plan": { en: "Made an offline safety plan", zh: "制定了现实安全计划" },
+  "tech-account-safety": { en: "Secured account access", zh: "加固了账号访问安全" },
+  "tech-safe-device": { en: "Used a safe device", zh: "使用了安全设备" },
+  "tech-mfa": { en: "Enabled multi-factor authentication", zh: "启用了多因素验证" },
+  "tech-minor-no-blame": { en: "Removed blame from the child", zh: "没有责备孩子" },
+  "tech-child-support": { en: "Used child-protection support", zh: "联系了未成年人保护支持" },
+  "tech-redistributed-content": { en: "Redistributed harmful content", zh: "再次传播了伤害内容" },
+  "tech-blocked-before-preserving": { en: "Blocked before saving identifiers", zh: "保存标识前就拉黑" },
+  "tech-public-escalation": { en: "Escalated from the main account", zh: "用主账号公开升级冲突" },
+  "tech-alerted-stalker": { en: "Alerted a possible stalker first", zh: "先惊动了可能的监控者" },
+  "tech-minor-reshare-request": { en: "Asked a minor to resend material", zh: "要求未成年人重发材料" },
+  "tech-alerted-offender": { en: "Confronted from the child's account", zh: "用孩子账号直接对质" },
 
   // ─── 家暴情景（domestic-violence.json）─────────
   "reached-safety": { en: "Reached a safe location", zh: "先到达了安全的地方" },

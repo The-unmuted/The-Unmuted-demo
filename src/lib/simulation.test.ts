@@ -8,6 +8,7 @@ import {
   resolveAuto,
   validateScenario,
 } from "@/lib/simulation";
+import { computeSimulationScore } from "@/lib/simulationScore";
 
 describe("simulation scenarios", () => {
   it("has at least one scenario", () => {
@@ -113,59 +114,76 @@ describe("domestic-violence scenario", () => {
 describe("sexual-harassment scenario", () => {
   const sh = SIM_SCENARIOS.find((s) => s.id === "sexual-harassment")!;
 
-  it("opening branches to four situation-specific paths", () => {
+  it("opening branches to five situation-specific paths", () => {
     const opening = sh.scenes["opening"];
     const nextIds = opening.choices!.map((c) => c.next);
     expect(nextIds).toContain("wechat-open");
     expect(nextIds).toContain("workplace-open");
     expect(nextIds).toContain("acquaintance-open");
     expect(nextIds).toContain("landlord-open");
+    expect(nextIds).toContain("transit-open");
+    expect(opening.choices).toHaveLength(5);
   });
 
-  it("police outcome routes to admin-detention when evidence is strong", () => {
-    const police = sh.scenes["police-outcome-auto"];
-    expect(resolveAuto(police, new Set(["submitted-evidence", "reported-quickly"]))).toBe("admin-detention");
-    expect(resolveAuto(police, new Set(["complete-records"]))).toBe("admin-detention");
-    expect(resolveAuto(police, new Set(["signed-carefully"]))).toBe("warning-only");
-    expect(resolveAuto(police, new Set())).toBe("no-action");
-  });
-
-  it("civil-trial routes to strong-win when records + refusal + lawyer are all present", () => {
-    const civil = sh.scenes["civil-trial"];
-    expect(resolveAuto(civil, new Set(["complete-records", "clear-refusal", "hired-lawyer"]))).toBe("end:civil-strong-win");
-    expect(resolveAuto(civil, new Set(["deleted-records"]))).toBe("end:civil-lost");
+  it("transit route supports safety, witnesses, CCTV preservation, and 110", () => {
+    const openFlags = sh.scenes["transit-open"].choices!.flatMap((choice) => choice.flags ?? []);
+    const actionFlags = sh.scenes["transit-action"].choices!.flatMap((choice) => choice.flags ?? []);
+    expect(openFlags).toEqual(expect.arrayContaining(["transit-reached-staff", "transit-used-intercom", "transit-safe-exit"]));
+    expect(actionFlags).toEqual(expect.arrayContaining(["transit-recorded-details", "transit-witness-contact", "requested-cctv", "transit-followed"]));
   });
 
   it("debrief covers preserved-records and deleted-records", () => {
     const ids = evaluateDebrief(sh, new Set(["saved-records", "deleted-records"])).map((r) => r.id);
     expect(ids).toContain("good-saved-records");
-    expect(ids).toContain("bad-deleted-records");
+    expect(ids).toContain("risk-deleted");
   });
 });
 
 describe("sexual-assault scenario", () => {
   const sa = SIM_SCENARIOS.find((s) => s.id === "sexual-assault")!;
 
-  it("filing routes by evidence strength", () => {
-    const filing = sa.scenes["filing-auto"];
-    // Strongest: medical exam → filing-decision-strong (real timeline: DNA + wait)
-    expect(resolveAuto(filing, new Set(["medical-exam"]))).toBe("filing-decision-strong");
-    // Medium: clothing kept, no medical exam → hard investigation branch
-    expect(resolveAuto(filing, new Set(["kept-clothes"]))).toBe("filed-hard-cont");
-    // Weakest: nothing → non-filing notice
-    expect(resolveAuto(filing, new Set())).toBe("filing-weak");
+  it("offers immediate, delayed, supporter, and incomplete-memory routes", () => {
+    const nextIds = sa.scenes["opening"].choices!.map((choice) => choice.next);
+    expect(nextIds).toEqual(expect.arrayContaining([
+      "immediate-safety",
+      "delayed-reassurance",
+      "supporter-response",
+      "memory-reassurance",
+    ]));
   });
 
-  it("late reporting after a private settlement hits the settlement trap", () => {
-    const late = sa.scenes["late-police"];
-    expect(resolveAuto(late, new Set(["private-settlement"]))).toBe("end:settlement-trap");
-    expect(resolveAuto(late, new Set())).toBe("end:late-hard");
+  it("contains judgment-derived evidence-chain guidance without guaranteeing an outcome", () => {
+    const text = JSON.stringify(sa);
+    expect(text).toContain("网约车记录");
+    expect(text).toContain("SOS");
+    expect(text).toContain("不等于同意");
+    expect(text).toContain("不能保证");
+    expect(text).not.toContain("黄金72小时决定");
   });
 
-  it("debrief never blames delayed disclosure without support", () => {
-    const rules = evaluateDebrief(sa, new Set(["long-delay", "psych-support"]));
-    const ids = rules.map((r) => r.id);
-    expect(ids).toContain("bad-long-delay");
-    expect(ids).toContain("good-psych");
+  it("does not deduct points for trauma responses or delayed disclosure", () => {
+    expect(computeSimulationScore(new Set(["washed", "long-delay", "silence", "frozen", "forced-normalcy"])).score).toBe(40);
+  });
+});
+
+describe("new trauma-informed scenarios", () => {
+  const secondary = SIM_SCENARIOS.find((s) => s.id === "secondary-victimization")!;
+  const technology = SIM_SCENARIOS.find((s) => s.id === "technology-facilitated-gender-violence")!;
+
+  it("uses reflection mode for secondary victimisation", () => {
+    expect(secondary.resultMode).toBe("reflection");
+    expect(secondary.scenes.opening.choices).toHaveLength(5);
+  });
+
+  it("covers five technology-facilitated violence routes", () => {
+    const nextIds = technology.scenes.opening.choices!.map((choice) => choice.next);
+    expect(nextIds).toEqual(expect.arrayContaining(["sextortion", "deepfake", "doxxing", "stalking", "minor"]));
+    expect(nextIds).toHaveLength(5);
+  });
+
+  it("never recommends copying a minor's sexual material", () => {
+    const guidance = technology.scenes.minor.coach!.zh;
+    expect(guidance).toContain("不要下载或转发");
+    expect(guidance).toContain("不要要求孩子重新发送");
   });
 });

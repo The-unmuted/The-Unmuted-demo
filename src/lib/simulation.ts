@@ -9,6 +9,8 @@ import { AppLanguage, copyFor } from "@/lib/locale";
 import domesticViolence from "@/data/simulations/domestic-violence.json";
 import sexualHarassment from "@/data/simulations/sexual-harassment.json";
 import sexualAssault from "@/data/simulations/sexual-assault.json";
+import secondaryVictimization from "@/data/simulations/secondary-victimization.json";
+import technologyFacilitatedViolence from "@/data/simulations/technology-facilitated-gender-violence.json";
 
 export interface SimText {
   en: string;
@@ -69,6 +71,8 @@ export interface SimDebriefRule {
 
 export interface SimScenario {
   id: string;
+  /** Reflection mode deliberately avoids grading trauma and self-protection responses. */
+  resultMode?: "scored" | "reflection";
   title: SimText;
   tagline: SimText;
   intro: SimText;
@@ -86,6 +90,8 @@ export const SIM_SCENARIOS: SimScenario[] = [
   domesticViolence as SimScenario,
   sexualHarassment as SimScenario,
   sexualAssault as SimScenario,
+  secondaryVictimization as SimScenario,
+  technologyFacilitatedViolence as SimScenario,
 ];
 
 export function scenarioById(id: string): SimScenario | undefined {
