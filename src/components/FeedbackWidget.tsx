@@ -36,10 +36,10 @@ export default function FeedbackWidget({ language }: FeedbackWidgetProps) {
     return () => window.removeEventListener(OPEN_EVENT, handler as EventListener);
   }, []);
 
-  const typeLabels: Record<FeedbackType, { en: string; zh: string }> = {
-    bug:        { en: "Bug",        zh: "问题" },
-    suggestion: { en: "Suggestion", zh: "建议" },
-    other:      { en: "Other",      zh: "其他" },
+  const typeLabels: Record<FeedbackType, { en: string; zh: string; de: string }> = {
+    bug:        { en: "Bug",           zh: "问题", de: "Fehler" },
+    suggestion: { en: "Suggestion",    zh: "建议", de: "Vorschlag" },
+    other:      { en: "Collaboration", zh: "合作", de: "Kooperation" },
   };
 
   const handleSubmit = async () => {
@@ -128,7 +128,7 @@ export default function FeedbackWidget({ language }: FeedbackWidgetProps) {
                         : "border-border text-muted-foreground hover:border-primary/50"
                     }`}
                   >
-                    {copyFor(language, typeLabels[t].en, typeLabels[t].zh)}
+                    {copyFor(language, typeLabels[t].en, typeLabels[t].zh, typeLabels[t].de)}
                   </button>
                 ))}
               </div>

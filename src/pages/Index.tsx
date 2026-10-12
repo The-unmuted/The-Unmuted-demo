@@ -5,9 +5,9 @@ import { ShieldCheck } from "lucide-react";
 import BottomNav, { type MainTab } from "@/components/BottomNav";
 import { useLocale, copyFor } from "@/lib/locale";
 import FeedbackWidget from "@/components/FeedbackWidget";
-import { QuickExitButton, WeatherExitButton } from "@/components/QuickExit";
+import { QuickExitButton } from "@/components/QuickExit";
 import DemoWelcome from "@/components/DemoWelcome";
-import WeChatGroupButton from "@/components/WeChatGroupButton";
+import OfficialWebsiteButton from "@/components/OfficialWebsiteButton";
 import WelcomeFeedbackDialog, {
   hasSeenWelcomePopup,
   markWelcomePopupSeen,
@@ -92,8 +92,7 @@ export default function Index() {
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
-          <WeChatGroupButton language={language} />
-          <WeatherExitButton language={language} />
+          <OfficialWebsiteButton language={language} />
           <QuickExitButton language={language} />
           <FeedbackWidget language={language} />
           <button

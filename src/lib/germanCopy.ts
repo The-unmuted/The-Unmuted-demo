@@ -32,22 +32,10 @@ export const GERMAN_COPY: Record<string, string> = {
     " ein (nur Ablaufsimulation – im Hintergrund läuft echte Verschlüsselung mit einem fest hinterlegten Beta-Schlüssel).",
 
   // Header tools, safety information and feedback
-  "Join the tester WeChat group": "Der WeChat-Testgruppe beitreten",
-  "Join our WeChat tester group": "Unserer WeChat-Testgruppe beitreten",
-  "Scan with WeChat to join. Group QR refreshes weekly — if it fails, tap the 👗 again for the latest one.":
-    "Scanne den Code mit WeChat. Der Gruppen-QR-Code wird wöchentlich erneuert. Falls er nicht funktioniert, tippe erneut auf 👗.",
-  "WeChat group QR code": "QR-Code der WeChat-Testgruppe",
-  "Your feedback shapes what we build next. Thank you.":
-    "Dein Feedback beeinflusst, was wir als Nächstes entwickeln. Danke.",
-  "Open weather (Back returns here)": "Wetter öffnen (Zurück führt hierher)",
-  "Weather · Back returns here": "Wetter · Zurück führt hierher",
   "Quick exit": "Schnell verlassen",
   "Exit": "Verlassen",
   "Tap \"Exit\" at the top right and this page instantly becomes a weather search — the Back button will not come back here.":
     "Tippe oben rechts auf „Verlassen“. Diese Seite wird sofort durch eine Wettersuche ersetzt; die Zurück-Taste führt nicht hierher zurück.",
-  "Returnable weather button": "Wetter-Schaltfläche mit Rückkehrmöglichkeit",
-  "The small cloud button opens weather while keeping this page in browser history. Use the browser Back button or gesture to return. If your phone may be checked, use the Exit button instead.":
-    "Die kleine Wolken-Schaltfläche öffnet das Wetter und behält diese Seite im Browserverlauf. Kehre mit der Zurück-Taste oder -Geste zurück. Wenn jemand dein Telefon kontrollieren könnte, nutze stattdessen „Verlassen“.",
   "Use private browsing": "Privaten Browsermodus verwenden",
   "A private/incognito window leaves no history after you close it. iPhone Safari: tabs button → Private. Android Chrome: ⋮ → New Incognito tab.":
     "Ein privates Inkognito-Fenster hinterlässt nach dem Schließen keinen Verlauf. iPhone Safari: Tab-Taste → Privat. Android Chrome: ⋮ → Neuer Inkognito-Tab.",
@@ -66,7 +54,6 @@ export const GERMAN_COPY: Record<string, string> = {
   "Thank you!": "Vielen Dank!",
   "Bug": "Fehler",
   "Suggestion": "Vorschlag",
-  "Other": "Sonstiges",
   "Describe your feedback…": "Beschreibe dein Feedback …",
   "Failed to send. Please try again.": "Senden fehlgeschlagen. Bitte versuche es erneut.",
   "Submit": "Senden",

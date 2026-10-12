@@ -5,7 +5,7 @@ import GermanySimulationPage from "@/components/GermanySimulationPage";
 import DemoWelcome from "@/components/DemoWelcome";
 import FeedbackWidget from "@/components/FeedbackWidget";
 import { NGOSuggestionSheet } from "@/components/NGOPage";
-import WeChatGroupButton from "@/components/WeChatGroupButton";
+import OfficialWebsiteButton, { OFFICIAL_WEBSITE_URL } from "@/components/OfficialWebsiteButton";
 import WelcomeFeedbackDialog from "@/components/WelcomeFeedbackDialog";
 import { copyFor } from "@/lib/locale";
 import { GERMANY_SEXUAL_ASSAULT_SCENARIO } from "@/data/germanySimulation";
@@ -83,6 +83,7 @@ describe("German shared-interface localization", () => {
 
     expect(screen.getByRole("dialog", { name: "Feedback senden" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Fehler" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Kooperation" })).toBeTruthy();
     expect(screen.getByPlaceholderText("Beschreibe dein Feedback …")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Senden" })).toBeTruthy();
   });
@@ -96,21 +97,25 @@ describe("German shared-interface localization", () => {
     expect(screen.getByText("TelefonSeelsorge Deutschland")).toBeTruthy();
   });
 
-  it("localizes the tester-group dialog, including its close control", () => {
-    render(<WeChatGroupButton language="de" />);
-    fireEvent.click(screen.getByRole("button", { name: "Der WeChat-Testgruppe beitreten" }));
+  it("links the localized website button to the official site", () => {
+    render(<OfficialWebsiteButton language="de" />);
 
-    expect(screen.getByRole("dialog", { name: "Unserer WeChat-Testgruppe beitreten" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Schließen" })).toBeTruthy();
+    const link = screen.getByRole("link", {
+      name: "Offizielle Website von The Unmuted besuchen",
+    });
+    expect(link.getAttribute("href")).toBe(OFFICIAL_WEBSITE_URL);
+    expect(link.getAttribute("target")).toBe("_blank");
+    expect(link.getAttribute("rel")).toBe("noopener noreferrer");
   });
 
-  it("uses German HTML content instead of the Chinese welcome artwork", () => {
+  it("uses localized HTML content and the official website in the welcome dialog", () => {
     render(<WelcomeFeedbackDialog open onOpenChange={vi.fn()} language="de" />);
 
     expect(screen.getAllByText("Willkommen bei The Unmuted").length).toBeGreaterThan(0);
     expect(screen.getByText("Feedback geben")).toBeTruthy();
-    expect(screen.getByText("Mit der Testgruppe austauschen")).toBeTruthy();
-    expect(screen.queryByAltText("欢迎使用非默 — 我们期待你的反馈")).toBeNull();
+    expect(screen.getByRole("link", { name: /Unsere offizielle Website besuchen/ }).getAttribute("href"))
+      .toBe(OFFICIAL_WEBSITE_URL);
+    expect(screen.queryByText(/Testgruppe/)).toBeNull();
   });
 
   it("translates shared evidence-vault details and dynamic progress", () => {
