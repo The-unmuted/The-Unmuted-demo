@@ -22,6 +22,9 @@ import {
 } from "@/lib/reportNotesVault";
 import { unlockWithPassword, type UnlockFailureReason } from "@/lib/keyVaultService";
 import { getSessionMasterKey } from "@/lib/sessionKey";
+import { EMERGENCY_EXIT_EVENT } from "@/lib/emergencyExit";
+import { useEncryptedRecordDraft, type DraftSaveStatus } from "@/hooks/useEncryptedRecordDraft";
+import RecordDraftRecoveryDialog from "@/components/RecordDraftRecoveryDialog";
 // DEMO branch: swapped to demoVault (IndexedDB-only, hardcoded master key).
 import {
   listDeletedEvidence,
@@ -413,6 +416,10 @@ function getSituationGuide(id: SituationId) {
   return SITUATION_GUIDES.find((guide) => guide.id === id) ?? SITUATION_GUIDES[0];
 }
 
+function isSituationId(value: string): value is SituationId {
+  return SITUATION_GUIDES.some((guide) => guide.id === value);
+}
+
 // ── Step indicator ─────────────────────────────────────────────────────────────
 
 type StepStatusVal = "pending" | "running" | "done" | "error";
@@ -762,6 +769,7 @@ export default function EvidencePage({
   const [selectedSituation, setSelectedSituation] = useState<SituationId>("memory-gap");
   const [reportNotes, setReportNotes] = useState<ReportNotes>(() => emptyReportNotes());
   const [noteRecords, setNoteRecords] = useState<EncryptedReportNoteRecord[]>(() => loadEncryptedReportNotes());
+  const [draftRecoveryDismissed, setDraftRecoveryDismissed] = useState(false);
 
   const [showRecovery, setShowRecovery] = useState(false);
   const [captureQueue, setCaptureQueue] = useState<QueuedCapture[]>([]);
@@ -777,6 +785,22 @@ export default function EvidencePage({
 
   const refreshNoteRecords = useCallback(() => {
     setNoteRecords(loadEncryptedReportNotes());
+  }, []);
+
+  const draft = useEncryptedRecordDraft({
+    userId: vault.userId,
+    situationId: selectedSituation,
+    notes: reportNotes,
+    enabled: view === "notes",
+  });
+
+  useEffect(() => {
+    const clearSensitiveForm = () => {
+      setReportNotes(emptyReportNotes());
+      setView("hub");
+    };
+    window.addEventListener(EMERGENCY_EXIT_EVENT, clearSensitiveForm);
+    return () => window.removeEventListener(EMERGENCY_EXIT_EVENT, clearSensitiveForm);
   }, []);
 
   const goHub = useCallback(() => {
@@ -798,10 +822,51 @@ export default function EvidencePage({
     onComplete?.();
   }, [onComplete]);
 
-  const handleSituationChange = useCallback((nextSituation: SituationId) => {
+  const handleSituationChange = useCallback(async (nextSituation: SituationId) => {
+    if (nextSituation === selectedSituation) return;
+    if (hasReportNotes(reportNotes)) {
+      const protectedDraft = await draft.saveNow();
+      if (!protectedDraft) {
+        toast.error(
+          copyFor(
+            language,
+            "Protect this draft before changing the situation.",
+            "当前草稿尚未成功保护，请稍后再切换情况。",
+            "Schütze diesen Entwurf, bevor du die Situation wechselst."
+          )
+        );
+        return;
+      }
+    }
     setSelectedSituation(nextSituation);
     setReportNotes(emptyReportNotes());
-  }, []);
+  }, [draft, language, reportNotes, selectedSituation]);
+
+  const handleRecoverDraft = useCallback(async () => {
+    const payload = await draft.recover();
+    if (!payload) return;
+    if (isSituationId(payload.situationId)) setSelectedSituation(payload.situationId);
+    setReportNotes(payload.notes as ReportNotes);
+    setDraftRecoveryDismissed(true);
+    setView("notes");
+  }, [draft]);
+
+  const handleDeleteDraft = useCallback(async () => {
+    await draft.discard();
+    setReportNotes(emptyReportNotes());
+    setDraftRecoveryDismissed(true);
+  }, [draft]);
+
+  const handleFinalNotesSaved = useCallback(async () => {
+    try {
+      await draft.markFinalized();
+    } catch {
+      // The completed encrypted note already exists. A queued cloud deletion
+      // can retry later; never misreport the successful final save as failed.
+    }
+    refreshNoteRecords();
+    setReportNotes(emptyReportNotes());
+  }, [draft, refreshNoteRecords]);
 
   // Pre-warm a location fix when the capture view opens (same pattern as the
   // SOS button) so coordinates are ready at the capture instant. Best-effort:
@@ -903,6 +968,21 @@ export default function EvidencePage({
   if (view === "hub") {
     return (
       <div className="flex flex-col gap-5 px-4 py-4">
+        {draft.loadingRecovery && (
+          <div
+            className="flex min-h-11 items-center gap-2 rounded-2xl border border-border bg-card px-3 text-xs text-muted-foreground"
+            role="status"
+            aria-live="polite"
+          >
+            <Loader2 className="h-4 w-4 animate-spin text-primary" aria-hidden="true" />
+            {copyFor(
+              language,
+              "Checking for a protected draft…",
+              "正在检查受保护的草稿……",
+              "Geschützter Entwurf wird geprüft…"
+            )}
+          </div>
+        )}
         <div className="pt-2 text-center">
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
             <Archive className="h-6 w-6 text-primary" />
@@ -999,6 +1079,15 @@ export default function EvidencePage({
             </div>
           </button>
         </div>
+        <RecordDraftRecoveryDialog
+          draft={draftRecoveryDismissed ? null : draft.recoveryDraft}
+          error={draftRecoveryDismissed ? null : draft.recoveryError}
+          language={language}
+          onContinue={handleRecoverDraft}
+          onDelete={handleDeleteDraft}
+          onLater={() => setDraftRecoveryDismissed(true)}
+          onRetry={draft.refreshRecovery}
+        />
       </div>
     );
   }
@@ -1255,8 +1344,19 @@ export default function EvidencePage({
           onSituationChange={handleSituationChange}
           notes={reportNotes}
           onNotesChange={setReportNotes}
-          onSaved={refreshNoteRecords}
+          onSaved={handleFinalNotesSaved}
+          draftStatus={draft.status}
+          draftSavedAt={draft.lastSavedAt}
           language={language}
+        />
+        <RecordDraftRecoveryDialog
+          draft={draftRecoveryDismissed ? null : draft.recoveryDraft}
+          error={draftRecoveryDismissed ? null : draft.recoveryError}
+          language={language}
+          onContinue={handleRecoverDraft}
+          onDelete={handleDeleteDraft}
+          onLater={() => setDraftRecoveryDismissed(true)}
+          onRetry={draft.refreshRecovery}
         />
       </div>
     );
@@ -1345,13 +1445,17 @@ function ReportGuidanceCard({
   notes,
   onNotesChange,
   onSaved,
+  draftStatus,
+  draftSavedAt,
   language,
 }: {
   selectedSituation: SituationId;
   onSituationChange: (situation: SituationId) => void;
   notes: ReportNotes;
   onNotesChange: React.Dispatch<React.SetStateAction<ReportNotes>>;
-  onSaved: () => void;
+  onSaved: () => Promise<void> | void;
+  draftStatus: DraftSaveStatus;
+  draftSavedAt: string | null;
   language: AppLanguage;
 }) {
   const selected = getSituationGuide(selectedSituation);
@@ -1386,7 +1490,7 @@ function ReportGuidanceCard({
       setReceiptDownload(nextReceipt);
       triggerDownload(nextReceipt.url, nextReceipt.filename);
       setSavedRecord(record);
-      onSaved();
+      await onSaved();
       toast.success(copyFor(language, "Encrypted notes saved on this device.", "填写内容已加密保存在本机。"));
     } catch (error) {
       if (error instanceof Error && error.message === "EMPTY_NOTES") {
@@ -1517,8 +1621,20 @@ function ReportGuidanceCard({
             {copyFor(language, "Save encrypted notes", "加密保存填写内容")}
           </button>
 
-          <div className="flex items-start gap-2 rounded-2xl border border-primary/12 bg-primary/6 px-3 py-2 text-[11px] leading-5 text-muted-foreground">
-            <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+          <div
+            className="flex items-start gap-2 rounded-2xl border border-primary/12 bg-primary/6 px-3 py-2 text-[11px] leading-5 text-muted-foreground"
+            role={draftStatus === "error" ? "alert" : "status"}
+            aria-live="polite"
+          >
+            {draftStatus === "saving" ? (
+              <Loader2 className="mt-0.5 h-3.5 w-3.5 shrink-0 animate-spin text-primary" aria-hidden="true" />
+            ) : draftStatus === "error" ? (
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-destructive" aria-hidden="true" />
+            ) : draftStatus === "saved" ? (
+              <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" />
+            ) : (
+              <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" />
+            )}
             <span>
               {savedRecord
                 ? copyFor(
@@ -1526,10 +1642,32 @@ function ReportGuidanceCard({
                     `Saved ${savedRecord.noteCount} encrypted notes. View them in Evidence Records.`,
                     `已加密保存 ${savedRecord.noteCount} 项内容，可在存证记录中查看。`
                   )
+                : draftStatus === "saving"
+                  ? copyFor(
+                      language,
+                      "Protecting your draft on this device…",
+                      "正在本机加密保护草稿……",
+                      "Der Entwurf wird auf diesem Gerät geschützt…"
+                    )
+                : draftStatus === "saved"
+                  ? copyFor(
+                      language,
+                      `Protected on this device${draftSavedAt ? ` at ${new Date(draftSavedAt).toLocaleTimeString(localeTag(language), { hour: "2-digit", minute: "2-digit" })}` : ""}. Cloud sync will activate with the official signed-in account.`,
+                      `已在本机加密保护${draftSavedAt ? `（${new Date(draftSavedAt).toLocaleTimeString(localeTag(language), { hour: "2-digit", minute: "2-digit" })}）` : ""}。正式账号接入后将自动同步密文。`,
+                      `Auf diesem Gerät geschützt${draftSavedAt ? ` (${new Date(draftSavedAt).toLocaleTimeString(localeTag(language), { hour: "2-digit", minute: "2-digit" })})` : ""}. Die Cloud-Synchronisierung wird mit dem offiziellen Konto aktiviert.`
+                    )
+                : draftStatus === "error"
+                  ? copyFor(
+                      language,
+                      "The draft could not be protected yet. Keep this page open and edit once to retry.",
+                      "草稿暂时未能加密保存。请保持页面打开，再编辑一次即可重试。",
+                      "Der Entwurf konnte noch nicht geschützt werden. Lass die Seite geöffnet und bearbeite ein Feld, um es erneut zu versuchen."
+                    )
                 : copyFor(
                     language,
-                    "Notes are encrypted before local saving and can attach to the evidence receipt.",
-                    "内容会先加密再保存在本机，也可附加到存证回执中。"
+                    "Your draft is encrypted automatically as you type. Quick Exit never waits for a network request.",
+                    "输入时会自动加密保护草稿；紧急离开不会等待网络请求。",
+                    "Der Entwurf wird beim Schreiben automatisch verschlüsselt. Der Schnell-Exit wartet nie auf das Netzwerk."
               )}
             </span>
           </div>

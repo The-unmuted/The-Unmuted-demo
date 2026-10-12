@@ -93,6 +93,31 @@ No key-file downloads anymore. Legacy records (localStorage + user-held JSON key
 
 Schema: `supabase/migrations/0001_key_vault_and_evidence.sql` (key_vaults, evidence_records, private bucket + per-user RLS).
 
+### Emergency-safe situation-record drafts
+
+Situation notes use an IndexedDB-first encrypted draft pipeline
+(`recordDraftService.ts` + `useEncryptedRecordDraft.ts`):
+
+```
+field change → 650 ms debounce → sealJson(masterKey, complete draft)
+             → ciphertext + SHA-256 into IndexedDB
+             → optional background outbox sync through an authenticated HTTPS adapter
+```
+
+Quick Exit never waits for this pipeline. It synchronously announces sensitive
+state clearing, removes the in-memory master key, sets a non-sensitive re-lock
+marker, and calls `location.replace`. On the next safe entry, the app offers a
+neutral “Protected draft available” prompt without showing the situation type
+or text. Opening the draft still requires the vault master key.
+
+The demo identity (`demo-user`) is intentionally local-only and no draft cloud
+adapter is installed. In the official build, pass the stable authenticated
+account ID through `useEvidenceVault` and configure the provider-neutral REST
+adapter only after sign-in can provide a short-lived access token. The service
+verifies the adapter identity before every cloud read or write. Tencent
+CloudBase HTTP functions are the recommended first backend, but the draft core
+does not import any provider SDK. See `docs/record-draft-cloud-api.md`.
+
 ---
 
 ## SOS Flow (`src/components/SOSPage.tsx`)

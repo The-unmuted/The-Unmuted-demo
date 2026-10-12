@@ -11,6 +11,7 @@
 import { useState } from "react";
 import { DoorOpen, ShieldQuestion, X } from "lucide-react";
 import { copyFor, type AppLanguage } from "@/lib/locale";
+import { prepareEmergencyExit } from "@/lib/emergencyExit";
 
 function leaveNow(language: AppLanguage): void {
   const url =
@@ -19,6 +20,9 @@ function leaveNow(language: AppLanguage): void {
       : language === "de"
         ? "https://www.google.com/search?q=Wetter"
         : "https://www.google.com/search?q=weather";
+  // Never await storage or cloud work here. Drafts autosave continuously;
+  // Quick Exit only clears live secrets, marks the app locked, and leaves.
+  prepareEmergencyExit();
   window.location.replace(url);
 }
 

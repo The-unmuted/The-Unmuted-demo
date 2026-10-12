@@ -144,3 +144,25 @@ Typed loader/filters for `src/data/aidDirectory.json` (situation tags, city filt
 | `the_unmuted_sos_history` | SOS trigger history |
 | `the_unmuted_encrypted_report_notes` | encrypted report notes |
 | `unmuted_zone_reports` | geo alert records (localStorage only) |
+
+## Encrypted record drafts (provider-neutral preparation)
+
+`recordDraftService.ts` stores only client-encrypted situation-record drafts.
+Situation type, field names, note text, and display title remain inside one
+AES-256-GCM ciphertext. IndexedDB is the source of truth and its outbox retries
+encrypted cloud operations after connectivity returns.
+
+Cloud integration is isolated behind `RecordDraftCloudAdapter` in
+`src/lib/recordDraftCloud.ts`. The demo deliberately installs no adapter and
+therefore never uploads a draft. The official sign-in layer may later install
+`createRestRecordDraftCloudAdapter(...)` for Tencent CloudBase HTTP functions,
+a same-origin API, or another authenticated backend without changing the form
+or recovery UI. See `docs/record-draft-cloud-api.md` for the exact contract.
+
+- The server derives ownership from the bearer token; the client never sends a
+  user ID in the URL or body.
+- Cloud payloads contain ciphertext, integrity hash, revision, schema version,
+  and lifecycle timestamps only.
+- Default retention is 30 days after the most recent edit.
+- Recovery requires account sign-in, vault unlock, and an explicit user action;
+  content is never restored onto the screen automatically.

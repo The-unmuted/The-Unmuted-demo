@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { useSilentMode } from "@/hooks/useSilentMode";
 import { useAutoLock } from "@/hooks/useAutoLock";
-import { ShieldCheck } from "lucide-react";
+import { LockKeyhole, ShieldCheck } from "lucide-react";
 import BottomNav, { type MainTab } from "@/components/BottomNav";
 import { useLocale, copyFor } from "@/lib/locale";
 import FeedbackWidget from "@/components/FeedbackWidget";
@@ -13,7 +13,9 @@ import WelcomeFeedbackDialog, {
   markWelcomePopupSeen,
 } from "@/components/WelcomeFeedbackDialog";
 import { setSessionMasterKey } from "@/lib/sessionKey";
-import { initDemoSessionKey, seedDemoRecordsIfEmpty } from "@/lib/demoVault";
+import { DEMO_USER_ID, initDemoSessionKey, seedDemoRecordsIfEmpty } from "@/lib/demoVault";
+import { consumeEmergencyLock } from "@/lib/emergencyExit";
+import { listRecordDraftSummaries } from "@/lib/recordDraftService";
 
 const SOSPage = lazy(() => import("@/components/SOSPage"));
 const EvidencePage = lazy(() => import("@/components/EvidencePage"));
@@ -34,8 +36,9 @@ export default function Index() {
   const { language, setLanguage } = useLocale();
   const { isSilent, voiceDeterrent, customAudioUrl } = useSilentMode();
   const [entered, setEntered] = useState(false);
-  const [autoLocked, setAutoLocked] = useState(false);
+  const [autoLocked, setAutoLocked] = useState(() => consumeEmergencyLock());
   const [welcomePopupOpen, setWelcomePopupOpen] = useState(false);
+  const [protectedDraftAvailable, setProtectedDraftAvailable] = useState(false);
   const nextLanguage = language === "en" ? "zh" : language === "zh" ? "de" : "en";
 
   // Demo: initialize the session master key on app load so uploads work
@@ -48,6 +51,12 @@ export default function Index() {
   const handleEnter = async () => {
     await initDemoSessionKey();
     await seedDemoRecordsIfEmpty();
+    try {
+      const drafts = await listRecordDraftSummaries(DEMO_USER_ID);
+      setProtectedDraftAvailable(drafts.length > 0);
+    } catch {
+      setProtectedDraftAvailable(false);
+    }
     setAutoLocked(false);
     setEntered(true);
     // First-time visitors: show the "how to give feedback" popup once.
@@ -68,6 +77,7 @@ export default function Index() {
     setSessionMasterKey(null);
     setEntered(false);
     setAutoLocked(true);
+    setProtectedDraftAvailable(false);
   }, []);
   useAutoLock(entered, handleAutoLock);
 
@@ -135,6 +145,39 @@ export default function Index() {
         </>
       ) : (
         <>
+          {protectedDraftAvailable && (
+            <button
+              type="button"
+              onClick={() => {
+                setProtectedDraftAvailable(false);
+                setActiveTab("evidence");
+              }}
+              className="mx-3 mt-2 flex min-h-11 shrink-0 items-center gap-2 rounded-2xl border border-primary/20 bg-primary/8 px-3 text-left text-xs text-foreground transition-colors hover:bg-primary/12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              <LockKeyhole className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+              <span className="min-w-0 flex-1">
+                <span className="block font-bold">
+                  {copyFor(
+                    language,
+                    "Protected draft available",
+                    "有一份受保护的草稿",
+                    "Geschützter Entwurf verfügbar"
+                  )}
+                </span>
+                <span className="block text-[11px] text-muted-foreground">
+                  {copyFor(
+                    language,
+                    "Open only when it is safe.",
+                    "请只在安全时打开。",
+                    "Nur öffnen, wenn es sicher ist."
+                  )}
+                </span>
+              </span>
+              <span className="shrink-0 font-bold text-primary">
+                {copyFor(language, "Review", "查看", "Ansehen")}
+              </span>
+            </button>
+          )}
           <main className="flex min-h-0 flex-1 flex-col overflow-y-auto pb-4">
             <Suspense fallback={null}>
               {activeTab === "sos" && (
