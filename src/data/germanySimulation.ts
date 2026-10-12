@@ -475,9 +475,14 @@ export const GERMANY_DOMESTIC_VIOLENCE_SCENARIO = {
       url: "https://www.gesetze-im-internet.de/stgb/__238.html",
     },
     {
-      label: "Hilfe-Info · Bundesministerium der Justiz",
-      detail: "Opferrechte, Strafanzeige, Beweissicherung, Prozessbegleitung und Beratungsstellen-Finder.",
-      url: "https://www.hilfe-info.de/",
+      label: "Hilfe-Info · Was tun bei häuslicher Gewalt?",
+      detail: "Konkrete Hinweise zu Schutz, Polizei, Beratung und weiteren Schritten bei häuslicher Gewalt.",
+      url: "https://www.hilfe-info.de/Webs/hilfeinfo/DE/Merkblaetter/21-merkblatt_haeuslichegewalt.html",
+    },
+    {
+      label: "Hilfe-Info · Beweissicherung",
+      detail: "Offizielle Hinweise zur Sicherung möglicher Beweismittel, ohne die eigene Sicherheit zu gefährden.",
+      url: "https://www.hilfe-info.de/Webs/hilfeinfo/DE/EigeneRechteKennen/HilfeUndRechte/Beweissicherung/Beweissicherung_node.html",
     },
     {
       label: "§ 406g StPO · Psychosoziale Prozessbegleitung",
@@ -763,8 +768,18 @@ export const GERMANY_SEXUAL_ASSAULT_SCENARIO: GermanySimulationScenario = {
   sources: [
     {
       label: "Hilfe-Info · Sexualisierte Gewalt",
-      detail: "Offizielles Portal zu Anzeige, Beweissicherung, medizinischer Versorgung, Opferrechten und Beratung.",
-      url: "https://www.hilfe-info.de/",
+      detail: "Konkrete Hinweise zu Hilfe, medizinischer Versorgung, Opferrechten und nächsten Schritten nach einem sexuellen Übergriff.",
+      url: "https://www.hilfe-info.de/Webs/hilfeinfo/DE/Merkblaetter/20-merkblatt_sexuelleruebergriff.html",
+    },
+    {
+      label: "Hilfe-Info · Beweissicherung",
+      detail: "Offizielle Hinweise zum sicheren Umgang mit möglichen Sach-, Dokumenten- und digitalen Beweismitteln.",
+      url: "https://www.hilfe-info.de/Webs/hilfeinfo/DE/EigeneRechteKennen/HilfeUndRechte/Beweissicherung/Beweissicherung_node.html",
+    },
+    {
+      label: "Hilfe-Info · Strafanzeige",
+      detail: "Ablauf, Anlaufstellen und grundlegende Informationen zur Erstattung einer Strafanzeige.",
+      url: "https://www.hilfe-info.de/Webs/hilfeinfo/DE/EigeneRechteKennen/Strafverfahren/Anzeige/Anzeige_node.html",
     },
     {
       label: "Polizeiliche Kriminalprävention · Sexualisierte Gewalt",
@@ -779,7 +794,7 @@ export const GERMANY_SEXUAL_ASSAULT_SCENARIO: GermanySimulationScenario = {
     {
       label: "WEISSER RING · Opfer-Telefon 116 006",
       detail: "Bundesweite Opferhilfe und Vermittlung zu regionalen Stellen.",
-      url: "https://weisser-ring.de/hilfe/" ,
+      url: "https://weisser-ring.de/hilfe-fuer-opfer/opfer-telefon",
     },
     {
       label: "§ 406g StPO · Psychosoziale Prozessbegleitung",
@@ -792,9 +807,14 @@ export const GERMANY_SEXUAL_ASSAULT_SCENARIO: GermanySimulationScenario = {
       url: "https://www.gesetze-im-internet.de/stgb/__177.html",
     },
     {
-      label: "§§ 158 und 160 StPO · Strafanzeige und Ermittlungsverfahren",
-      detail: "Offizielle Grundlagen zur Anzeige bei Polizei oder Staatsanwaltschaft und zum Ermittlungsverfahren.",
+      label: "§ 158 StPO · Strafanzeige und Strafantrag",
+      detail: "Offizielle Grundlage zur Erstattung einer Strafanzeige bei Polizei, Staatsanwaltschaft oder Amtsgericht.",
       url: "https://www.gesetze-im-internet.de/stpo/__158.html",
+    },
+    {
+      label: "§ 160 StPO · Ermittlungen der Staatsanwaltschaft",
+      detail: "Offizielle Grundlage zu den Ermittlungs- und Aufklärungspflichten der Staatsanwaltschaft.",
+      url: "https://www.gesetze-im-internet.de/stpo/__160.html",
     },
   ],
 };
@@ -983,7 +1003,7 @@ export const GERMANY_SEXUAL_HARASSMENT_SCENARIO: GermanySimulationScenario = {
     {
       label: "Antidiskriminierungsstelle des Bundes · Sexuelle Belästigung",
       detail: "Informationen zu Rechten, Beschwerdewegen und Beratung im Arbeitsleben.",
-      url: "https://www.antidiskriminierungsstelle.de/",
+      url: "https://www.antidiskriminierungsstelle.de/DE/ueber-diskriminierung/lebensbereiche/arbeitsleben/sexuelle-belaestigung-am-arbeitsplatz/sexuelle-belaestigung-am-arbeitsplatz-node.html",
     },
     {
       label: "Allgemeines Gleichbehandlungsgesetz (AGG)",
@@ -991,9 +1011,9 @@ export const GERMANY_SEXUAL_HARASSMENT_SCENARIO: GermanySimulationScenario = {
       url: "https://www.gesetze-im-internet.de/agg/",
     },
     {
-      label: "Hilfe-Info · Sexualisierte Gewalt",
-      detail: "Bundesweite Informationen zu Hilfe, Anzeige, Beweissicherung und Opferrechten.",
-      url: "https://www.hilfe-info.de/",
+      label: "Hilfe-Info · Strafanzeige",
+      detail: "Bundesweite Informationen zur Anzeige, wenn Belästigung zugleich eine mögliche Straftat betrifft.",
+      url: "https://www.hilfe-info.de/Webs/hilfeinfo/DE/EigeneRechteKennen/Strafverfahren/Anzeige/Anzeige_node.html",
     },
   ],
 };
