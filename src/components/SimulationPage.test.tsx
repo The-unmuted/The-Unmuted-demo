@@ -124,10 +124,15 @@ describe("SimulationPage", () => {
     fireEvent.click(screen.getByText("TA被性骚扰了该怎么做"));
     fireEvent.click(screen.getByText("继续进入练习"));
     fireEvent.click(screen.getByText(/文字骚扰/));
-    fireEvent.click(screen.getByText("因为不愿再看到而删除全部记录"));
-    fireEvent.click(screen.getByText("向平台投诉并保存受理回执"));
+    fireEvent.click(screen.getByText("请可信任的人协助保存账号页、完整上下文、时间和撤回提示，再拉黑"));
+    expect(screen.queryByText(/知识储备 \+21 分（当前 61\/100）/)).toBeNull();
+    fireEvent.click(screen.getByText("把两个账号标识一并提交平台，并保存投诉内容、受理编号和处理结果"));
 
     expect(screen.getByTestId("simulation-result-report")).toBeTruthy();
+    expect(screen.getByTestId("score-explanation")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /本次得分如何计算/ }));
+    expect(screen.getByText(/知识储备分：40 \+ 39 − 0 = 79/)).toBeTruthy();
+    expect(screen.getByText("本次计入的加分步骤")).toBeTruthy();
     expect(await screen.findByTestId("shareable-score-card")).toBeTruthy();
     expect(vi.mocked(renderScoreCard)).toHaveBeenLastCalledWith(
       expect.objectContaining({

@@ -114,28 +114,50 @@ describe("domestic-violence scenario", () => {
 describe("sexual-harassment scenario", () => {
   const sh = SIM_SCENARIOS.find((s) => s.id === "sexual-harassment")!;
 
-  it("opening branches to five situation-specific paths", () => {
+  it("opening branches to seven situation-specific paths", () => {
     const opening = sh.scenes["opening"];
     const nextIds = opening.choices!.map((c) => c.next);
-    expect(nextIds).toContain("wechat-open");
-    expect(nextIds).toContain("workplace-open");
-    expect(nextIds).toContain("acquaintance-open");
-    expect(nextIds).toContain("landlord-open");
-    expect(nextIds).toContain("transit-open");
-    expect(opening.choices).toHaveLength(5);
+    expect(nextIds).toEqual(expect.arrayContaining([
+      "messages-open",
+      "workplace-open",
+      "recruitment-open",
+      "street-open",
+      "public-touch-open",
+      "enclosed-open",
+      "minor-open",
+    ]));
+    expect(opening.choices).toHaveLength(7);
   });
 
-  it("transit route supports safety, witnesses, CCTV preservation, and 110", () => {
-    const openFlags = sh.scenes["transit-open"].choices!.flatMap((choice) => choice.flags ?? []);
-    const actionFlags = sh.scenes["transit-action"].choices!.flatMap((choice) => choice.flags ?? []);
-    expect(openFlags).toEqual(expect.arrayContaining(["transit-reached-staff", "transit-used-intercom", "transit-safe-exit"]));
-    expect(actionFlags).toEqual(expect.arrayContaining(["transit-recorded-details", "transit-witness-contact", "requested-cctv", "transit-followed"]));
+  it("covers safety, workplace safeguards, record preservation, and child safeguarding", () => {
+    const routeFlags = Object.values(sh.scenes).flatMap((scene) =>
+      scene.choices?.flatMap((choice) => choice.flags ?? []) ?? []
+    );
+    expect(routeFlags).toEqual(expect.arrayContaining([
+      "workplace-safeguards",
+      "requested-cctv",
+      "street-safe-place",
+      "street-identifiers",
+      "hotel-record-map",
+      "minor-believed",
+      "minor-no-repeat",
+      "minor-safe-adult",
+    ]));
   });
 
-  it("debrief covers preserved-records and deleted-records", () => {
-    const ids = evaluateDebrief(sh, new Set(["saved-records", "deleted-records"])).map((r) => r.id);
-    expect(ids).toContain("good-saved-records");
-    expect(ids).toContain("risk-deleted");
+  it("debrief explains records, safety, and child-protective handling", () => {
+    const ids = evaluateDebrief(sh, new Set([
+      "saved-records",
+      "evidence-over-safety",
+      "minor-believed",
+      "minor-no-repeat",
+    ])).map((r) => r.id);
+    expect(ids).toEqual(expect.arrayContaining([
+      "records-context",
+      "risk-evidence-first",
+      "minor-response",
+    ]));
+    expect(ids).not.toContain("risk-minor-questioning");
   });
 });
 
@@ -163,6 +185,20 @@ describe("sexual-assault scenario", () => {
 
   it("does not deduct points for trauma responses or delayed disclosure", () => {
     expect(computeSimulationScore(new Set(["washed", "long-delay", "silence", "frozen", "forced-normalcy"])).score).toBe(40);
+  });
+
+  it("keeps the score formula inspectable: base + selected steps − selected risk notes", () => {
+    const result = computeSimulationScore(new Set(["saved-records", "evidence-over-safety", "forced-normalcy"]));
+    expect(result).toMatchObject({
+      baseScore: 40,
+      positivePoints: 10,
+      riskPoints: 8,
+      score: 42,
+    });
+    expect(result.breakdown).toEqual(expect.arrayContaining([
+      { flag: "saved-records", delta: 10, kind: "good" },
+      { flag: "evidence-over-safety", delta: -8, kind: "bad" },
+    ]));
   });
 });
 

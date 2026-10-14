@@ -16,6 +16,7 @@ import {
   ChevronUp,
   BookOpen,
   Sparkles,
+  Info,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -46,6 +47,7 @@ import {
   FLAG_WEIGHTS,
   collectCoachHints,
   computeSimulationScore,
+  shortLabelFor,
   type SimulationScoreResult,
 } from "@/lib/simulationScore";
 import {
@@ -1189,6 +1191,166 @@ function SimulationResultReport({
         variant="domestic-report"
         summary={summary}
       />
+
+      <ScoreExplanationSection language={language} score={score} />
+    </div>
+  );
+}
+
+function ScoreExplanationSection({
+  language,
+  score,
+}: {
+  language: AppLanguage;
+  score: SimulationScoreResult;
+}) {
+  const [open, setOpen] = useState(false);
+  const positiveItems = score.breakdown.filter((item) => item.kind === "good");
+  const riskItems = score.breakdown.filter((item) => item.kind === "bad");
+  const formula = `${score.baseScore} + ${score.positivePoints} − ${score.riskPoints} = ${score.score}`;
+
+  return (
+    <section className="overflow-hidden rounded-2xl border border-primary/25 bg-card/90" data-testid="score-explanation">
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls="score-explanation-details"
+        onClick={() => setOpen((value) => !value)}
+        className="flex min-h-14 w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      >
+        <span className="flex min-w-0 items-center gap-2.5">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <Info className="h-4 w-4" aria-hidden="true" />
+          </span>
+          <span>
+            <span className="block text-sm font-bold text-foreground">
+              {copyFor(language, "How this score was calculated", "本次得分如何计算")}
+            </span>
+            <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">
+              {copyFor(
+                language,
+                `Knowledge score: ${formula}`,
+                `知识储备分：${formula}`
+              )}
+            </span>
+          </span>
+        </span>
+        {open ? (
+          <ChevronUp className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+        ) : (
+          <ChevronDown className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+        )}
+      </button>
+
+      {open && (
+        <div id="score-explanation-details" className="border-t border-border/60 px-4 pb-4 pt-3">
+          <p className="text-sm leading-6 text-foreground/80">
+            {copyFor(
+              language,
+              "All scored China scenarios begin at 40. This run adds only the safety, record-preservation, support, or process steps you selected, and subtracts only selected choices that can add avoidable risk. The final number is limited to 0–100.",
+              "所有会计分的中国版情景都从 40 分起步。本次只会为你实际选择的安全、留存、求助或程序步骤加分；只会对本次实际选择、且可能增加可避免风险的处理扣分；最终分数限制在 0–100。"
+            )}
+          </p>
+
+          <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+            <ScoreFormulaPart
+              label={copyFor(language, "Starting point", "起点")}
+              value={String(score.baseScore)}
+              tone="neutral"
+            />
+            <ScoreFormulaPart
+              label={copyFor(language, "Selected steps", "本次加分")}
+              value={`+${score.positivePoints}`}
+              tone="positive"
+            />
+            <ScoreFormulaPart
+              label={copyFor(language, "Risk notes", "风险提示")}
+              value={`−${score.riskPoints}`}
+              tone="risk"
+            />
+          </div>
+
+          <ScoreBreakdownList
+            language={language}
+            title={copyFor(language, "Selected knowledge steps", "本次计入的加分步骤")}
+            items={positiveItems}
+            empty={copyFor(language, "No separately scored positive step was selected on this route.", "本条路线中没有单独计分的加分步骤。")}
+            tone="positive"
+          />
+          <ScoreBreakdownList
+            language={language}
+            title={copyFor(language, "Selected risk notes", "本次计入的风险提示")}
+            items={riskItems}
+            empty={copyFor(language, "No selected step was deducted in this run.", "本次没有选择会被扣分的步骤。")}
+            tone="risk"
+          />
+
+          <p className="mt-4 rounded-xl bg-secondary/55 px-3 py-2.5 text-xs leading-5 text-muted-foreground">
+            {copyFor(
+              language,
+              "Important: this is a learning aid, not a measure of how well someone handled real harm. Freezing, appeasing to get away, leaving, waiting, blocking, or seeking care are not scored down. Not choosing another positive route is not a deduction.",
+              "重要说明：这是学习辅助，不衡量一个人在真实伤害中“应对得好不好”。僵住、为脱身而顺从、离开、等待、拉黑或先就医都不会被扣分；没有选择其他加分路径也不等于扣分。"
+            )}
+          </p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function ScoreFormulaPart({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone: "neutral" | "positive" | "risk";
+}) {
+  const tones = {
+    neutral: "border-border/70 bg-secondary/55 text-foreground",
+    positive: "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+    risk: "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+  };
+  return (
+    <div className={`rounded-xl border px-2 py-2.5 ${tones[tone]}`}>
+      <span className="block text-lg font-black leading-5">{value}</span>
+      <span className="mt-1 block text-[11px] font-semibold leading-4 opacity-80">{label}</span>
+    </div>
+  );
+}
+
+function ScoreBreakdownList({
+  language,
+  title,
+  items,
+  empty,
+  tone,
+}: {
+  language: AppLanguage;
+  title: string;
+  items: SimulationScoreResult["breakdown"];
+  empty: string;
+  tone: "positive" | "risk";
+}) {
+  const pointClass = tone === "positive" ? "text-emerald-700 dark:text-emerald-300" : "text-amber-700 dark:text-amber-300";
+  return (
+    <div className="mt-4">
+      <h3 className="text-sm font-bold text-foreground">{title}</h3>
+      {items.length > 0 ? (
+        <ul className="mt-2 space-y-1.5">
+          {items.map((item) => (
+            <li key={item.flag} className="flex items-start justify-between gap-3 rounded-xl bg-secondary/40 px-3 py-2 text-sm leading-5">
+              <span className="text-foreground/80">{shortLabelFor(item.flag, language === "de" ? "en" : language)}</span>
+              <span className={`shrink-0 font-black ${pointClass}`}>
+                {item.delta > 0 ? `+${item.delta}` : item.delta}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">{empty}</p>
+      )}
     </div>
   );
 }

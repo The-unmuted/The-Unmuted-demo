@@ -2,7 +2,7 @@
  * 模拟评分引擎 — 基于 flag 计算 0-100 分。
  *
  * 设计原则：
- * 1. 起点 50 分（中性）——即使什么都不做也不会得 0。
+ * 1. 起点 40 分（中性）——即使尚未选择正式步骤，也不会得 0。
  * 2. 「good」flag 按权重加分；「bad」flag 按权重扣分。
  * 3. 创伤反应（洗澡、延迟披露、沉默、僵住）不扣分。评分只反映可学习的
  *    安全与程序知识，不评价幸存者在创伤中的本能反应。
@@ -101,6 +101,37 @@ export const FLAG_WEIGHTS: Record<string, number> = {
   "frozen": 0,
   "forced-normalcy": 0,
 
+  // ─── 性骚扰情景：2026 年裁判文书重构路径 ───
+  "platform-report": 6,
+  "saved-confirmation": 4,
+  "workplace-safeguards": 8,
+  "kept-work-copy": 4,
+  "workplace-followup": 6,
+  "workplace-transfer": 2,
+  "retaliation-log": 8,
+  "public-setting": 5,
+  "shared-location": 5,
+  "rescue-signal": 8,
+  "hotel-record-map": 8,
+  "street-safe-place": 6,
+  "street-identifiers": 8,
+  "called-trusted-person": 5,
+  "preserved-original": 6,
+  "medical-record": 5,
+  "actual-loss-proof": 5,
+  "minor-believed": 8,
+  "minor-exact-words": 5,
+  "minor-no-repeat": 5,
+  "minor-safe-adult": 8,
+  // Safety and trauma responses are never scored down. The negative weights
+  // below are only for avoidable process choices that can raise current risk.
+  "delayed-decision": 0,
+  "evidence-over-safety": -8,
+  "verbal-engagement-risk": -3,
+  "minor-demanded-detail": -5,
+  "minor-confronted-first": -8,
+  "minor-public-disclosure": -10,
+
   // ─── 公交/地铁陌生人骚扰 ───
   "transit-reached-staff": 8,
   "transit-bystander-help": 5,
@@ -189,13 +220,20 @@ export const FLAG_WEIGHTS: Record<string, number> = {
   "waiting": -2,                   // 选择等一等
 };
 
-const BASE_SCORE = 40;
+/** All scored China-simulator routes start from the same neutral knowledge base. */
+export const SIMULATION_SCORE_BASE = 40;
 
 export type ScoreBand = "excellent" | "good" | "partial" | "weak";
 
 export interface SimulationScoreResult {
   /** 0-100 的最终分数。 */
   score: number;
+  /** 中性起点。分数不是案件结果或个人反应的评价。 */
+  baseScore: number;
+  /** 本轮已选正向知识步骤的累计分。 */
+  positivePoints: number;
+  /** 本轮已触发的可避免风险项累计扣分（正数，展示时以减号呈现）。 */
+  riskPoints: number;
   /** 触发的 good flag 数量。 */
   goodCount: number;
   /** 触发的 bad flag 数量。 */
@@ -319,11 +357,11 @@ export const FLAG_SHORT_LABELS: Record<string, { en: string; zh: string }> = {
   "formal-complaint": { en: "Submitted written complaint to employer", zh: "向单位提交书面投诉" },
   "witnesses-willing": { en: "Found colleagues willing to testify", zh: "找到愿出庭作证的同事" },
   "signed-carefully": { en: "Reviewed and corrected the transcript", zh: "逐页核对笔录后签字" },
-  "submitted-evidence": { en: "Proactively provided evidence to police", zh: "主动向警方提交证据" },
+  "submitted-evidence": { en: "Submitted relevant material through a formal channel", zh: "通过正式渠道提交了相关材料" },
   "applied-review": { en: "Applied for reconsideration", zh: "申请了复议" },
   "hired-lawyer": { en: "Hired a lawyer for the civil case", zh: "为民事诉讼委托律师" },
   "legal-aid": { en: "Used legal aid (free lawyer)", zh: "使用了法律援助（免费律师）" },
-  "sought-support": { en: "Called 12338 for support", zh: "拨打 12338 寻求支持" },
+  "sought-support": { en: "Reached out for trusted support", zh: "获得了可信任的支持" },
   "colleague-knows": { en: "A colleague learned in real time", zh: "第一时间告知了同事" },
   "contemporaneous-note": { en: "Documented details immediately", zh: "事发当时记录了细节" },
   "escaped": { en: "Got out of the space safely", zh: "安全离开了现场" },
@@ -344,6 +382,34 @@ export const FLAG_SHORT_LABELS: Record<string, { en: string; zh: string }> = {
   "let-go": { en: "Chose to let it go", zh: "选择放下这件事" },
   "frozen": { en: "Froze in the moment — normal trauma response", zh: "当下僵住——正常创伤反应" },
   "forced-normalcy": { en: "Forced a normal appearance to escape", zh: "强作镇定以便脱身" },
+
+  // ─── 性骚扰情景：2026 年裁判文书重构路径 ───
+  "platform-report": { en: "Created a platform report", zh: "留下了平台投诉记录" },
+  "saved-confirmation": { en: "Kept a confirmation or receipt", zh: "保留了受理回执或确认记录" },
+  "workplace-safeguards": { en: "Asked for concrete workplace safeguards", zh: "要求单位提供具体保护措施" },
+  "kept-work-copy": { en: "Kept a copy outside the work account", zh: "在工作账号外保留了副本" },
+  "workplace-followup": { en: "Followed up with a written workplace record", zh: "用书面方式确认了单位沟通" },
+  "workplace-transfer": { en: "Set boundaries for a temporary transfer", zh: "为临时调岗明确了边界" },
+  "retaliation-log": { en: "Recorded possible retaliation facts", zh: "记录了可能涉及报复的事实" },
+  "public-setting": { en: "Requested a public meeting setting", zh: "要求改在公共场所见面" },
+  "shared-location": { en: "Shared a location or check-in plan", zh: "分享了位置或确认安全计划" },
+  "rescue-signal": { en: "Created a route to urgent help", zh: "建立了紧急求助路径" },
+  "hotel-record-map": { en: "Mapped possible venue records", zh: "梳理了场所可能存在的记录" },
+  "street-safe-place": { en: "Moved toward a safer public place", zh: "向更安全的公共区域移动" },
+  "street-identifiers": { en: "Recorded vehicle and time identifiers", zh: "记录了车辆与时间线索" },
+  "called-trusted-person": { en: "Created a live support contact", zh: "联系了实时支持者" },
+  "preserved-original": { en: "Kept original media or records unchanged", zh: "保持了原始媒体或记录不变" },
+  "medical-record": { en: "Kept a real care record", zh: "保留了真实就医记录" },
+  "actual-loss-proof": { en: "Kept actual expense or leave evidence", zh: "保留了实际支出或休假凭证" },
+  "minor-believed": { en: "Believed the child without blame", zh: "相信孩子且没有责备" },
+  "minor-exact-words": { en: "Preserved the child's own words", zh: "保留了孩子自己的原话" },
+  "minor-no-repeat": { en: "Avoided repeated questioning", zh: "避免了反复询问孩子" },
+  "minor-safe-adult": { en: "Involved a safe responsible adult", zh: "联系了安全的负责成年人" },
+  "evidence-over-safety": { en: "Stayed to seek an admission", zh: "为了取得承认而延长停留" },
+  "verbal-engagement-risk": { en: "Extended direct contact to record words", zh: "为了录下言语而延长直接互动" },
+  "minor-demanded-detail": { en: "Asked the child for a full retelling", zh: "要求孩子完整复述" },
+  "minor-confronted-first": { en: "Contacted the adult before safeguarding", zh: "保护措施前先联系了成年人" },
+  "minor-public-disclosure": { en: "Shared the child's account publicly", zh: "公开传播了孩子的经历" },
 
   // ─── 公交/地铁、性侵害重构、技术性别暴力 ───
   "transit-reached-staff": { en: "Moved toward staff or other people", zh: "向工作人员或人群移动" },
@@ -456,18 +522,20 @@ function bandFor(score: number): ScoreBand {
 
 export function computeSimulationScore(flags: Set<string>): SimulationScoreResult {
   const breakdown: SimulationScoreResult["breakdown"] = [];
-  let delta = 0;
+  let positivePoints = 0;
+  let riskPoints = 0;
   let goodCount = 0;
   let badCount = 0;
 
   for (const flag of flags) {
     const weight = FLAG_WEIGHTS[flag];
     if (weight == null) continue;
-    delta += weight;
     if (weight > 0) {
+      positivePoints += weight;
       goodCount++;
       breakdown.push({ flag, delta: weight, kind: "good" });
     } else if (weight < 0) {
+      riskPoints += Math.abs(weight);
       badCount++;
       breakdown.push({ flag, delta: weight, kind: "bad" });
     }
@@ -475,7 +543,7 @@ export function computeSimulationScore(flags: Set<string>): SimulationScoreResul
 
   breakdown.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
 
-  const raw = BASE_SCORE + delta;
+  const raw = SIMULATION_SCORE_BASE + positivePoints - riskPoints;
   const score = Math.max(0, Math.min(100, raw));
 
   const band = bandFor(score);
@@ -483,6 +551,9 @@ export function computeSimulationScore(flags: Set<string>): SimulationScoreResul
 
   return {
     score,
+    baseScore: SIMULATION_SCORE_BASE,
+    positivePoints,
+    riskPoints,
     goodCount,
     badCount,
     breakdown,

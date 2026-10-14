@@ -8,6 +8,7 @@ import {
   Compass,
   ExternalLink,
   FileText,
+  Info,
   LifeBuoy,
   Phone,
   RotateCcw,
@@ -391,10 +392,7 @@ function GermanyResult({
   onGoToAid: () => void;
 }) {
   const ending = scenario.endings[endingId];
-  const triggered = scenario.debrief.filter((item) => flags.has(item.flag));
-  const good = triggered.filter((item) => item.kind === "good");
-  const risks = triggered.filter((item) => item.kind === "risk");
-  const score = Math.max(0, Math.min(100, 40 + good.length * 9 - risks.length * 5));
+  const { good, risks, score } = germanyScore(scenario, flags);
   const band = score >= 80 ? "Gut vorbereitet" : score >= 60 ? "Solide Grundlage" : score >= 40 ? "Erste Schritte" : "Mehr Orientierung hilfreich";
   const scoreColor = score >= 80 ? "text-fuchsia-500" : score >= 60 ? "text-pink-400" : score >= 40 ? "text-rose-300" : "text-amber-300";
   const conicStop = `${Math.max(8, score)}%`;
@@ -431,6 +429,18 @@ function GermanyResult({
           </p>
         </div>
       </section>
+
+      <ExpandableSection title="So entsteht dein Wissensstand" icon={Info}>
+        <p className="text-sm leading-6 text-foreground/85">
+          Rechnung: <strong>40</strong> Startpunkte + <strong>{good.length} × 9</strong> erkannte
+          Schutz- oder Hilfeschritte − <strong>{risks.length} × 5</strong> Risikohinweise = <strong>{score}</strong>.
+        </p>
+        <p className="mt-2 text-xs leading-5 text-muted-foreground">
+          Jeder deutsche Übungsweg beginnt bei 40. Nur Schritte, die in diesem Durchlauf gewählt und
+          in der Auswertung hinterlegt sind, verändern den Wert. Nicht gewählte positive Schritte
+          werden nicht abgezogen; der Wert ist keine Bewertung einer real betroffenen Person.
+        </p>
+      </ExpandableSection>
 
       <ExpandableSection title="Was in diesem Durchlauf hilfreich war" icon={CheckCircle2}>
         {good.length > 0 ? (
@@ -526,6 +536,17 @@ function GermanyResult({
       </div>
     </div>
   );
+}
+
+function germanyScore(scenario: GermanyScenario, flags: ReadonlySet<string>) {
+  const triggered = scenario.debrief.filter((item) => flags.has(item.flag));
+  const good = triggered.filter((item) => item.kind === "good");
+  const risks = triggered.filter((item) => item.kind === "risk");
+  return {
+    good,
+    risks,
+    score: Math.max(0, Math.min(100, 40 + good.length * 9 - risks.length * 5)),
+  };
 }
 
 function ExpandableSection({
