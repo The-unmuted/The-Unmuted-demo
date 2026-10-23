@@ -1157,9 +1157,6 @@ function SimulationResultReport({
           <h1 className="mt-5 max-w-xl text-2xl font-black leading-[1.3] tracking-tight text-white">
             {simText(language, score.headline)}
           </h1>
-          <p className="mt-4 text-base leading-7 text-white/75">
-            {simText(language, score.detail)}
-          </p>
 
           <ResultInsightPanels
             language={language}

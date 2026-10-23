@@ -246,13 +246,11 @@ export interface SimulationScoreResult {
   label: { en: string; zh: string };
   /** 主副标题（结果页顶部大字），比 label 更鼓励。 */
   headline: { en: string; zh: string };
-  /** 分数下方的一句话说明。 */
-  detail: { en: string; zh: string };
 }
 
 const BANDS: Record<
   ScoreBand,
-  { min: number; label: { en: string; zh: string }; headline: { en: string; zh: string }; detail: { en: string; zh: string } }
+  { min: number; label: { en: string; zh: string }; headline: { en: string; zh: string } }
 > = {
   excellent: {
     min: 80,
@@ -260,10 +258,6 @@ const BANDS: Record<
     headline: {
       en: "You covered the essentials.",
       zh: "你已经掌握了关键步骤。",
-    },
-    detail: {
-      en: "Your choices show a solid grasp of what to do — this preparation could save a friend or yourself.",
-      zh: "你的选择显示出对关键步骤的清晰把握——这份准备可能会保护你自己或朋友。",
     },
   },
   good: {
@@ -273,10 +267,6 @@ const BANDS: Record<
       en: "You've built a solid base.",
       zh: "你已经打下了基础。",
     },
-    detail: {
-      en: "You caught the essentials but missed some details that could make a difference in the moment.",
-      zh: "关键的你抓住了，但还有一些细节可能在真正的时刻起作用。",
-    },
   },
   partial: {
     min: 40,
@@ -285,10 +275,6 @@ const BANDS: Record<
       en: "You've taken important first steps.",
       zh: "你已经迈出了重要的一步。",
     },
-    detail: {
-      en: "You've made some right choices but there are still areas to strengthen.",
-      zh: "你已经做出了一些关键选择，但仍有可以加强的地方。",
-    },
   },
   weak: {
     min: 0,
@@ -296,10 +282,6 @@ const BANDS: Record<
     headline: {
       en: "Knowing what to do makes all the difference.",
       zh: "知道该怎么做，会带来完全不同的结果。",
-    },
-    detail: {
-      en: "These gaps are common — nobody teaches this. Reading through the debrief below is a real step forward.",
-      zh: "这些缺口很常见——没有人教过我们这些。看完下方复盘，就是真正的一步。"
     },
   },
 };
