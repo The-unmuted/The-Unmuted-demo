@@ -94,8 +94,8 @@
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.69.0",
-    "vite": "^6.4.3",
-    "vitest": "4.1.11"
+    "vite": "^7.3.7",
+    "vitest": "4.1.12"
   },
   "overrides": {
     "browserslist": "^4.28.1",
@@ -103,7 +103,13 @@
     "glob": {
       ".": "^10.5.0",
       "minimatch": "^9.0.7",
-      "brace-expansion": "^2.1.4"
+      "brace-expansion": "^2.1.7"
+    },
+    "minimatch@3": {
+      "brace-expansion": "^1.1.21"
+    },
+    "minimatch@10": {
+      "brace-expansion": "^5.0.12"
     },
     "js-yaml": "^4.3.1",
     "nanoid": "^3.3.18",
@@ -117,7 +123,8 @@
     "readdirp": {
       "picomatch": "^2.3.2"
     },
-    "postcss-selector-parser": "^6.1.3",
+    "postcss-selector-parser": "^7.1.6",
+    "source-map-js": "^1.2.2",
     "form-data": "^4.0.6",
     "lodash": "^4.18.0",
     "fast-xml-parser": "^5.7.0",
