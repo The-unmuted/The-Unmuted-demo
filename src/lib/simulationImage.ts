@@ -171,7 +171,7 @@ async function renderDomesticResultCard(opts: RenderOpts): Promise<Blob> {
   }
 
   const bandLabel = lang === "zh" ? opts.score.label.zh : opts.score.label.en;
-  ctx.font = `bold 28px ${FONT_ZH}`;
+  ctx.font = `bold 34px ${FONT_ZH}`;
   const pillWidth = Math.min(360, ctx.measureText(bandLabel).width + 64);
   drawRoundRect(ctx, scoreX, contentY + 322, pillWidth, 58, 29);
   ctx.strokeStyle = bandColor;
@@ -184,20 +184,6 @@ async function renderDomesticResultCard(opts: RenderOpts): Promise<Blob> {
 
   await drawDomesticBandCircle(ctx, opts, 620, contentY + 365, 172);
   drawDomesticBandLegend(ctx, opts, 880, contentY + 150, 102);
-
-  ctx.textAlign = "left";
-  ctx.textBaseline = "top";
-  ctx.fillStyle = COLOR.textMuted;
-  ctx.font = `500 22px ${FONT_ZH}`;
-  drawWrappedText(
-    ctx,
-    lang === "zh" ? opts.score.detail.zh : opts.score.detail.en,
-    scoreX,
-    contentY + 455,
-    280,
-    32,
-    3
-  );
 
   drawCompactSummary(ctx, lang, summary, 92, 805, W - 184);
   return canvasToBlob(canvas);
@@ -216,11 +202,11 @@ function drawCompactSummary(
   ctx.textBaseline = "top";
   ctx.font = `bold 28px ${FONT_ZH}`;
   ctx.fillStyle = COLOR.brandPink;
-  ctx.fillText(`ⓘ  ${summary?.sceneTipTitle ?? (lang === "zh" ? "场景科普小tip" : "Scenario tip")}`, x + 32, y + 10);
+  ctx.fillText(`ⓘ  ${summary?.sceneTipTitle ?? (lang === "zh" ? "场景科普小tip" : "Scenario tip")}`, x + 32, y + 8);
   ctx.fillStyle = COLOR.textMuted;
-  ctx.font = `500 21px ${FONT_ZH}`;
+  ctx.font = `500 26px ${FONT_ZH}`;
   const tipText = normalizeTipText(summary?.sceneTip ?? tip?.detail ?? tip?.title ?? "");
-  drawWrappedText(ctx, tipText, x + 32, y + 51, width - 64, 29, 3);
+  drawWrappedText(ctx, tipText, x + 32, y + 58, width - 64, 36, 3);
 }
 
 function normalizeTipText(text: string): string {
@@ -611,14 +597,6 @@ function drawScoreSection(ctx: CanvasRenderingContext2D, opts: RenderOpts) {
   ctx.textBaseline = "middle";
   ctx.textAlign = "center";
   ctx.fillText(bandLabel, bandPillX + bandPillW / 2, bandPillY + bandPillH / 2);
-
-  // detail 文字
-  ctx.textAlign = "left";
-  ctx.textBaseline = "top";
-  ctx.font = `500 22px ${FONT_ZH}`;
-  ctx.fillStyle = COLOR.textMuted;
-  const detail = lang === "zh" ? opts.score.detail.zh : opts.score.detail.en;
-  wrapText(ctx, detail, 90, bandPillY + bandPillH + 20, 380, 32, "left");
 
   // 右侧 4 档标尺
   drawBandRuler(ctx, opts, y0 + 40, h - 80);

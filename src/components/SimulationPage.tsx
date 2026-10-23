@@ -1244,15 +1244,7 @@ function ScoreExplanationSection({
 
       {open && (
         <div id="score-explanation-details" className="border-t border-border/60 px-4 pb-4 pt-3">
-          <p className="text-sm leading-6 text-foreground/80">
-            {copyFor(
-              language,
-              "All scored China scenarios begin at 40. This run adds only the safety, record-preservation, support, or process steps you selected, and subtracts only selected choices that can add avoidable risk. The final number is limited to 0–100.",
-              "所有会计分的中国版情景都从 40 分起步。本次只会为你实际选择的安全、留存、求助或程序步骤加分；只会对本次实际选择、且可能增加可避免风险的处理扣分；最终分数限制在 0–100。"
-            )}
-          </p>
-
-          <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+          <div className="grid grid-cols-3 gap-2 text-center">
             <ScoreFormulaPart
               label={copyFor(language, "Starting point", "起点")}
               value={String(score.baseScore)}

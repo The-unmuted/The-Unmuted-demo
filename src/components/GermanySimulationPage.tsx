@@ -435,11 +435,6 @@ function GermanyResult({
           Rechnung: <strong>40</strong> Startpunkte + <strong>{good.length} × 9</strong> erkannte
           Schutz- oder Hilfeschritte − <strong>{risks.length} × 5</strong> Risikohinweise = <strong>{score}</strong>.
         </p>
-        <p className="mt-2 text-xs leading-5 text-muted-foreground">
-          Jeder deutsche Übungsweg beginnt bei 40. Nur Schritte, die in diesem Durchlauf gewählt und
-          in der Auswertung hinterlegt sind, verändern den Wert. Nicht gewählte positive Schritte
-          werden nicht abgezogen; der Wert ist keine Bewertung einer real betroffenen Person.
-        </p>
       </ExpandableSection>
 
       <ExpandableSection title="Was in diesem Durchlauf hilfreich war" icon={CheckCircle2}>
